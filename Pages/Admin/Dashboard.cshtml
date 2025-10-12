@@ -1,0 +1,136 @@
+@page
+@model BookInfoFinder.Pages.Admin.DashboardModel
+@{
+    ViewData["Title"] = "Bảng điều khiển";
+    ViewData["Icon"] = "bi bi-speedometer2";
+    ViewData["Description"] = "Tổng quan hệ thống";
+}
+
+<div class="admin-stats-grid">
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="admin-stat-value">@Model.TotalUsers</div>
+        <div class="admin-stat-label">Tổng người dùng</div>
+        <a href="/Admin/Users" class="btn btn-admin-primary btn-admin-sm mt-3">
+            <i class="bi bi-eye"></i>
+            Xem chi tiết
+        </a>
+    </div>
+    
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon">
+            <i class="bi bi-book-fill"></i>
+        </div>
+        <div class="admin-stat-value">@Model.TotalBooks</div>
+        <div class="admin-stat-label">Tổng số sách</div>
+        <a href="/Admin/ManageBook" class="btn btn-admin-primary btn-admin-sm mt-3">
+            <i class="bi bi-eye"></i>
+            Xem chi tiết
+        </a>
+    </div>
+    
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon">
+            <i class="bi bi-tags-fill"></i>
+        </div>
+        <div class="admin-stat-value">@Model.TotalCategories</div>
+        <div class="admin-stat-label">Thể loại sách</div>
+        <a href="/Admin/Categories" class="btn btn-admin-primary btn-admin-sm mt-3">
+            <i class="bi bi-eye"></i>
+            Xem chi tiết
+        </a>
+    </div>
+    
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon">
+            <i class="bi bi-person-badge-fill"></i>
+        </div>
+        <div class="admin-stat-value">@Model.TotalAuthors</div>
+        <div class="admin-stat-label">Tác giả</div>
+        <a href="/Admin/ManageAuthor" class="btn btn-admin-primary btn-admin-sm mt-3">
+            <i class="bi bi-eye"></i>
+            Xem chi tiết
+        </a>
+    </div>
+    
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon">
+            <i class="bi bi-building-fill"></i>
+        </div>
+        <div class="admin-stat-value">@Model.TotalPublishers</div>
+        <div class="admin-stat-label">Nhà xuất bản</div>
+        <a href="/Admin/ManageNXB" class="btn btn-admin-primary btn-admin-sm mt-3">
+            <i class="bi bi-eye"></i>
+            Xem chi tiết
+        </a>
+    </div>
+    
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon">
+            <i class="bi bi-tag-fill"></i>
+        </div>
+        <div class="admin-stat-value">@Model.TotalTags</div>
+        <div class="admin-stat-label">Tags</div>
+        <a href="/Admin/Tags" class="btn btn-admin-primary btn-admin-sm mt-3">
+            <i class="bi bi-eye"></i>
+            Xem chi tiết
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="admin-form-wrapper">
+            <h3 class="mb-4">
+                <i class="bi bi-graph-up"></i>
+                Thống kê nhanh
+            </h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="admin-alert admin-alert-info">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <div>
+                            <strong>Hệ thống hoạt động tốt</strong><br>
+                            Tất cả dịch vụ đang chạy ổn định
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="admin-alert admin-alert-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div>
+                            <strong>Cập nhật thành công</strong><br>
+                            Dữ liệu đã được đồng bộ hóa
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="admin-form-wrapper">
+            <h3 class="mb-4">
+                <i class="bi bi-lightning-fill"></i>
+                Thao tác nhanh
+            </h3>
+            <div class="d-grid gap-3">
+                <a href="/Admin/AddBook" class="btn btn-admin-success">
+                    <i class="bi bi-plus-circle"></i>
+                    Thêm sách mới
+                </a>
+                <a href="/Admin/Categories" class="btn btn-admin-primary">
+                    <i class="bi bi-plus-circle"></i>
+                    Thêm thể loại
+                </a>
+                <a href="/Admin/Report" class="btn btn-admin-secondary">
+                    <i class="bi bi-file-text"></i>
+                    Xem báo cáo
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+ 

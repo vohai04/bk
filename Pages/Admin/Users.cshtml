@@ -1,0 +1,378 @@
+@page
+@model BookInfoFinder.Pages.Admin.UsersModel
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+    ViewData["Icon"] = "bi bi-people";
+    ViewData["Description"] = "Quản lý tất cả tài khoản người dùng trong hệ thống";
+}
+ 
+<div class="admin-form-wrapper">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-people"></i> Danh sách người dùng</h4>
+        <button type="button" class="btn btn-admin-success btn-lg" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="bi bi-person-plus"></i> Thêm người dùng
+        </button>
+    </div>
+    
+    <!-- Search and Filter Section - More Spacious -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h6 class="card-title mb-3"><i class="bi bi-funnel"></i> Bộ lọc và tìm kiếm</h6>
+                    <form id="searchForm" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tìm kiếm</label>
+                            <input type="text" id="searchInput" name="search" class="form-control admin-form-control" placeholder="Tên đăng nhập, họ tên hoặc email..." />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select id="statusFilter" name="status" class="form-select admin-form-control">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="1">Hoạt động</option>
+                                <option value="0">Tạm khóa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Quyền</label>
+                            <select id="roleFilter" name="role" class="form-select admin-form-control">
+                                <option value="">Tất cả quyền</option>
+                                <option value="User">User</option>
+                                <option value="Admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="d-flex gap-2 w-100">
+                                <button type="submit" class="btn btn-admin-primary flex-fill">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                                <a href="/Admin/Users" class="btn btn-admin-secondary" title="Reset">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table Section - More Spacious -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-light border-0 py-3">
+        <h6 class="mb-0"><i class="bi bi-table"></i> Danh sách người dùng</h6>
+    </div>
+    <div class="card-body p-0">
+        <div id="userTableContainer" class="table-responsive">
+            <!-- Table content will be loaded here -->
+        </div>
+    </div>
+    
+    <div class="card-footer bg-light border-0">
+        <nav id="paginationNav" class="d-flex justify-content-center">
+            <ul class="pagination mb-0"></ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Modal Thêm người dùng -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="addUserForm" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUserModalLabel">
+                    <i class="bi bi-person-plus"></i> Thêm người dùng mới
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Tên đăng nhập *</label>
+                    <input type="text" name="UserName" class="form-control" placeholder="Tên đăng nhập" required maxlength="30" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Họ và tên *</label>
+                    <input type="text" name="FullName" class="form-control" placeholder="Họ và tên" required maxlength="50" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" name="Email" class="form-control" placeholder="Email" required maxlength="50" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu *</label>
+                    <input type="password" name="Password" class="form-control" placeholder="Mật khẩu" required maxlength="50" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Quyền *</label>
+                    <select name="roleStr" class="form-select" required>
+                        <option value="">Chọn quyền</option>
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check"></i> Thêm người dùng
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+        </form>
+    </div>
+</div>
+ 
+<!-- Modal Sửa user (Bootstrap 5) -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="editUserForm" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Sửa tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="userId" id="editUserId" />
+                <div class="mb-2">
+                    <label>Tên đăng nhập</label>
+                    <input type="text" name="userName" id="editUserName" class="form-control" required maxlength="30" />
+                </div>
+                <div class="mb-2">
+                    <label>Họ tên</label>
+                    <input type="text" name="fullName" id="editFullName" class="form-control" maxlength="50" />
+                </div>
+                <div class="mb-2">
+                    <label>Email</label>
+                    <input type="email" name="email" id="editEmail" class="form-control" required maxlength="50" />
+                </div>
+                <div class="mb-2">
+                    <label>Quyền</label>
+                    <select name="roleStr" id="editRoleStr" class="form-select" required>
+                        <option value="">Chọn quyền</option>
+                        <option value="User">User</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">💾 Lưu</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+        </form>
+    </div>
+</div>
+ 
+@section Scripts {
+    <script>
+        $(function () {
+            const pageSize = 10;
+            let currentPage = 1;
+            let currentSearch = "";
+            let addModal = null;
+            let editModal = null;
+
+            function loadUsers(page = 1) {
+                currentPage = page;
+                currentSearch = $('#searchInput').val();
+                    const statusFilter = $('#statusFilter').val();
+                const roleFilter = $('#roleFilter').val();
+                
+                $.get('/Admin/Users?handler=AjaxSearch', {
+                    search: currentSearch,
+                    status: statusFilter,
+                    role: roleFilter,
+                    page: currentPage,
+                    pageSize: pageSize
+                })
+                .done(function (data) {
+                    renderUsersTable(data.users);
+                    if (data.totalPages > 1) {
+                        renderPagination("#paginationNav ul", data.totalPages, currentPage, function(page) {
+                            loadUsers(page);
+                        });
+                    } else {
+                        $('#paginationNav ul').empty();
+                    }
+                })
+                .fail(function() {
+                    showToast('Có lỗi xảy ra khi tải dữ liệu!', 'error');
+                });
+            }
+
+            function renderUsersTable(users) {
+                let html = '';
+                if (!users.length) {
+                    html = `<div class="alert alert-warning m-4">
+                                <i class="bi bi-exclamation-triangle"></i> 
+                                Không tìm thấy người dùng phù hợp với điều kiện tìm kiếm.
+                            </div>`;
+                    $('#paginationNav').hide();
+                } else {
+                    $('#paginationNav').show();
+                    html += '<table class="table table-hover align-middle mb-0">';
+                    html += '<thead class="table-light">' +
+                        '<tr>' +
+                            '<th class="py-3 px-4" style="width: 80px;">ID</th>' +
+                            '<th class="py-3 px-4" style="width: 150px;">Tên đăng nhập</th>' +
+                            '<th class="py-3 px-4" style="width: 200px;">Email</th>' +
+                            '<th class="py-3 px-4" style="width: 180px;">Họ tên</th>' +
+                            '<th class="py-3 px-4 text-center" style="width: 100px;">Quyền</th>' +
+                            '<th class="py-3 px-4 text-center" style="width: 120px;">Trạng thái</th>' +
+                            '<th class="py-3 px-4 text-center" style="width: 160px;">Thao tác</th>' +
+                        '</tr>' +
+                        '</thead><tbody>';
+                    
+                    $.each(users, function (i, u) {
+                        // Fix status display - check both lowercase and uppercase
+                        let userStatus = u.status !== undefined ? u.status : u.Status;
+                        let statusText = userStatus == 1
+                            ? '<span class="badge bg-success px-3 py-2">Hoạt động</span>'
+                            : '<span class="badge bg-danger px-3 py-2">Tạm khóa</span>';
+
+                        let actionBtn = userStatus == 1
+                            ? `<button class="btn btn-sm btn-outline-warning btn-disable me-1" data-id="${u.userId || u.UserId}" title="Khóa tài khoản">
+                                    <i class="bi bi-lock"></i> Khóa
+                               </button>`
+                            : `<button class="btn btn-sm btn-outline-success btn-enable me-1" data-id="${u.userId || u.UserId}" title="Kích hoạt lại">
+                                    <i class="bi bi-unlock"></i> Kích hoạt
+                               </button>`;
+
+                        html += '<tr>' +
+                            `<td class="py-3 px-4"><strong>#${u.userId || u.UserId}</strong></td>` +
+                            `<td class="py-3 px-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle me-2 text-primary"></i>
+                                    <span>${u.userName || u.UserName}</span>
+                                </div>
+                             </td>` +
+                            `<td class="py-3 px-4">
+                                <small class="text-muted">
+                                    <i class="bi bi-envelope me-1"></i>
+                                    ${u.email || u.Email}
+                                </small>
+                             </td>` +
+                            `<td class="py-3 px-4">${u.fullName || u.FullName}</td>` +
+                            `<td class="py-3 px-4 text-center">
+                                <span class="badge ${(u.role || u.Role) === 'Admin' ? 'bg-danger' : 'bg-primary'} px-3 py-2">
+                                    ${u.role || u.Role}
+                                </span>
+                             </td>` +
+                            `<td class="py-3 px-4 text-center">${statusText}</td>` +
+                            `<td class="py-3 px-4 text-center">
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-primary btn-edit me-1"
+                                        data-id="${u.userId || u.UserId}" data-name="${u.userName || u.UserName}" data-email="${u.email || u.Email}" 
+                                        data-fullname="${u.fullName || u.FullName}" data-role="${u.role || u.Role}" title="Sửa thông tin">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </button>
+                                    ${actionBtn}
+                                </div>
+                            </td>` +
+                            '</tr>';
+                    });
+                    html += "</tbody></table>";
+                }
+                $('#userTableContainer').html(html);
+            }
+
+            // Thêm user
+            $('#addUserForm').on('submit', function (e) {
+                e.preventDefault();
+                let userName = $(this).find('[name="UserName"]').val();
+                let fullName = $(this).find('[name="FullName"]').val();
+                let email = $(this).find('[name="Email"]').val();
+                let password = $(this).find('[name="Password"]').val();
+                let roleStr = $(this).find('[name="roleStr"]').val();
+                
+                $.post('/Admin/Users?handler=AjaxAdd', { userName, fullName, email, password, roleStr })
+                .done(function (res) {
+                    if (res.success) {
+                        $('#addUserForm')[0].reset();
+                        if (addModal) addModal.hide();
+                        showToast("Thêm tài khoản thành công!", "success");
+                        loadUsers(1);
+                    } else {
+                        showToast(res.message || "Thêm user thất bại!", "error");
+                    }
+                })
+                .fail(function() {
+                    showToast("Có lỗi xảy ra khi thêm user!", "error");
+                });
+            });
+
+            // Sửa user
+            $('#userTableContainer').on('click', '.btn-edit', function () {
+                $('#editUserId').val($(this).data('id'));
+                $('#editUserName').val($(this).data('name'));
+                $('#editFullName').val($(this).data('fullname'));
+                $('#editEmail').val($(this).data('email'));
+                $('#editRoleStr').val($(this).data('role'));
+                if (!editModal) editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+                editModal.show();
+            });
+
+            $('#editUserForm').on('submit', function (e) {
+                e.preventDefault();
+                let userId = $('#editUserId').val();
+                let userName = $('#editUserName').val();
+                let fullName = $('#editFullName').val();
+                let email = $('#editEmail').val();
+                let roleStr = $('#editRoleStr').val();
+                
+                $.post('/Admin/Users?handler=AjaxEdit', {
+                    userId, userName, fullName, email, roleStr
+                })
+                .done(function (res) {
+                    if (res.success) {
+                        editModal.hide();
+                        showToast("Cập nhật tài khoản thành công!", "success");
+                        loadUsers(currentPage);
+                    } else {
+                        showToast(res.message || "Sửa user thất bại!", "error");
+                    }
+                })
+                .fail(function() {
+                    showToast("Có lỗi xảy ra khi sửa user!", "error");
+                });
+            });
+
+            // Khóa/mở khóa user
+            $('#userTableContainer').on('click', '.btn-disable, .btn-enable', function () {
+                const $btn = $(this);
+                const userId = $btn.data('id');
+                const isDisable = $btn.hasClass('btn-disable');
+                
+                showConfirmModal(
+                    'Xác nhận thay đổi trạng thái',
+                    isDisable ? "Bạn có chắc chắn muốn khóa tài khoản này?" : "Bạn có muốn kích hoạt lại tài khoản này?",
+                    function() {
+                        const newStatus = isDisable ? 0 : 1;
+                        $.post('/Admin/Users?handler=AjaxSetUserStatus', { userId, status: newStatus })
+                        .done(function (res) {
+                            if (res.success) {
+                                showToast("Cập nhật trạng thái thành công!", "success");
+                                loadUsers(currentPage);
+                            } else {
+                                showToast("Cập nhật trạng thái thất bại!", "error");
+                            }
+                        })
+                        .fail(function() {
+                            showToast("Có lỗi xảy ra khi cập nhật trạng thái!", "error");
+                        });
+                    }
+                );
+            });
+
+            // Tìm kiếm
+            $('#searchForm').on('submit', function (e) {
+                e.preventDefault();
+                loadUsers(1);
+            });
+
+            // Initialize modals
+            addModal = new bootstrap.Modal(document.getElementById('addUserModal'));
+
+            // Load mặc định
+            loadUsers(1);
+        });
+    </script>
+}

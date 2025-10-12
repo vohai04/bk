@@ -1,0 +1,542 @@
+﻿@page
+@model BookInfoFinder.Pages.IndexModel
+@using BookInfoFinder.Models
+@{
+   ViewData["Title"] = "Tra cứu sách";
+}
+
+<div class="container">
+    <!-- Hero Section -->
+    <div class="hero-section text-center mb-5">
+        <h1 class="hero-title text-gradient mb-3">📚 BookInfoFinder</h1>
+        <p class="hero-subtitle">Khám phá thế giới sách với công cụ tìm kiếm thông minh</p>
+    </div>
+
+    <!-- Central Search Bar -->
+    <div class="search-container">
+        <div class="search-wrapper">
+            <form id="mainSearchForm" class="search-form">
+                @Html.AntiForgeryToken()
+                <div class="search-input-wrapper">
+                    <input type="text" 
+                           class="search-input-main" 
+                           id="mainSearchInput" 
+                           placeholder="Tìm kiếm sách, tác giả, thể loại..." 
+                           autocomplete="off" />
+                    <button type="submit" class="search-btn-main">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+                <div id="searchSuggestions" class="search-suggestions"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <div class="loading-text">Đang tải danh sách sách...</div>
+    </div>
+
+    <!-- Books Grid -->
+    <div id="bookList" class="book-grid"></div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="empty-state" style="display: none;">
+        <i class="bi bi-book"></i>
+        <h3>Không tìm thấy sách</h3>
+        <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc để tìm kiếm sách khác</p>
+        <button class="btn btn-primary" onclick="location.reload()">
+            <i class="bi bi-arrow-clockwise me-2"></i>
+            Tải lại trang
+        </button>
+    </div>
+
+    <!-- Pagination -->
+    <nav id="paginationNav" class="pagination-container" style="display: none;">
+        <ul class="pagination" id="paginationButtons"></ul>
+    </nav>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            let state = { page: 1, pageSize: 8, title: '', author: '', category: '', year: '', tag: '', sort: '' };
+            let suggestionTimeout = null;
+            let currentSuggestions = [];
+            let activeSuggestionIndex = -1;
+
+            function showLoading() {
+                $('#loadingState').show();
+                $('#bookList').hide();
+                $('#emptyState').hide();
+                $('#paginationNav').hide();
+            }
+
+            function hideLoading() {
+                $('#loadingState').hide();
+            }
+
+            // Search suggestions functionality
+            function initSearchSuggestions() {
+                const $input = $('#mainSearchInput');
+                const $suggestions = $('#searchSuggestions');
+                
+                $input.on('input', function() {
+                    const keyword = $(this).val().trim();
+                    
+                    if (suggestionTimeout) {
+                        clearTimeout(suggestionTimeout);
+                    }
+                    
+                    if (keyword.length >= 2) {
+                        suggestionTimeout = setTimeout(() => {
+                            fetchSuggestions(keyword);
+                        }, 300);
+                    } else {
+                        hideSuggestions();
+                    }
+                });
+                
+                $input.on('keydown', function(e) {
+                    if ($suggestions.is(':visible')) {
+                        switch(e.key) {
+                            case 'ArrowDown':
+                                e.preventDefault();
+                                navigateSuggestions(1);
+                                break;
+                            case 'ArrowUp':
+                                e.preventDefault();
+                                navigateSuggestions(-1);
+                                break;
+                            case 'Enter':
+                                e.preventDefault();
+                                if (activeSuggestionIndex >= 0) {
+                                    selectSuggestion(activeSuggestionIndex);
+                                } else {
+                                    $('#mainSearchForm').submit();
+                                }
+                                break;
+                            case 'Escape':
+                                hideSuggestions();
+                                break;
+                        }
+                    }
+                });
+                
+                $input.on('blur', function() {
+                    setTimeout(() => {
+                        hideSuggestions();
+                    }, 200);
+                });
+                
+                $(document).on('click', '.suggestion-item', function() {
+                    const index = $(this).data('index');
+                    selectSuggestion(index);
+                });
+            }
+            
+            function fetchSuggestions(keyword) {
+                Promise.all([
+                    $.get('/Index?handler=TitleSuggest', { keyword: keyword }),
+                    $.get('/Index?handler=AuthorSuggest', { keyword: keyword }),
+                    $.get('/Index?handler=CategorySuggest', { keyword: keyword })
+                ]).then(([titles, authors, categories]) => {
+                    const suggestions = [];
+                    
+                    // Add title suggestions
+                    if (titles && titles.length > 0) {
+                        titles.slice(0, 4).forEach(title => {
+                            suggestions.push({
+                                text: title,
+                                type: 'title',
+                                icon: 'bi-book',
+                                label: 'Sách',
+                                searchType: 'Tên sách'
+                            });
+                        });
+                    }
+                    
+                    // Add author suggestions
+                    if (authors && authors.length > 0) {
+                        authors.slice(0, 3).forEach(author => {
+                            suggestions.push({
+                                text: author,
+                                type: 'author',
+                                icon: 'bi-person-fill',
+                                label: 'Tác giả',
+                                searchType: 'Tác giả'
+                            });
+                        });
+                    }
+                    
+                    // Add category suggestions
+                    if (categories && categories.length > 0) {
+                        categories.slice(0, 3).forEach(category => {
+                            suggestions.push({
+                                text: category,
+                                type: 'category',
+                                icon: 'bi-tag-fill',
+                                label: 'Thể loại',
+                                searchType: 'Thể loại'
+                            });
+                        });
+                    }
+                    
+                    currentSuggestions = suggestions;
+                    displaySuggestions(suggestions);
+                }).catch(() => {
+                    hideSuggestions();
+                });
+            }
+            
+            function displaySuggestions(suggestions) {
+                const $suggestions = $('#searchSuggestions');
+                
+                if (suggestions.length === 0) {
+                    hideSuggestions();
+                    return;
+                }
+                
+                let html = '';
+                suggestions.forEach((suggestion, index) => {
+                    html += `
+                        <div class="suggestion-item" data-index="${index}">
+                            <div class="suggestion-icon">
+                                <i class="${suggestion.icon}"></i>
+                            </div>
+                            <div class="suggestion-content">
+                                <div class="suggestion-text">${suggestion.text}</div>
+                                <div class="suggestion-type">${suggestion.searchType}</div>
+                            </div>
+                            <div class="suggestion-meta">${suggestion.label}</div>
+                        </div>
+                    `;
+                });
+                
+                $suggestions.html(html).show();
+                activeSuggestionIndex = -1;
+            }
+            
+            function hideSuggestions() {
+                $('#searchSuggestions').hide();
+                activeSuggestionIndex = -1;
+            }
+            
+            function navigateSuggestions(direction) {
+                const $items = $('.suggestion-item');
+                
+                if ($items.length === 0) return;
+                
+                $items.removeClass('active');
+                
+                activeSuggestionIndex += direction;
+                
+                if (activeSuggestionIndex < 0) {
+                    activeSuggestionIndex = $items.length - 1;
+                } else if (activeSuggestionIndex >= $items.length) {
+                    activeSuggestionIndex = 0;
+                }
+                
+                $items.eq(activeSuggestionIndex).addClass('active');
+            }
+            
+            function selectSuggestion(index) {
+                if (index >= 0 && index < currentSuggestions.length) {
+                    const suggestion = currentSuggestions[index];
+                    
+                    // Clear current state
+                    state = { page: 1, pageSize: 8, title: '', author: '', category: '', year: '', tag: '', sort: '' };
+                    
+                    // Set appropriate filter based on suggestion type
+                    switch(suggestion.type) {
+                        case 'title':
+                            state.title = suggestion.text;
+                            break;
+                        case 'author':
+                            state.author = suggestion.text;
+                            break;
+                        case 'category':
+                            state.category = suggestion.text;
+                            break;
+                    }
+                    
+                    $('#mainSearchInput').val(suggestion.text);
+                    hideSuggestions();
+                    
+                    // Load books first to get result count
+                    loadBooksAndSaveHistory(suggestion);
+                    
+                    showToast(`Tìm kiếm ${suggestion.searchType.toLowerCase()}: "${suggestion.text}"`, 'info');
+                }
+            }
+
+            function loadBooksAndSaveHistory(suggestion) {
+                showLoading();
+                const params = Object.assign({}, state);
+                
+                $.getJSON('/Index?handler=Search', params)
+                    .done(function (res) {
+                        hideLoading();
+                        renderBooks(res.items || []);
+                        const totalPages = res.totalPages || 1;
+                        
+                        // Save search history with result count
+                        saveSearchHistory(suggestion.text, suggestion.type, res.total || 0);
+                        
+                        // Update pagination - using existing pagination logic
+                        if (totalPages > 1) {
+                            $('#paginationNav').show();
+                            renderPagination('#paginationButtons', totalPages, state.page, function (p) { 
+                                state.page = p; 
+                                loadBooks(); 
+                            });
+                        } else {
+                            $('#paginationNav').hide();
+                        }
+                    })
+                    .fail(function () {
+                        hideLoading();
+                        showToast('Lỗi khi tải sách', 'error');
+                    });
+            }
+
+            function saveSearchHistory(query, type, resultCount) {
+                // Only save if user is logged in
+                const userName = '@(ViewData["UserName"] ?? "")';
+                if (!userName) return;
+
+                const formData = new FormData();
+                formData.append('query', query);
+                formData.append('type', type);
+                formData.append('resultCount', resultCount.toString());
+
+                fetch('/Index?handler=SaveSearchHistory', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    }
+                }).catch(err => {
+                    console.log('Failed to save search history:', err);
+                });
+            }
+
+            function loadBooks() {
+                showLoading();
+                const params = Object.assign({}, state);
+                
+                $.getJSON('/Index?handler=Search', params)
+                    .done(function (res) {
+                        hideLoading();
+                        renderBooks(res.items || []);
+                        const totalPages = res.totalPages || 1;
+                        
+                        // Save search history if this is a new search (page 1) and has criteria
+                        if (state.page === 1) {
+                            const hasSearch = state.title || state.author || state.category || state.year;
+                            if (hasSearch) {
+                                const query = state.title || state.author || state.category || state.year;
+                                const type = state.title ? 'title' : state.author ? 'author' : state.category ? 'category' : 'year';
+                                saveSearchHistory(query, type, res.total || 0);
+                            }
+                        }
+                        
+                        if (totalPages > 1) {
+                            $('#paginationNav').show();
+                            renderPagination('#paginationButtons', totalPages, state.page, function (p) { 
+                                state.page = p; 
+                                loadBooks(); 
+                            });
+                        } else {
+                            $('#paginationNav').hide();
+                        }
+                        
+                        initTooltips();
+                    })
+                    .fail(function (xhr, status, error) { 
+                        hideLoading();
+                        showToast('Không tải được danh sách sách', 'error'); 
+                    });
+            }
+
+            function renderBooks(items) {
+                const $list = $('#bookList');
+                $list.empty();
+                
+                if (!items || !items.length) {
+                    $('#emptyState').show();
+                    $('#bookList').hide();
+                    return;
+                }
+                
+                $('#emptyState').hide();
+                $('#bookList').show();
+                
+                items.forEach(function (b) {
+                    const title = b.title || 'Không rõ tên sách';
+                    const author = b.author || 'Không rõ tác giả';
+                    const cover = b.coverUrl || '/favicon.ico';
+                    const rating = parseFloat(b.rating || 0).toFixed(1);
+                    const favs = parseInt(b.favorites || 0);
+                    const desc = (b.description || 'Không có mô tả').toString().replace(/"/g, '&quot;');
+                    const bookId = b.id || b.bookId || '';
+                    
+                    const html = `
+                        <div class="book-card fade-in-up">
+                            <img src="${cover}" class="book-image" alt="${title}" onerror="this.src='/favicon.ico'" loading="lazy">
+                            <div class="book-content">
+                                <h3 class="book-title" data-bs-toggle="tooltip" title="${desc}">${title}</h3>
+                                <p class="book-author">${author}</p>
+                                <div class="book-stats">
+                                    <div class="book-rating">
+                                        <i class="bi bi-star-fill"></i>
+                                        <span>${rating}</span>
+                                    </div>
+                                    <div class="book-favorites">
+                                        <i class="bi bi-heart-fill"></i>
+                                        <span>${favs}</span>
+                                    </div>
+                                </div>
+                                <a class="book-btn" href="/BookDetail/${bookId}">
+                                    <i class="bi bi-eye me-2"></i>
+                                    Xem chi tiết
+                                </a>
+                            </div>
+                        </div>`;
+                    $list.append(html);
+                });
+                
+                setTimeout(initTooltips, 100);
+            }
+
+            // Main search form
+            $('#mainSearchForm').on('submit', function (e) {
+                e.preventDefault();
+                const searchValue = $('#mainSearchInput').val().trim();
+                
+                if (searchValue) {
+                    // Smart search - search in all fields
+                    state.title = searchValue;
+                    state.author = searchValue;
+                    state.category = searchValue;
+                    state.page = 1;
+                }
+                
+                hideSuggestions();
+                loadBooks();
+            });
+
+            // Initialize
+            $(document).ready(function() {
+                initTooltips();
+                initSearchSuggestions();
+                
+                // Check for URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const filter = urlParams.get('filter');
+                const tag = urlParams.get('tag');
+                
+                // Check for search parameters from SearchHistory 
+                const title = urlParams.get('title');
+                const author = urlParams.get('author');
+                const category = urlParams.get('category');
+                const year = urlParams.get('year');
+                
+                if (title || author || category || year) {
+                    // Set state from search history params
+                    state.title = title || '';
+                    state.author = author || '';
+                    state.category = category || '';
+                    state.year = year || '';
+                    state.page = 1;
+                    
+                    // Update search input
+                    let searchText = title || author || category || year;
+                    $('#mainSearchInput').val(searchText);
+                    
+                    loadBooks();
+                    
+                    const searchType = title ? 'tên sách' : author ? 'tác giả' : category ? 'thể loại' : 'năm xuất bản';
+                    showToast(`Tìm kiếm ${searchType}: "${searchText}"`, 'info');
+                }
+                else if (filter) {
+                    // Apply URL filter
+                    switch(filter) {
+                        case 'top-rated':
+                            state.sort = 'rating';
+                            break;
+                        case 'trending':
+                            state.sort = 'favorites';
+                            break;
+                        case 'most-searched':
+                            state.sort = 'searched';
+                            break;
+                    }
+                    state.page = 1;
+                    loadBooks();
+                    showToast(`Đã áp dụng bộ lọc: ${getFilterDisplayName(filter)}`, 'success');
+                } else if (tag) {
+                    // Apply tag filter
+                    state.tag = tag;
+                    state.page = 1;
+                    loadBooks();
+                    showToast(`Đang lọc theo thẻ: ${tag}`, 'success');
+                } else {
+                    loadBooks();
+                }
+            });
+            
+            function getFilterDisplayName(filter) {
+                switch(filter) {
+                    case 'top-rated': return 'Đánh giá cao nhất';
+                    case 'trending': return 'Yêu thích nhất';
+                    case 'most-searched': return 'Xu hướng tìm kiếm';
+                    default: return filter;
+                }
+            }
+
+            // Check URL parameters and auto-search on page load
+            function checkUrlParamsAndSearch() {
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                // Check for search parameters
+                const title = urlParams.get('title');
+                const author = urlParams.get('author');
+                const category = urlParams.get('category');
+                const year = urlParams.get('year');
+                
+                if (title || author || category || year) {
+                    // Set state from URL params
+                    state.title = title || '';
+                    state.author = author || '';
+                    state.category = category || '';
+                    state.year = year || '';
+                    state.page = 1; // Reset to first page
+                    
+                    // Update search input to show the query
+                    let searchText = '';
+                    if (title) searchText = title;
+                    else if (author) searchText = author;
+                    else if (category) searchText = category;
+                    else if (year) searchText = year;
+                    
+                    $('#mainSearchInput').val(searchText);
+                    
+                    // Perform search
+                    loadBooks();
+                    
+                    // Show toast about the auto-search
+                    const searchType = title ? 'tên sách' : author ? 'tác giả' : category ? 'thể loại' : 'năm xuất bản';
+                    showToast(`Đang tìm kiếm ${searchType}: "${searchText}"`, 'info');
+                }
+            }
+
+            // Initialize on page load
+            $(document).ready(function() {
+                initSearchSuggestions();
+                checkUrlParamsAndSearch(); // Auto-search based on URL params
+            });
+        })();
+    </script>
+}

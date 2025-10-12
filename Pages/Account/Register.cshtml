@@ -1,0 +1,77 @@
+@page
+@model BookInfoFinder.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header text-center">
+                    <h3>Đăng ký tài khoản</h3>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @Model.ErrorMessage
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @Model.SuccessMessage
+                        </div>
+                    }
+
+                    <form method="post">
+                        <div class="form-group mb-3">
+                            <label asp-for="RegisterRequest.FullName" class="form-label">Họ và tên:</label>
+                            <input asp-for="RegisterRequest.FullName" class="form-control" placeholder="Nhập họ và tên" />
+                            <span asp-validation-for="RegisterRequest.FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="RegisterRequest.Username" class="form-label">Tên đăng nhập:</label>
+                            <input asp-for="RegisterRequest.Username" class="form-control" placeholder="Nhập tên đăng nhập" />
+                            <span asp-validation-for="RegisterRequest.Username" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="RegisterRequest.Email" class="form-label">Email:</label>
+                            <input asp-for="RegisterRequest.Email" type="email" class="form-control" placeholder="Nhập địa chỉ email" />
+                            <span asp-validation-for="RegisterRequest.Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="RegisterRequest.Password" class="form-label">Mật khẩu:</label>
+                            <input asp-for="RegisterRequest.Password" type="password" class="form-control" placeholder="Nhập mật khẩu" />
+                            <span asp-validation-for="RegisterRequest.Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="RegisterRequest.ConfirmPassword" class="form-label">Xác nhận mật khẩu:</label>
+                            <input asp-for="RegisterRequest.ConfirmPassword" type="password" class="form-control" placeholder="Nhập lại mật khẩu" />
+                            <span asp-validation-for="RegisterRequest.ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Đăng ký</button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <span>Đã có tài khoản? </span>
+                        <a asp-page="/Account/Login" class="text-decoration-none">Đăng nhập ngay</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

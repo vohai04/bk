@@ -1,0 +1,392 @@
+﻿@using Microsoft.AspNetCore.Http
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BookInfoFinder</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/BookInfoFinder.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="modern-body">
+    @{
+        var isAdminPage = ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Admin") == true;
+        var username = Context.Session.GetString("UserName") ?? Context.Request.Cookies["UserName"];
+        var userRole = Context.Session.GetString("Role") ?? Context.Request.Cookies["Role"];
+        var isAdmin = userRole == "Admin";
+    }
+
+    <!-- Modern Header -->
+    <header class="modern-header">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <a class="navbar-brand modern-brand" asp-area="" asp-page="@(isAdminPage ? "/Admin/Dashboard" : "/Index")">
+                    <div class="brand-icon">
+                        <i class="bi bi-book"></i>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">BookInfoFinder</span>
+                        @if (isAdminPage)
+                        {
+                            <span class="brand-subtitle">Admin Panel</span>
+                        }
+                    </div>
+                </a>
+
+                @if (!isAdminPage)
+                {
+                    <div class="navbar-nav nav-center">
+                        <a class="nav-link" asp-area="" asp-page="/Index">
+                            <i class="bi bi-house"></i>
+                            <span>Trang chủ</span>
+                        </a>
+                        <a class="nav-link" asp-area="" asp-page="/Favorites">
+                            <i class="bi bi-heart"></i>
+                            <span>Yêu thích</span>
+                        </a>
+                        <a class="nav-link" asp-area="" asp-page="/SearchHistory">
+                            <i class="bi bi-clock-history"></i>
+                            <span>Lịch sử</span>
+                        </a>
+                        
+                        <!-- Filter Dropdown -->
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle filter-dropdown" href="#" id="filterDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-funnel"></i>
+                                <span>Bộ lọc</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end filter-menu" aria-labelledby="filterDropdown">
+                                <li><h6 class="dropdown-header"><i class="bi bi-star-fill text-warning"></i> Sách nổi bật</h6></li>
+                                <li><a class="dropdown-item filter-item" href="/?filter=top-rated" data-filter="top-rated">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <span>Đánh giá cao nhất</span>
+                                </a></li>
+                                <li><a class="dropdown-item filter-item" href="/?filter=trending" data-filter="trending">
+                                    <i class="bi bi-heart-fill text-danger"></i>
+                                    <span>Yêu thích nhất</span>
+                                </a></li>
+                                <li><a class="dropdown-item filter-item" href="/?filter=most-searched" data-filter="most-searched">
+                                    <i class="bi bi-fire text-info"></i>
+                                    <span>Xu hướng tìm kiếm</span>
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header"><i class="bi bi-tags-fill text-primary"></i> Lọc theo thẻ</h6></li>
+                                <li>
+                                    <div class="dropdown-item-text">
+                                        <div class="tags-filter-container">
+                                            <div class="selected-tags" id="selectedTags"></div>
+                                            <div class="tag-search-container">
+                                                <input type="text" class="form-control form-control-sm tag-search-input" 
+                                                       placeholder="Tìm thẻ..." id="tagSearchInput">
+                                            </div>
+                                            <div class="available-tags" id="availableTags">
+                                                <!-- Tags will be loaded here -->
+                                            </div>
+                                            <div class="filter-actions mt-2">
+                                                <button class="btn btn-primary btn-sm" id="applyTagFilter">
+                                                    <i class="bi bi-check"></i> Áp dụng
+                                                </button>
+                                                <button class="btn btn-outline-secondary btn-sm" id="clearTagFilter">
+                                                    <i class="bi bi-x"></i> Xóa
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <a class="nav-link" asp-area="" asp-page="/Privacy">
+                            <i class="bi bi-shield-check"></i>
+                            <span>Chính sách</span>
+                        </a>
+                        @if (isAdmin)
+                        {
+                            <a class="nav-link admin-link" asp-area="" asp-page="/Admin/Dashboard">
+                                <i class="bi bi-gear"></i>
+                                <span>Admin</span>
+                            </a>
+                        }
+                    </div>
+                }
+
+                <div class="navbar-nav nav-end">
+                    @if (!string.IsNullOrEmpty(username))
+                    {
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <div class="user-details">
+                                <span class="user-name">@username</span>
+                                <span class="user-role">@(isAdminPage ? "Admin" : "User")</span>
+                            </div>
+                        </div>
+                        <form method="post" asp-page="/Account/Logout" class="logout-form">
+                            <button type="submit" class="btn-logout">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a href="/Account/Login" class="btn-login">Đăng nhập</a>
+                        <a href="/Account/Register" class="btn-register">Đăng ký</a>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    @if (isAdminPage)
+    {
+        <!-- Admin Layout -->
+        <div class="admin-layout">
+            <aside class="admin-sidebar">
+                <div class="sidebar-header">
+                    <h3><i class="bi bi-gear-fill"></i> Quản trị hệ thống</h3>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="/Admin/Dashboard" class="nav-item">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/Admin/Users" class="nav-item">
+                        <i class="bi bi-people"></i>
+                        <span>Quản lý người dùng</span>
+                    </a>
+                    <a href="/Admin/ManageBook" class="nav-item">
+                        <i class="bi bi-book"></i>
+                        <span>Quản lý sách</span>
+                    </a>
+                    <a href="/Admin/Categories" class="nav-item">
+                        <i class="bi bi-tags"></i>
+                        <span>Quản lý thể loại</span>
+                    </a>
+                    <a href="/Admin/ManageAuthor" class="nav-item">
+                        <i class="bi bi-person-badge"></i>
+                        <span>Quản lý Tác giả</span>
+                    </a>
+                    <a href="/Admin/ManageNXB" class="nav-item">
+                        <i class="bi bi-building"></i>
+                        <span>Quản lý NXB</span>
+                    </a>
+                    <a href="/Admin/Tags" class="nav-item">
+                        <i class="bi bi-tag"></i>
+                        <span>Quản lý Tag</span>
+                    </a>
+                    <a href="/Admin/Report" class="nav-item">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Báo cáo thống kê</span>
+                    </a>
+                </nav>
+            </aside>
+            <main class="admin-main">
+                @RenderBody()
+            </main>
+        </div>
+    }
+    else
+    {
+        <!-- Main Content Layout -->
+        <main class="main-content">
+            @RenderBody()
+        </main>
+    }
+
+    <!-- Modern Footer -->
+    <footer class="modern-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <i class="bi bi-book-half"></i>
+                    <span>BookInfoFinder</span>
+                </div>
+                <div class="footer-links">
+                    <a asp-area="" asp-page="/Privacy">
+                        <i class="bi bi-shield-check"></i>
+                        Chính sách bảo mật
+                    </a>
+                    <a href="#" onclick="showComingSoon()">
+                        <i class="bi bi-file-text"></i>
+                        Điều khoản sử dụng
+                    </a>
+                    <a href="#" onclick="showComingSoon()">
+                        <i class="bi bi-envelope"></i>
+                        Liên hệ
+                    </a>
+                    <a href="#" onclick="showComingSoon()">
+                        <i class="bi bi-question-circle"></i>
+                        Hỗ trợ
+                    </a>
+                </div>
+                <div class="footer-copyright">
+                    &copy; 2025 BookInfoFinder. Made with ❤️
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055">
+        <div id="sharedToast" class="toast modern-toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                <strong class="me-auto">Thông báo</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                <span id="toastMessage">Thông báo mặc định</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+        // Coming Soon Function
+        function showComingSoon() {
+            if (typeof showToast === 'function') {
+                showToast('Tính năng này sẽ sớm được cập nhật! 🚀', 'info');
+            } else {
+                alert('Tính năng này sẽ sớm được cập nhật! 🚀');
+            }
+        }
+        
+        // Header Filter Functionality
+        let selectedTags = [];
+        let availableTagsData = [];
+        
+        function initHeaderFilters() {
+            loadAvailableTags();
+            
+            // Tag search functionality
+            $('#tagSearchInput').on('input', function() {
+                const searchTerm = $(this).val().toLowerCase();
+                filterAvailableTags(searchTerm);
+            });
+            
+            // Apply tag filter
+            $('#applyTagFilter').on('click', function() {
+                if (selectedTags.length > 0) {
+                    const tagParams = selectedTags.join(',');
+                    window.location.href = `/Index?tag=${encodeURIComponent(tagParams)}`;
+                } else {
+                    showToast('Vui lòng chọn ít nhất một thẻ', 'warning');
+                }
+            });
+            
+            // Clear tag filter
+            $('#clearTagFilter').on('click', function() {
+                selectedTags = [];
+                updateSelectedTagsDisplay();
+                filterAvailableTags('');
+            });
+            
+            // Handle direct filter links
+            $('.filter-item').on('click', function(e) {
+                e.preventDefault();
+                const filter = $(this).data('filter');
+                if (filter) {
+                    // Navigate to Index page with filter
+                    window.location.href = `/Index?filter=${filter}`;
+                }
+            });
+        }
+        
+        function loadAvailableTags() {
+            $.get('/Index?handler=TagCounts')
+                .done(function(tags) {
+                    availableTagsData = tags || [];
+                    displayAvailableTags(availableTagsData);
+                })
+                .catch(function() {
+                    console.log('Could not load tags');
+                });
+        }
+        
+        function displayAvailableTags(tags) {
+            const $container = $('#availableTags');
+            $container.empty();
+            
+            // Create a styled checkbox list like in AddBook
+            tags.forEach(function(tag, index) {
+                const isSelected = selectedTags.includes(tag.name);
+                const $checkboxWrapper = $(`
+                    <div class="mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   id="filter_tag_${index}" 
+                                   data-tag="${tag.name}"
+                                   ${isSelected ? 'checked' : ''} />
+                            <label class="form-check-label" for="filter_tag_${index}">
+                                ${tag.name} <span class="text-muted">(${tag.count || 0})</span>
+                            </label>
+                        </div>
+                    </div>
+                `);
+                
+                $checkboxWrapper.find('input').on('change', function() {
+                    toggleTag(tag.name);
+                });
+                
+                $container.append($checkboxWrapper);
+            });
+        }
+        
+        function filterAvailableTags(searchTerm) {
+            const filtered = availableTagsData.filter(tag => 
+                tag.name.toLowerCase().includes(searchTerm)
+            );
+            displayAvailableTags(filtered);
+        }
+        
+        function toggleTag(tagName) {
+            const index = selectedTags.indexOf(tagName);
+            if (index > -1) {
+                selectedTags.splice(index, 1);
+            } else {
+                selectedTags.push(tagName);
+            }
+            updateSelectedTagsDisplay();
+            displayAvailableTags(availableTagsData.filter(tag => 
+                tag.name.toLowerCase().includes($('#tagSearchInput').val().toLowerCase())
+            ));
+        }
+        
+        function updateSelectedTagsDisplay() {
+            const $container = $('#selectedTags');
+            $container.empty();
+            
+            selectedTags.forEach(function(tagName) {
+                const $tag = $(`
+                    <span class="selected-tag">
+                        ${tagName}
+                        <span class="remove-tag" data-tag="${tagName}">×</span>
+                    </span>
+                `);
+                
+                $tag.find('.remove-tag').on('click', function() {
+                    toggleTag(tagName);
+                });
+                
+                $container.append($tag);
+            });
+        }
+        
+        // Initialize tooltips
+        $(document).ready(function() {
+            $('[data-bs-toggle="tooltip"]').tooltip();
+            initHeaderFilters();
+        });
+    </script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,511 @@
+{
+  "Version": "18.0.0.0",
+  "Culture": "vi-VN",
+  "Name": "SystemStatisticsReport",
+  "Body": {
+    "ReportItems": [
+      {
+        "Type": "PageHeader",
+        "Name": "PageHeader1",
+        "Height": "1in",
+        "Items": [
+          {
+            "Type": "TextBox",
+            "Name": "ReportTitle",
+            "Value": "BÁO CÁO THỐNG KÊ HỆ THỐNG",
+            "Style": {
+              "FontFamily": "Arial",
+              "FontSize": "18pt",
+              "FontWeight": "Bold",
+              "TextAlign": "Center",
+              "Color": "#2563eb"
+            },
+            "Top": "0.1in",
+            "Left": "0in",
+            "Width": "7.5in",
+            "Height": "0.4in"
+          },
+          {
+            "Type": "TextBox",
+            "Name": "ReportSubtitle",
+            "Value": "BookInfoFinder Management System",
+            "Style": {
+              "FontFamily": "Arial",
+              "FontSize": "12pt",
+              "TextAlign": "Center",
+              "Color": "#6b7280"
+            },
+            "Top": "0.5in",
+            "Left": "0in",
+            "Width": "7.5in",
+            "Height": "0.3in"
+          }
+        ]
+      },
+      {
+        "Type": "Body",
+        "Name": "Body1",
+        "Height": "8in",
+        "Items": [
+          {
+            "Type": "Rectangle",
+            "Name": "StatsContainer",
+            "Style": {
+              "Border": "1pt Solid #e5e7eb",
+              "BackgroundColor": "#f9fafb"
+            },
+            "Top": "0.2in",
+            "Left": "0in",
+            "Width": "7.5in",
+            "Height": "1.5in",
+            "Items": [
+              {
+                "Type": "TextBox",
+                "Name": "StatsTitle",
+                "Value": "TỔNG QUAN THỐNG KÊ",
+                "Style": {
+                  "FontFamily": "Arial",
+                  "FontSize": "14pt",
+                  "FontWeight": "Bold",
+                  "Color": "#111827"
+                },
+                "Top": "0.1in",
+                "Left": "0.2in",
+                "Width": "7.1in",
+                "Height": "0.3in"
+              },
+              {
+                "Type": "Rectangle",
+                "Name": "StatsGrid",
+                "Top": "0.5in",
+                "Left": "0.2in",
+                "Width": "7.1in",
+                "Height": "0.8in",
+                "Items": [
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalBooksLabel",
+                    "Value": "Tổng số sách:",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "FontWeight": "Bold"
+                    },
+                    "Top": "0in",
+                    "Left": "0in",
+                    "Width": "1.2in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalBooksValue",
+                    "Value": "=Fields!TotalBooks.Value",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "Color": "#059669"
+                    },
+                    "Top": "0in",
+                    "Left": "1.2in",
+                    "Width": "0.8in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalAuthorsLabel",
+                    "Value": "Tác giả:",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "FontWeight": "Bold"
+                    },
+                    "Top": "0in",
+                    "Left": "2.4in",
+                    "Width": "1in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalAuthorsValue",
+                    "Value": "=Fields!TotalAuthors.Value",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "Color": "#3b82f6"
+                    },
+                    "Top": "0in",
+                    "Left": "3.4in",
+                    "Width": "0.8in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalCategoriesLabel",
+                    "Value": "Thể loại:",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "FontWeight": "Bold"
+                    },
+                    "Top": "0in",
+                    "Left": "4.6in",
+                    "Width": "1in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalCategoriesValue",
+                    "Value": "=Fields!TotalCategories.Value",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "Color": "#f59e0b"
+                    },
+                    "Top": "0in",
+                    "Left": "5.6in",
+                    "Width": "0.8in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalPublishersLabel",
+                    "Value": "Nhà xuất bản:",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "FontWeight": "Bold"
+                    },
+                    "Top": "0.3in",
+                    "Left": "0in",
+                    "Width": "1.2in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalPublishersValue",
+                    "Value": "=Fields!TotalPublishers.Value",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "Color": "#8b5cf6"
+                    },
+                    "Top": "0.3in",
+                    "Left": "1.2in",
+                    "Width": "0.8in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalUsersLabel",
+                    "Value": "Người dùng:",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "FontWeight": "Bold"
+                    },
+                    "Top": "0.3in",
+                    "Left": "2.4in",
+                    "Width": "1in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalUsersValue",
+                    "Value": "=Fields!TotalUsers.Value",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "Color": "#ef4444"
+                    },
+                    "Top": "0.3in",
+                    "Left": "3.4in",
+                    "Width": "0.8in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalTagsLabel",
+                    "Value": "Tags:",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "FontWeight": "Bold"
+                    },
+                    "Top": "0.3in",
+                    "Left": "4.6in",
+                    "Width": "1in",
+                    "Height": "0.25in"
+                  },
+                  {
+                    "Type": "TextBox",
+                    "Name": "TotalTagsValue",
+                    "Value": "=Fields!TotalTags.Value",
+                    "Style": {
+                      "FontFamily": "Arial",
+                      "FontSize": "10pt",
+                      "Color": "#06b6d4"
+                    },
+                    "Top": "0.3in",
+                    "Left": "5.6in",
+                    "Width": "0.8in",
+                    "Height": "0.25in"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "Type": "Chart",
+            "Name": "YearlyBooksChart",
+            "ChartType": "Column",
+            "Style": {
+              "Border": "1pt Solid #e5e7eb"
+            },
+            "Top": "2in",
+            "Left": "0in",
+            "Width": "3.7in",
+            "Height": "2.5in",
+            "Title": {
+              "Caption": "Sách theo năm xuất bản",
+              "Style": {
+                "FontFamily": "Arial",
+                "FontSize": "12pt",
+                "FontWeight": "Bold"
+              }
+            },
+            "CategoryAxis": {
+              "Title": "Năm"
+            },
+            "ValueAxis": {
+              "Title": "Số lượng sách"
+            },
+            "DataSource": "YearlyBooksData"
+          },
+          {
+            "Type": "Chart",
+            "Name": "TopAuthorsChart",
+            "ChartType": "Bar",
+            "Style": {
+              "Border": "1pt Solid #e5e7eb"
+            },
+            "Top": "2in",
+            "Left": "3.8in",
+            "Width": "3.7in",
+            "Height": "2.5in",
+            "Title": {
+              "Caption": "Top tác giả có nhiều sách nhất",
+              "Style": {
+                "FontFamily": "Arial",
+                "FontSize": "12pt",
+                "FontWeight": "Bold"
+              }
+            },
+            "CategoryAxis": {
+              "Title": "Tác giả"
+            },
+            "ValueAxis": {
+              "Title": "Số sách"
+            },
+            "DataSource": "TopAuthorsData"
+          },
+          {
+            "Type": "Chart",
+            "Name": "PublisherChart",
+            "ChartType": "Doughnut",
+            "Style": {
+              "Border": "1pt Solid #e5e7eb"
+            },
+            "Top": "4.7in",
+            "Left": "0in",
+            "Width": "3.7in",
+            "Height": "2.5in",
+            "Title": {
+              "Caption": "Phân bố sách theo nhà xuất bản",
+              "Style": {
+                "FontFamily": "Arial",
+                "FontSize": "12pt",
+                "FontWeight": "Bold"
+              }
+            },
+            "DataSource": "PublisherData"
+          },
+          {
+            "Type": "Chart",
+            "Name": "CategoryChart",
+            "ChartType": "Pie",
+            "Style": {
+              "Border": "1pt Solid #e5e7eb"
+            },
+            "Top": "4.7in",
+            "Left": "3.8in",
+            "Width": "3.7in",
+            "Height": "2.5in",
+            "Title": {
+              "Caption": "Phân bố sách theo thể loại",
+              "Style": {
+                "FontFamily": "Arial",
+                "FontSize": "12pt",
+                "FontWeight": "Bold"
+              }
+            },
+            "DataSource": "CategoryData"
+          }
+        ]
+      },
+      {
+        "Type": "PageFooter",
+        "Name": "PageFooter1",
+        "Height": "0.5in",
+        "Items": [
+          {
+            "Type": "TextBox",
+            "Name": "GeneratedDate",
+            "Value": "=Now()",
+            "Format": "Tạo ngày: dd/MM/yyyy HH:mm:ss",
+            "Style": {
+              "FontFamily": "Arial",
+              "FontSize": "9pt",
+              "Color": "#6b7280",
+              "TextAlign": "Left"
+            },
+            "Top": "0.1in",
+            "Left": "0in",
+            "Width": "3in",
+            "Height": "0.3in"
+          },
+          {
+            "Type": "TextBox",
+            "Name": "PageNumber",
+            "Value": "=Globals!PageNumber & \" / \" & Globals!TotalPages",
+            "Style": {
+              "FontFamily": "Arial",
+              "FontSize": "9pt",
+              "Color": "#6b7280",
+              "TextAlign": "Right"
+            },
+            "Top": "0.1in",
+            "Left": "4.5in",
+            "Width": "3in",
+            "Height": "0.3in"
+          }
+        ]
+      }
+    ]
+  },
+  "DataSources": [
+    {
+      "Name": "SystemStatistics",
+      "ConnectionProperties": {
+        "DataProvider": "JSON",
+        "ConnectString": "jsondoc=StatisticsData"
+      }
+    }
+  ],
+  "DataSets": [
+    {
+      "Name": "StatisticsData",
+      "DataSourceName": "SystemStatistics",
+      "CommandText": "$",
+      "Fields": [
+        {
+          "Name": "TotalBooks",
+          "DataField": "totalBooks"
+        },
+        {
+          "Name": "TotalAuthors",
+          "DataField": "totalAuthors"
+        },
+        {
+          "Name": "TotalCategories",
+          "DataField": "totalCategories"
+        },
+        {
+          "Name": "TotalPublishers",
+          "DataField": "totalPublishers"
+        },
+        {
+          "Name": "TotalUsers",
+          "DataField": "totalUsers"
+        },
+        {
+          "Name": "TotalTags",
+          "DataField": "totalTags"
+        }
+      ]
+    },
+    {
+      "Name": "YearlyBooksData",
+      "DataSourceName": "SystemStatistics",
+      "CommandText": "$.chartData.yearlyBooks[*]",
+      "Fields": [
+        {
+          "Name": "Year",
+          "DataField": "year"
+        },
+        {
+          "Name": "Count",
+          "DataField": "count"
+        }
+      ]
+    },
+    {
+      "Name": "TopAuthorsData",
+      "DataSourceName": "SystemStatistics",
+      "CommandText": "$.chartData.topAuthors[*]",
+      "Fields": [
+        {
+          "Name": "AuthorName",
+          "DataField": "name"
+        },
+        {
+          "Name": "BookCount",
+          "DataField": "count"
+        }
+      ]
+    },
+    {
+      "Name": "PublisherData",
+      "DataSourceName": "SystemStatistics",
+      "CommandText": "$.chartData.publisherDistribution[*]",
+      "Fields": [
+        {
+          "Name": "PublisherName",
+          "DataField": "name"
+        },
+        {
+          "Name": "BookCount",
+          "DataField": "count"
+        }
+      ]
+    },
+    {
+      "Name": "CategoryData",
+      "DataSourceName": "SystemStatistics",
+      "CommandText": "$.chartData.categoryDistribution[*]",
+      "Fields": [
+        {
+          "Name": "CategoryName",
+          "DataField": "name"
+        },
+        {
+          "Name": "BookCount",
+          "DataField": "count"
+        }
+      ]
+    }
+  ],
+  "ReportParameters": [
+    {
+      "Name": "ReportTitle",
+      "DataType": "String",
+      "DefaultValue": "Báo cáo thống kê hệ thống BookInfoFinder",
+      "Prompt": "Tiêu đề báo cáo"
+    },
+    {
+      "Name": "GeneratedBy",
+      "DataType": "String",
+      "DefaultValue": "Hệ thống tự động",
+      "Prompt": "Người tạo báo cáo"
+    }
+  ]
+}

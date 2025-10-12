@@ -1,0 +1,1397 @@
+@page "{id:int}"
+@model BookInfoFinder.Pages.BookDetailModel
+@{
+    ViewData["Title"] = "Chi tiết sách";
+    var book = Model.Book;
+}
+ 
+@if (book == null)
+{
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="alert alert-warning text-center">
+                    <i class="bi bi-exclamation-triangle-fill fs-1 mb-3"></i>
+                    <h4>Không tìm thấy sách</h4>
+                    <p class="mb-0">Sách bạn đang tìm kiếm có thể đã bị xóa hoặc không tồn tại.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container-fluid px-0">
+        <!-- Hero Section with Book Info -->
+        <div class="book-hero-section">
+            <div class="container py-5">
+                <div class="row align-items-center g-5">
+                    <!-- Book Cover Column -->
+                    <div class="col-lg-4 col-md-5">
+                        <div class="book-cover-container">
+                            <div class="book-cover-wrapper">
+                                <img src="@(string.IsNullOrEmpty(book.ImageBase64) ? "/images/default-book.jpg" : book.ImageBase64)" 
+                                     alt="@book.Title"
+                                     class="book-cover-image" />
+                                <div class="book-cover-overlay">
+                                    <div class="cover-actions">
+                                        <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#imageModal">
+                                            <i class="bi bi-zoom-in"></i> Phóng to
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Rating Display -->
+                            <div class="rating-card mt-4">
+                                <div class="rating-header">
+                                    <h5 class="mb-0">Đánh giá</h5>
+                                </div>
+                                <div class="rating-body text-center">
+                                    <div class="rating-score">
+                                        <span class="rating-number js-average-rating">@book.AverageRating</span>
+                                        <div class="rating-stars">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bi bi-star-fill @(i <= Math.Round(book.AverageRating) ? "text-warning" : "text-muted")"></i>
+                                            }
+                                        </div>
+                                        <small class="text-muted js-rating-count">(@book.RatingCount lượt đánh giá)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Book Info Column -->
+                    <div class="col-lg-8 col-md-7">
+                        <div class="book-info">
+                            <!-- Title -->
+                            <h1 class="book-title">@book.Title</h1>
+                            
+                            <!-- Meta Info -->
+                            <div class="book-meta mb-4">
+                                <div class="meta-item">
+                                    <i class="bi bi-person-fill"></i>
+                                    <span class="meta-label">Tác giả:</span>
+                                    <span class="meta-value">@book.AuthorName</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="bi bi-tag-fill"></i>
+                                    <span class="meta-label">Thể loại:</span>
+                                    <span class="meta-value">@book.CategoryName</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="bi bi-calendar-fill"></i>
+                                    <span class="meta-label">Năm xuất bản:</span>
+                                    <span class="meta-value">@book.PublicationDate</span>
+                                </div>
+                                @if (book.Tags.Any())
+                                {
+                                    <div class="meta-item">
+                                        <i class="bi bi-tags-fill"></i>
+                                        <span class="meta-label">Tags:</span>
+                                        <div class="book-tags">
+                                            @foreach (var tag in book.Tags)
+                                            {
+                                                <span class="tag-badge">@tag</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                            
+                            <!-- Description -->
+                            @if (!string.IsNullOrEmpty(book.Description))
+                            {
+                                <div class="book-description mb-4">
+                                    <h5 class="section-title">
+                                        <i class="bi bi-file-text"></i>
+                                        Mô tả
+                                    </h5>
+                                    <p class="description-text">@book.Description</p>
+                                </div>
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(book.Abstract))
+                            {
+                                <div class="book-abstract mb-4">
+                                    <h5 class="section-title">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                        Tóm tắt
+                                    </h5>
+                                    <p class="abstract-text">@book.Abstract</p>
+                                </div>
+                            }
+                            
+                            <!-- Action Buttons -->
+                            <div class="book-actions">
+                                <button id="btnFavorite"
+                                        class="btn btn-primary btn-lg action-btn"
+                                        data-bookid="@book.BookId">
+                                    <i class="bi bi-heart"></i>
+                                    <span>Thêm vào yêu thích</span>
+                                </button>
+                                <a href="javascript:history.back();" 
+                                   class="btn btn-outline-secondary btn-lg action-btn">
+                                    <i class="bi bi-arrow-left"></i>
+                                    <span>Quay lại</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        <!-- FORM ĐÁNH GIÁ -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8">
+                <div class="review-form-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-chat-square-text me-2"></i>
+                            Viết đánh giá & bình luận
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="ratingCommentForm">
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Chọn số sao:</label>
+                                <div id="starSelect" class="star-rating mb-2">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <span class="star-selector" data-value="@i">
+                                            <i class="bi bi-star-fill"></i>
+                                        </span>
+                                    }
+                                </div>
+                                <input type="hidden" name="Star" id="selectedStar" value="5" />
+                            </div>
+ 
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Nội dung bình luận:</label>
+                                <textarea class="form-control" name="Comment" id="commentContent"
+                                          rows="4" maxlength="500" placeholder="Chia sẻ cảm nhận của bạn về cuốn sách này..." required></textarea>
+                                <div class="form-text">Tối đa 500 ký tự</div>
+                            </div>
+ 
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-send me-2"></i>
+                                Gửi đánh giá
+                            </button>
+                        </form>
+                        <div id="commentFormMsg" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+ 
+        <!-- DANH SÁCH BÌNH LUẬN -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="comments-section">
+                    <h4 class="section-title mb-4">
+                        <i class="bi bi-chat-dots me-2"></i>
+                        Bình luận & đánh giá
+                    </h4>
+                    <div id="commentList"></div>
+                    <div class="mt-4">
+                        <ul class="pagination justify-content-center" id="commentPagination"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@book.Title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="@(string.IsNullOrEmpty(book.ImageBase64) ? "/images/default-book.jpg" : book.ImageBase64)" 
+                         alt="@book.Title" class="img-fluid" />
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@section Scripts {
+    <script src="~/js/site.js"></script>
+    <script>
+        // Khởi tạo tooltip Bootstrap
+        $(document).ready(function () {
+            initTooltips();
+        });
+ 
+        // XỬ LÝ THÊM YÊU THÍCH
+        $(document).on("click", "#btnFavorite", function () {
+            const bookId = $(this).data("bookid");
+            const $btn = $(this);
+            
+            $.get("?handler=CheckLogin", function (loginData) {
+                if (!loginData.isLoggedIn) {
+                    showToast("Bạn cần đăng nhập để thêm vào yêu thích!", "warning");
+                    return;
+                }
+                
+                $btn.prop("disabled", true);
+                
+                $.post("?handler=AddFavorite", { bookId })
+                    .done(function (data) {
+                        if (data.success) {
+                            showToast(data.message, "success");
+                            $btn.removeClass("btn-primary")
+                                .addClass("btn-success")
+                                .html('<i class="bi bi-heart-fill"></i><span>Đã yêu thích</span>')
+                                .off("click")
+                                .on("click", function() {
+                                    window.location.href = "/Favorites";
+                                });
+                        } else {
+                            showToast(data.message, "error");
+                            if (data.message.includes("đã có")) {
+                                $btn.removeClass("btn-primary")
+                                    .addClass("btn-success")
+                                    .html('<i class="bi bi-heart-fill"></i><span>Đã yêu thích</span>')
+                                    .off("click")
+                                    .on("click", function() {
+                                        window.location.href = "/Favorites";
+                                    });
+                            } else {
+                                $btn.prop("disabled", false);
+                            }
+                        }
+                    })
+                    .fail(function() {
+                        showToast("Có lỗi khi thêm vào yêu thích.", "error");
+                        $btn.prop("disabled", false);
+                    });
+            });
+        });
+ 
+        // CHỌN SỐ SAO
+        $(document).on("click", ".star-selector", function () {
+            const val = $(this).data("value");
+            $("#selectedStar").val(val);
+            $(".star-selector").removeClass("selected").each(function () {
+                if ($(this).data("value") <= val) {
+                    $(this).addClass("selected");
+                }
+            });
+        });
+ 
+        // Mặc định 5 sao được chọn
+        $(document).ready(function () {
+            $(".star-selector[data-value='5']").addClass("selected");
+        });
+ 
+        // GỬI ĐÁNH GIÁ
+        $("#ratingCommentForm").on("submit", function (e) {
+            e.preventDefault();
+            const star = $("#selectedStar").val();
+            const comment = $("#commentContent").val().trim();
+            const bookId = @(Model.Book?.BookId ?? 0);
+ 
+            if (!star || !comment) {
+                showToast("Vui lòng chọn số sao và nhập nội dung.", "warning");
+                return;
+            }
+
+            const $submitBtn = $(this).find('button[type="submit"]');
+            $submitBtn.prop("disabled", true).html('<i class="bi bi-hourglass-split me-2"></i>Đang gửi...');
+ 
+            $.post("?handler=AddComment", { Star: star, Comment: comment, BookId: bookId })
+                .done(function (data) {
+                    if (data.success) {
+                        showToast(data.message, "success");
+                        $("#commentContent").val("");
+                        $("#selectedStar").val("5");
+                        $(".star-selector").removeClass("selected");
+                        $(".star-selector[data-value='5']").addClass("selected");
+                        
+                        // Update rating display
+                        if (data.averageRating !== undefined) {
+                            $(".js-average-rating").text(data.averageRating);
+                        }
+                        if (data.ratingCount !== undefined) {
+                            $(".js-rating-count").text("(" + data.ratingCount + " lượt đánh giá)");
+                        }
+ 
+                        // Reload comments to show new comment
+                        loadComments(1);
+                    } else {
+                        showToast(data.message, "error");
+                    }
+                })
+                .fail(function() {
+                    showToast("Có lỗi khi gửi đánh giá.", "error");
+                })
+                .always(function() {
+                    $submitBtn.prop("disabled", false).html('<i class="bi bi-send me-2"></i>Gửi đánh giá');
+                });
+        });
+ 
+        // HIỂN THỊ FORM TRẢ LỜI
+        $(document).on("click", ".reply-btn", function () {
+            const cmtid = $(this).data("cmtid");
+            
+            // Ẩn tất cả form reply khác
+            $(".reply-form-container").slideUp();
+            
+            // Toggle form reply hiện tại
+            const $currentForm = $("#reply-form-" + cmtid);
+            if ($currentForm.is(':visible')) {
+                $currentForm.slideUp();
+            } else {
+                $currentForm.slideDown();
+                // Focus vào textarea
+                $currentForm.find('textarea').focus();
+            }
+        });
+
+        // HỦY REPLY
+        $(document).on("click", ".cancel-reply-btn", function () {
+            const $form = $(this).closest(".reply-form-container");
+            $form.find("textarea").val("");
+            $form.slideUp();
+        });
+
+        // EDIT COMMENT
+        $(document).on("click", ".edit-btn", function () {
+            const cmtid = $(this).data("cmtid");
+            
+            // Hide all other edit forms
+            $(".edit-form-container").slideUp();
+            $(".comment-content").show();
+            
+            // Show edit form for this comment
+            $(`#comment-content-${cmtid}`).hide();
+            $(`#edit-form-${cmtid}`).slideDown();
+        });
+
+        $(document).on("click", ".cancel-edit-btn", function () {
+            const $form = $(this).closest(".edit-form-container");
+            const cmtid = $form.attr('id').replace('edit-form-', '');
+            
+            $form.slideUp();
+            $(`#comment-content-${cmtid}`).show();
+        });
+
+        $(document).on("submit", ".editCommentForm", function (e) {
+            e.preventDefault();
+            const cmtid = $(this).data("cmtid");
+            const comment = $(this).find("textarea[name='Comment']").val().trim();
+            
+            if (!comment) {
+                showToast("Nội dung bình luận không được để trống.", "warning");
+                return;
+            }
+
+            const $form = $(this);
+            const $submitBtn = $form.find('button[type="submit"]');
+            $submitBtn.prop("disabled", true).html('<i class="bi bi-hourglass-split me-1"></i>Đang lưu...');
+
+            $.post("?handler=EditComment", { commentId: cmtid, newComment: comment })
+                .done(function (data) {
+                    if (data.success) {
+                        showToast("Cập nhật bình luận thành công!", "success");
+                        
+                        // Update comment content
+                        $(`#comment-content-${cmtid} .comment-text`).text(comment);
+                        
+                        // Hide edit form, show content
+                        $(`#edit-form-${cmtid}`).slideUp();
+                        $(`#comment-content-${cmtid}`).show();
+                    } else {
+                        showToast(data.message, "error");
+                    }
+                })
+                .fail(function() {
+                    showToast("Có lỗi khi cập nhật bình luận.", "error");
+                })
+                .always(function() {
+                    $submitBtn.prop("disabled", false).html('<i class="bi bi-check-lg me-1"></i>Lưu');
+                });
+        });
+
+        // DELETE COMMENT
+        $(document).on("click", ".delete-btn", function () {
+            const cmtid = $(this).data("cmtid");
+            
+            if (confirm("Bạn có chắc chắn muốn xóa bình luận này không?")) {
+                $.post("?handler=DeleteComment", { commentId: cmtid })
+                    .done(function (data) {
+                        if (data.success) {
+                            showToast("Xóa bình luận thành công!", "success");
+                            
+                            // Remove comment from UI
+                            $(`.comment-item[data-cmtid="${cmtid}"]`).fadeOut(function() {
+                                $(this).remove();
+                            });
+                        } else {
+                            showToast(data.message, "error");
+                        }
+                    })
+                    .fail(function() {
+                        showToast("Có lỗi khi xóa bình luận.", "error");
+                    });
+            }
+        });
+ 
+        // GỬI TRẢ LỜI
+        $(document).on("submit", ".replyCommentForm", function (e) {
+            e.preventDefault();
+            const parentId = $(this).data("parentid");
+            const comment = $(this).find("textarea[name='Comment']").val().trim();
+            const bookId = @(Model.Book?.BookId ?? 0);
+ 
+            if (!comment) {
+                showToast("Nội dung trả lời không được để trống.", "warning");
+                return;
+            }
+
+            const $form = $(this);
+            const $submitBtn = $form.find('button[type="submit"]');
+            $submitBtn.prop("disabled", true).html('<i class="bi bi-hourglass-split me-1"></i>Đang gửi...');
+ 
+            $.post("?handler=AddReply", { ParentCommentId: parentId, Comment: comment, BookId: bookId })
+                .done(function (data) {
+                    if (data.success) {
+                        showToast("Đã gửi phản hồi thành công!", "success");
+                        $form.find("textarea").val("");
+                        $("#reply-form-" + parentId).slideUp();
+                        
+                        // Tìm comment gốc (root comment) để reload replies
+                        const rootCommentId = findRootCommentId(parentId);
+                        
+                        // Reload toàn bộ comments để cập nhật repliesCount
+                        loadComments(1).then(() => {
+                            // Sau khi reload xong, tự động mở replies của root comment
+                            const $showRepliesBtn = $(`.show-replies-btn[data-cmtid="${rootCommentId}"]`);
+                            if ($showRepliesBtn.length > 0) {
+                                setTimeout(() => {
+                                    $showRepliesBtn.click();
+                                }, 500);
+                            }
+                        });
+                    } else {
+                        showToast(data.message, "error");
+                    }
+                })
+                .fail(function() {
+                    showToast("Có lỗi khi gửi trả lời.", "error");
+                })
+                .always(function() {
+                    $submitBtn.prop("disabled", false).html('<i class="bi bi-send me-1"></i>Gửi trả lời');
+                });
+        });
+ 
+        // KIỂM TRA YÊU THÍCH KHI TẢI TRANG
+        $(document).ready(function () {
+            const bookId = $("#btnFavorite").data("bookid");
+            const $btn = $("#btnFavorite");
+            
+            if (!bookId) return;
+            
+            $.get("?handler=CheckFavorite", { bookId }, function (data) {
+                if (data.isFavorite) {
+                    $btn.removeClass("btn-primary")
+                        .addClass("btn-success")
+                        .html('<i class="bi bi-heart-fill"></i><span>Đã yêu thích</span>')
+                        .off("click")
+                        .on("click", function() {
+                            window.location.href = "/Favorites";
+                        });
+                }
+            }).fail(function() {
+                console.log("Could not check favorite status");
+            });
+        });
+ 
+        // PHÂN TRANG COMMENT
+        let currentUserId = null; // Global variable để lưu current user ID
+        
+        function loadComments(page = 1) {
+            const bookId = @(Model.Book?.BookId ?? 0);
+            return new Promise((resolve, reject) => {
+                $.get("?handler=GetBookDetail", {id : bookId, page }, function (data) {
+                    if (!data.success) {
+                        showToast(data.message, "error");
+                        reject(data.message);
+                        return;
+                    }
+                    
+                    // Save current user ID
+                    currentUserId = data.currentUserId;
+                    
+                    const $list = $("#commentList");
+                    $list.empty();
+ 
+                if (!data.comments || data.comments.length === 0) {
+                    $list.append('<div class="alert alert-info">Chưa có bình luận nào cho sách này.</div>');
+                } else {
+                    data.comments.forEach(function (cmt) {
+                        console.log("Comment data:", cmt); // DEBUG: xem data comment
+                        
+                        let html = `
+                            <div class="comment-item" data-cmtid="${cmt.bookCommentId}">
+                                <div class="comment-header">
+                                    <div class="comment-user">
+                                        <div class="user-avatar">
+                                            <i class="bi bi-person-circle"></i>
+                                        </div>
+                                        <div class="user-info">
+                                            <span class="user-name">${cmt.userName}</span>
+                                            <span class="user-role badge bg-secondary">${cmt.roleName}</span>
+                                        </div>
+                                    </div>
+                                    <div class="comment-meta">
+                                        <div class="comment-rating">
+                                            ${Array.from({length: 5}, (_, i) => 
+                                                `<i class="bi bi-star-fill ${i < cmt.star ? 'text-warning' : 'text-muted'}"></i>`
+                                            ).join('')}
+                                        </div>
+                                        <span class="comment-date">${cmt.timeAgo || cmt.createdAt}</span>
+                                    </div>
+                                </div>
+                                <div class="comment-content" id="comment-content-${cmt.bookCommentId}">
+                                    <p class="comment-text">${cmt.comment}</p>
+                                </div>
+                                
+                                <!-- Edit form (hidden by default) -->
+                                <div class="edit-form-container" id="edit-form-${cmt.bookCommentId}" style="display:none;">
+                                    <form class="editCommentForm" data-cmtid="${cmt.bookCommentId}">
+                                        <div class="mb-2">
+                                            <textarea class="form-control" name="Comment" rows="3" required>${cmt.comment}</textarea>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-check-lg me-1"></i>Lưu
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary cancel-edit-btn">
+                                                <i class="bi bi-x me-1"></i>Hủy
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div class="comment-actions">
+                                    <button class="btn btn-sm btn-outline-primary reply-btn" data-cmtid="${cmt.bookCommentId}">
+                                        <i class="bi bi-reply me-1"></i>Trả lời
+                                    </button>`;
+                        
+                        // Show edit/delete buttons only for comment owner
+                        if (data.currentUserId && data.currentUserId === cmt.userId) {
+                            html += `
+                                    <button class="btn btn-sm btn-outline-warning edit-btn" data-cmtid="${cmt.bookCommentId}">
+                                        <i class="bi bi-pencil me-1"></i>Sửa
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" data-cmtid="${cmt.bookCommentId}">
+                                        <i class="bi bi-trash me-1"></i>Xóa
+                                    </button>`;
+                        }
+                        
+                        // Always show replies button if there are replies
+                        if (cmt.repliesCount && cmt.repliesCount > 0) {
+                            html += `
+                                    <button class="btn btn-sm btn-link show-replies-btn" data-cmtid="${cmt.bookCommentId}" data-reply-count="${cmt.repliesCount}">
+                                        <i class="bi bi-chat-dots me-1"></i>Xem ${cmt.repliesCount} phản hồi
+                                    </button>`;
+                        }
+                        
+                        html += `
+                                </div>
+                                <div class="reply-form-container" id="reply-form-${cmt.bookCommentId}" style="display:none;">
+                                    <form class="replyCommentForm" data-parentid="${cmt.bookCommentId}">
+                                        <div class="mb-2">
+                                            <textarea class="form-control" name="Comment" rows="2" placeholder="Nhập nội dung trả lời..." required></textarea>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-send me-1"></i>Gửi trả lời
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary cancel-reply-btn">
+                                                <i class="bi bi-x me-1"></i>Hủy
+                                            </button>
+                                        </div>
+                                    </form>
+                                    <div class="replyFormMsg"></div>
+                                </div>`;
+                        
+                        // Always add reply container for potential replies
+                        html += `<div class="reply-list-container" id="reply-list-${cmt.bookCommentId}" style="display:none;"></div>`;
+                        html += `</div>`;
+                        
+                        $list.append(html);
+                    });
+                }
+                renderPagination("#commentPagination", data.totalPages, data.currentPage, function (page) {
+                    loadComments(page);
+                });
+                resolve(data); // Promise resolve
+            }).fail(function() {
+                reject("Failed to load comments");
+            });
+        });
+        }
+
+        // Function để tìm root comment ID cho nested replies
+        function findRootCommentId(commentId) {
+            // Tìm comment element hiện tại
+            const $commentElement = $(`.comment-item, .reply-item`).filter(function() {
+                return $(this).find(`[data-cmtid="${commentId}"]`).length > 0 ||
+                       $(this).find(`[data-parentid="${commentId}"]`).length > 0;
+            });
+            
+            // Nếu comment này nằm trong reply-list, tìm root comment
+            const $replyContainer = $commentElement.closest('.reply-list-container');
+            if ($replyContainer.length > 0) {
+                const containerId = $replyContainer.attr('id'); // reply-list-{rootId}
+                return containerId.replace('reply-list-', '');
+            }
+            
+            // Nếu không, chính nó là root comment
+            const $rootComment = $commentElement.closest('.comment-item');
+            if ($rootComment.length > 0) {
+                const dataElement = $rootComment.find('[data-cmtid]').first();
+                return dataElement.data('cmtid');
+            }
+            
+            return commentId; // fallback
+        }
+ 
+        // Tải comment trang 1 khi load trang
+        $(document).ready(function () {
+            loadComments(1);
+        });
+ 
+        // HIỂN THỊ REPLIES KHI BẤM NÚT (Facebook style - nested)
+        $(document).on("click", ".show-replies-btn", function () {
+            const cmtid = $(this).data("cmtid");
+            const $container = $("#reply-list-" + cmtid);
+            const $btn = $(this);
+            const replyCount = $btn.data("reply-count") || $btn.text().match(/\d+/)?.[0] || '';
+            
+            if ($container.is(":visible")) {
+                $container.slideUp();
+                $btn.html(`<i class="bi bi-chat-dots me-1"></i>Xem ${replyCount} phản hồi`);
+                return;
+            }
+            
+            // Always reload replies to get fresh data
+            $btn.html('<i class="bi bi-hourglass-split me-1"></i>Đang tải...');
+            
+            $.get("?handler=GetReplies", { parentCommentId: cmtid })
+                .done(function (data) {
+                    console.log("Replies data:", data); // DEBUG: xem data replies
+                    if (data.success && data.replies) {
+                        console.log("Number of replies:", data.replies.length); // DEBUG
+                        const html = renderRepliesTree(data.replies, 0, currentUserId);
+                        console.log("Generated HTML:", html); // DEBUG
+                        $container.html(html);
+                        $container.slideDown();
+                        $btn.html('<i class="bi bi-eye-slash me-1"></i>Ẩn phản hồi');
+                    } else {
+                        showToast("Không thể tải phản hồi", "error");
+                        $btn.html(`<i class="bi bi-chat-dots me-1"></i>Xem ${replyCount} phản hồi`);
+                    }
+                })
+                .fail(function() {
+                    showToast("Có lỗi khi tải phản hồi", "error");
+                    $btn.html(`<i class="bi bi-chat-dots me-1"></i>Xem ${replyCount} phản hồi`);
+                });
+        });
+
+        // Function để render nested replies (Facebook style)
+        function renderRepliesTree(replies, level = 0, currentUserId = null) {
+            console.log(`Rendering level ${level}, replies:`, replies); // DEBUG
+            let html = "";
+            const maxLevel = 3; // Giới hạn độ sâu như Facebook
+            
+            replies.forEach((reply, index) => {
+                console.log(`Reply ${index} at level ${level}:`, reply); // DEBUG
+                console.log(`Reply ${index} nested replies:`, reply.replies); // DEBUG nested
+                const indent = Math.min(level, maxLevel) * 20; // Indentation theo level
+                
+                html += `
+                    <div class="reply-item" style="margin-left: ${indent}px;" data-cmtid="${reply.bookCommentId}">
+                        <div class="reply-header">
+                            <div class="reply-user">
+                                <div class="user-avatar">
+                                    <i class="bi bi-person-circle"></i>
+                                </div>
+                                <div class="user-info">
+                                    <span class="user-name">${reply.userName}</span>
+                                    <span class="user-role badge bg-secondary">${reply.roleName}</span>
+                                </div>
+                            </div>
+                            <span class="reply-date">${reply.createdAt}</span>
+                        </div>
+                        <div class="reply-content" id="comment-content-${reply.bookCommentId}">
+                            <p class="comment-text">${reply.comment}</p>
+                        </div>
+                        
+                        <!-- Edit form (hidden by default) -->
+                        <div class="edit-form-container" id="edit-form-${reply.bookCommentId}" style="display:none;">
+                            <form class="editCommentForm" data-cmtid="${reply.bookCommentId}">
+                                <div class="mb-2">
+                                    <textarea class="form-control" name="Comment" rows="2" required>${reply.comment}</textarea>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check-lg me-1"></i>Lưu
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary cancel-edit-btn">
+                                        <i class="bi bi-x me-1"></i>Hủy
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="reply-actions">
+                            <button class="btn btn-sm btn-outline-primary reply-btn" data-cmtid="${reply.bookCommentId}">
+                                <i class="bi bi-reply me-1"></i>Trả lời
+                            </button>`;
+                
+                // Show edit/delete buttons only for reply owner
+                if (currentUserId && currentUserId === reply.userId) {
+                    html += `
+                            <button class="btn btn-sm btn-outline-warning edit-btn" data-cmtid="${reply.bookCommentId}">
+                                <i class="bi bi-pencil me-1"></i>Sửa
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-btn" data-cmtid="${reply.bookCommentId}">
+                                <i class="bi bi-trash me-1"></i>Xóa
+                            </button>`;
+                }
+                
+                html += `
+                        </div>
+                        <div class="reply-form-container" id="reply-form-${reply.bookCommentId}" style="display:none;">
+                            <form class="replyCommentForm" data-parentid="${reply.bookCommentId}">
+                                <div class="mb-2">
+                                    <textarea class="form-control" name="Comment" rows="2" placeholder="Nhập nội dung trả lời..." required></textarea>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-send me-1"></i>Gửi trả lời
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary cancel-reply-btn">
+                                        <i class="bi bi-x me-1"></i>Hủy
+                                    </button>
+                                </div>
+                            </form>
+                            <div class="replyFormMsg"></div>
+                        </div>`;
+                
+                // Recursively render nested replies
+                if (reply.replies && reply.replies.length > 0) {
+                    console.log(`Found ${reply.replies.length} nested replies for reply ${reply.bookCommentId}`); // DEBUG
+                    html += renderRepliesTree(reply.replies, level + 1, currentUserId);
+                } else {
+                    console.log(`No nested replies for reply ${reply.bookCommentId}`); // DEBUG
+                }
+                
+                html += `</div>`;
+            });
+            
+            return html;
+        }
+    </script>
+    
+    <style>
+        /* ===== BOOK DETAIL STYLES ===== */
+        .book-hero-section {
+            background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .book-cover-container {
+            position: relative;
+        }
+
+        .book-cover-wrapper {
+            position: relative;
+            display: inline-block;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .book-cover-wrapper:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+
+        .book-cover-image {
+            width: 100%;
+            height: 450px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .book-cover-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .book-cover-wrapper:hover .book-cover-overlay {
+            opacity: 1;
+        }
+
+        .rating-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .rating-header {
+            text-align: center;
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .rating-score {
+            text-align: center;
+        }
+
+        .rating-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-600);
+            display: block;
+        }
+
+        .rating-stars {
+            font-size: 1.25rem;
+            margin: var(--space-xs) 0;
+        }
+
+        .book-info {
+            padding-left: var(--space-xl);
+        }
+
+        .book-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: var(--space-lg);
+            line-height: 1.2;
+        }
+
+        .book-meta {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-sm);
+        }
+
+        .meta-item i {
+            color: var(--primary-500);
+            margin-top: 2px;
+            font-size: 1.1rem;
+        }
+
+        .meta-label {
+            font-weight: 600;
+            color: var(--gray-700);
+            min-width: 120px;
+        }
+
+        .meta-value {
+            color: var(--gray-900);
+            font-weight: 500;
+        }
+
+        .book-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-xs);
+        }
+
+        .tag-badge {
+            background: var(--primary-100);
+            color: var(--primary-700);
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: var(--space-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .section-title i {
+            color: var(--primary-500);
+        }
+
+        .description-text,
+        .abstract-text {
+            color: var(--gray-700);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .book-actions {
+            display: flex;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+            margin-top: var(--space-xl);
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-xl);
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .review-form-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: none;
+            overflow: hidden;
+        }
+
+        .review-form-card .card-header {
+            background: var(--primary-500);
+            color: white;
+            border: none;
+            padding: var(--space-lg);
+        }
+
+        .review-form-card .card-body {
+            padding: var(--space-xl);
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 4px;
+            font-size: 1.5rem;
+        }
+
+        .star-selector {
+            cursor: pointer;
+            color: var(--gray-300);
+            transition: all 0.2s ease;
+        }
+
+        .star-selector:hover,
+        .star-selector.selected {
+            color: #fbbf24;
+            transform: scale(1.1);
+        }
+
+        .comments-section {
+            background: white;
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+        }
+
+        .comment-item {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-md);
+            transition: all 0.2s ease;
+        }
+
+        .comment-item:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border-color: var(--primary-200);
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-md);
+        }
+
+        .comment-user {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-100);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-600);
+            font-size: 1.25rem;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .user-role {
+            font-size: 0.7rem;
+        }
+
+        .comment-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .comment-rating {
+            font-size: 0.9rem;
+        }
+
+        .comment-date {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+        }
+
+        .comment-content {
+            color: var(--gray-700);
+            line-height: 1.6;
+            margin-bottom: var(--space-md);
+        }
+
+        .comment-text {
+            margin: 0;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .edit-form-container {
+            background: var(--primary-50);
+            padding: var(--space-md);
+            border-radius: var(--radius);
+            border: 2px solid var(--primary-200);
+            margin-bottom: var(--space-md);
+        }
+
+        .edit-form-container textarea {
+            border: 2px solid var(--primary-300);
+            border-radius: var(--radius);
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .edit-form-container textarea:focus {
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+        }
+
+        .comment-actions {
+            margin-bottom: var(--space-sm);
+        }
+
+        .comment-actions .btn {
+            margin-right: var(--space-xs);
+            font-size: 0.8rem;
+        }
+
+        .comment-actions .btn-outline-warning:hover {
+            background-color: var(--warning-100);
+            border-color: var(--warning-400);
+        }
+
+        .comment-actions .btn-outline-danger:hover {
+            background-color: var(--danger-100);
+            border-color: var(--danger-400);
+        }
+
+        .reply-form-container {
+            background: var(--gray-50);
+            padding: var(--space-md);
+            border-radius: var(--radius);
+            margin-top: var(--space-sm);
+        }
+
+        .reply-list-container {
+            margin-top: var(--space-sm);
+            padding-left: var(--space-lg);
+            border-left: 3px solid var(--primary-200);
+        }
+
+        .reply-item {
+            background: var(--gray-50);
+            border-radius: var(--radius);
+            padding: var(--space-md);
+            margin-bottom: var(--space-sm);
+            position: relative;
+        }
+
+        /* Facebook style nested reply indentation */
+        .reply-item[style*="margin-left"] {
+            border-left: 2px solid var(--primary-300);
+            background: var(--gray-25);
+        }
+
+        /* Visual line connecting nested replies */
+        .reply-item[style*="margin-left"]:before {
+            content: '';
+            position: absolute;
+            left: -2px;
+            top: -10px;
+            width: 2px;
+            height: 10px;
+            background: var(--primary-300);
+        }
+
+        .reply-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-sm);
+        }
+
+        .reply-user {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .reply-user .user-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 1rem;
+        }
+
+        .reply-date {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .reply-content {
+            color: var(--gray-700);
+            line-height: 1.5;
+        }
+
+        .reply-actions {
+            margin-top: var(--space-sm);
+            padding-top: var(--space-sm);
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .reply-actions .btn {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+        }
+
+        /* Nested reply styling */
+        .reply-item .reply-form-container {
+            background: white;
+            border: 1px solid var(--gray-200);
+            margin-top: var(--space-sm);
+        }
+
+        /* Responsive styles */
+        @@media (max-width: 768px) {
+            .book-info {
+                padding-left: 0;
+                margin-top: var(--space-xl);
+            }
+
+            .book-title {
+                font-size: 2rem;
+            }
+
+            .book-cover-image {
+                height: 350px;
+            }
+
+            .meta-item {
+                flex-direction: column;
+                gap: var(--space-xs);
+            }
+
+            .meta-label {
+                min-width: auto;
+            }
+
+            .book-actions {
+                justify-content: center;
+            }
+
+            .action-btn {
+                flex: 1;
+                justify-content: center;
+                min-width: 200px;
+            }
+
+            .comment-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-sm);
+            }
+
+            .comment-meta {
+                align-items: flex-start;
+            }
+        }
+    </style>
+}
+
+<script>
+    // Modal functionality
+    $('#bookCoverModal').on('show.bs.modal', function () {
+        const $img = $(this).find('.modal-body img');
+        const originalSrc = '@(!string.IsNullOrEmpty(Model?.Book?.ImageBase64) ? $"data:image/jpeg;base64,{Model.Book.ImageBase64}" : "/images/no-image.jpg")';
+        $img.attr('src', originalSrc);
+    });
+
+    // Comment and Reply functionality
+    $(document).ready(function () {
+        // Handle main comment form submission
+        $('#commentForm').on('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            submitComment(formData, null);
+        });
+
+        // Handle reply button clicks for main comments
+        $(document).on('click', '.reply-btn', function (e) {
+            e.preventDefault();
+            const commentId = $(this).data('comment-id');
+            const replyContainer = $(`#reply-form-${commentId}`);
+            replyContainer.toggle();
+            
+            if (replyContainer.is(':visible')) {
+                replyContainer.find('textarea').focus();
+            }
+        });
+
+        // Handle reply button clicks for nested replies
+        $(document).on('click', '.reply-to-reply-btn', function (e) {
+            e.preventDefault();
+            const replyId = $(this).data('reply-id');
+            const parentCommentId = $(this).data('parent-comment-id');
+            const replyContainer = $(`#reply-to-reply-form-${replyId}`);
+            replyContainer.toggle();
+            
+            if (replyContainer.is(':visible')) {
+                replyContainer.find('textarea').focus();
+            }
+        });
+
+        // Handle reply form submission for main comments
+        $(document).on('submit', '.reply-form', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const parentCommentId = $(this).find('input[name="ParentCommentId"]').val();
+            submitComment(formData, parentCommentId);
+        });
+
+        // Handle reply form submission for nested replies
+        $(document).on('submit', '.reply-to-reply-form', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const parentCommentId = $(this).find('input[name="ParentCommentId"]').val();
+            submitComment(formData, parentCommentId);
+        });
+    });
+
+    function submitComment(formData, parentCommentId) {
+        $.ajax({
+            url: '?handler=AddComment',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function (result) {
+                if (result.success) {
+                    // Reload the page to show new comment/reply
+                    location.reload();
+                } else {
+                    alert('Có lỗi xảy ra khi thêm bình luận.');
+                }
+            },
+            error: function () {
+                alert('Có lỗi xảy ra khi thêm bình luận.');
+            }
+        });
+    }
+
+    // Favorite toggle functionality
+    function toggleFavorite(bookId) {
+        $.ajax({
+            url: '?handler=ToggleFavorite',
+            type: 'POST',
+            data: { bookId: bookId },
+            headers: {
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            },
+            success: function (result) {
+                if (result.success) {
+                    const btn = $('.favorite-btn');
+                    const icon = btn.find('i');
+                    const text = btn.find('.action-text');
+                    
+                    if (result.isFavorite) {
+                        icon.removeClass('far').addClass('fas');
+                        text.text('Đã yêu thích');
+                        btn.removeClass('btn-outline-danger').addClass('btn-danger');
+                    } else {
+                        icon.removeClass('fas').addClass('far');
+                        text.text('Yêu thích');
+                        btn.removeClass('btn-danger').addClass('btn-outline-danger');
+                    }
+                }
+            },
+            error: function () {
+                alert('Có lỗi xảy ra.');
+            }
+        });
+    }
+</script>

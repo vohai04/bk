@@ -1,0 +1,307 @@
+@page
+@model BookInfoFinder.Pages.Admin.ManageBookModel
+@{
+    ViewData["Title"] = "Quản lý sách";
+    ViewData["Icon"] = "bi bi-book-fill";
+    ViewData["Description"] = "Quản lý tất cả sách trong hệ thống";
+}
+
+<div class="admin-form-wrapper mb-4">
+    <form method="get" class="row g-3" id="searchForm">
+        <div class="col-md-5">
+            <div class="admin-form-group">
+                <label class="admin-form-label">
+                    <i class="bi bi-search"></i>
+                    Tìm kiếm sách
+                </label>
+                <input type="text" name="search" id="searchInput" class="form-control admin-form-control" placeholder="Nhập tên sách..." />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="admin-form-group">
+                <label class="admin-form-label">
+                    <i class="bi bi-funnel"></i>
+                    Lọc theo thể loại
+                </label>
+                <select name="category" id="categorySelect" class="form-select admin-form-control">
+                    <option value="">Tất cả thể loại</option>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <option value="@cat.CategoryId">@cat.Name</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="admin-form-group">
+                <label class="admin-form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-admin-primary">
+                        <i class="bi bi-search"></i>
+                        Tìm kiếm
+                    </button>
+                    <a href="/Admin/ManageBook" class="btn btn-admin-secondary" title="Reset">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="admin-form-wrapper mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="d-flex gap-3">
+                <form method="post" asp-page-handler="ExportCsv" id="exportCsvForm" class="d-inline">
+                    <input type="hidden" name="Search" id="csvSearch" />
+                    <input type="hidden" name="Category" id="csvCategory" />
+                    <button type="submit" class="btn btn-admin-success">
+                        <i class="bi bi-download"></i>
+                        Xuất CSV (<span id="csvCount">0</span> sách)
+                    </button>
+                </form>
+                <a asp-page="./AddBook" class="btn btn-admin-primary">
+                    <i class="bi bi-plus-circle"></i>
+                    Thêm sách mới
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="admin-alert admin-alert-info p-2">
+                <i class="bi bi-info-circle"></i>
+                Tổng: <strong id="totalBooksDisplay">0</strong> sách
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-table-wrapper">
+    <div id="bookTableContainer">
+        <div class="admin-loading">
+            <i class="bi bi-arrow-clockwise"></i>
+            <span class="ms-2">Đang tải dữ liệu...</span>
+        </div>
+    </div>
+</div>
+
+<nav id="paginationNav" aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center" id="paginationBookButtons"></ul>
+</nav>
+
+@section Scripts {
+    <script>
+    $(function () {
+        const pageSize = 10;
+        let currentPage = 1;
+        let currentSearch = "";
+        let currentCategory = "";
+        let totalBooks = 0;
+
+        function loadBooks(page = 1) {
+            currentPage = page;
+            currentSearch = $("#searchInput").val();
+            currentCategory = $("#categorySelect").val();
+
+            // Show loading
+            $("#bookTableContainer").html(`
+                <div class="admin-loading">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    <span class="ms-2">Đang tải dữ liệu...</span>
+                </div>
+            `);
+
+            $.get("/Admin/ManageBook?handler=AjaxSearch", {
+                search: currentSearch,
+                category: currentCategory,
+                page: currentPage,
+                pageSize: pageSize,
+            })
+            .done(function (data) {
+                renderBooks(data.books);
+                renderPagination("#paginationBookButtons", data.totalPages, currentPage, loadBooks);
+                totalBooks = data.totalCount;
+                $("#csvCount").text(totalBooks);
+                $("#totalBooksDisplay").text(totalBooks);
+            })
+            .fail(function() {
+                $("#bookTableContainer").html(`
+                    <div class="admin-alert admin-alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.
+                    </div>
+                `);
+            });
+        }
+
+        function renderBooks(books) {
+            let html = "";
+            
+            if (!books || books.length === 0) {
+                html = `
+                    <div class="text-center p-5">
+                        <i class="bi bi-inbox" style="font-size: 4rem; color: #6c757d;"></i>
+                        <h5 class="mt-3 text-muted">Không tìm thấy sách nào</h5>
+                        <p class="text-muted">Không có sách nào phù hợp với bộ lọc hiện tại.</p>
+                        <a href="/Admin/ManageBook" class="btn btn-admin-primary">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            Reset bộ lọc
+                        </a>
+                    </div>
+                `;
+                $("#paginationNav").hide();
+            } else {
+                $("#paginationNav").show();
+                html = `
+                    <table class="table admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">
+                                    <i class="bi bi-image"></i>
+                                    Ảnh
+                                </th>
+                                <th>
+                                    <i class="bi bi-book"></i>
+                                    Tên sách
+                                </th>
+                                <th>
+                                    <i class="bi bi-upc"></i>
+                                    ISBN
+                                </th>
+                                <th>
+                                    <i class="bi bi-person"></i>
+                                    Tác giả
+                                </th>
+                                <th>
+                                    <i class="bi bi-tag"></i>
+                                    Thể loại
+                                </th>
+                                <th>
+                                    <i class="bi bi-building"></i>
+                                    NXB
+                                </th>
+                                <th>
+                                    <i class="bi bi-calendar"></i>
+                                    Năm XB
+                                </th>
+                                <th style="width: 150px;">
+                                    <i class="bi bi-gear"></i>
+                                    Thao tác
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                books.forEach(function(book) {
+                    const imageSrc = book.imageBase64 && book.imageBase64 !== ""
+                        ? book.imageBase64
+                        : "/images/default-book.jpg";
+                    
+                    const tags = book.tags && book.tags.length
+                        ? book.tags.map(t => `<span class="badge bg-info me-1">${t}</span>`).join("")
+                        : '<span class="text-muted small">Không có tag</span>';
+
+                    html += `
+                        <tr>
+                            <td>
+                                ${imageSrc 
+                                    ? `<img src="${imageSrc}" alt="Ảnh sách" class="img-thumbnail" style="width: 60px; height: 80px; object-fit: cover;" />` 
+                                    : '<div class="text-center text-muted"><i class="bi bi-image" style="font-size: 2rem;"></i></div>'
+                                }
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>${book.title}</strong>
+                                    <br>
+                                    <small class="text-muted">ID: ${book.bookId}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <code class="small">${book.isbn || 'N/A'}</code>
+                            </td>
+                            <td>${book.author?.name || 'N/A'}</td>
+                            <td>
+                                <span class="badge" style="background: var(--admin-primary);">
+                                    ${book.category?.name || 'N/A'}
+                                </span>
+                            </td>
+                            <td>${book.publisher?.name || 'N/A'}</td>
+                            <td>
+                                <span class="badge bg-secondary">${book.publicationYear || 'N/A'}</span>
+                            </td>
+                            <td>
+                                <div class="admin-action-buttons">
+                                    <a href="/Admin/UpdateBook/${book.bookId}" 
+                                       class="btn btn-warning btn-admin-sm" 
+                                       title="Chỉnh sửa"
+                                       data-bs-toggle="tooltip">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="/BookDetail/${book.bookId}" 
+                                       class="btn btn-info btn-admin-sm" 
+                                       title="Xem chi tiết"
+                                       data-bs-toggle="tooltip">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-admin-danger btn-admin-sm" 
+                                            title="Xóa"
+                                            data-bs-toggle="tooltip"
+                                            onclick="confirmDelete(${book.bookId},'${book.title.replace(/'/g, "\\'")}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+            }
+            
+            $("#bookTableContainer").html(html);
+            
+            // Initialize tooltips using site.js
+            initTooltips();
+        }
+
+        $("#searchForm").on("submit", function (e) {
+            e.preventDefault();
+            loadBooks(1);
+        });
+
+        $("#exportCsvForm").on("submit", function () {
+            $("#csvSearch").val(currentSearch);
+            $("#csvCategory").val(currentCategory);
+        });
+
+        window.confirmDelete = function (bookId, bookTitle) {
+            showConfirmModal(
+                'Xác nhận xóa sách',
+                `Bạn có chắc chắn muốn xóa sách "${bookTitle}"?\n\nHành động này không thể hoàn tác!`,
+                function() {
+                    $.post("/Admin/ManageBook?handler=Delete", { id: bookId })
+                    .done(function (response) {
+                        if (response.success) {
+                            showToast(`Đã xóa sách "${bookTitle}" thành công!`, 'success');
+                            loadBooks(currentPage);
+                        } else {
+                            showToast("Có lỗi xảy ra khi xóa sách. Vui lòng thử lại.", 'error');
+                        }
+                    })
+                    .fail(function() {
+                        showToast("Có lỗi xảy ra khi xóa sách. Vui lòng thử lại.", 'error');
+                    });
+                }
+            );
+        };
+
+        // Load initial data
+        loadBooks(1);
+    });
+    </script>
+}

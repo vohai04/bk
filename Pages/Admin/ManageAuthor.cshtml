@@ -1,0 +1,497 @@
+@page
+@model BookInfoFinder.Pages.Admin.ManageAuthorModel
+@{
+    ViewData["Title"] = "Quản lý tác giả";
+    ViewData["Icon"] = "bi bi-person-badge-fill";
+    ViewData["Description"] = "Quản lý thông tin các tác giả";
+}
+
+<div class="admin-form-wrapper mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="bi bi-person-badge-fill"></i> Danh sách tác giả</h4>
+        <button type="button" class="btn btn-admin-success" data-bs-toggle="modal" data-bs-target="#addAuthorModal">
+            <i class="bi bi-person-plus"></i> Thêm tác giả
+        </button>
+    </div>
+</div>
+
+<div class="admin-form-wrapper mb-4">
+    <form method="get" class="row g-3" id="searchAuthorForm">
+        <div class="col-md-8">
+            <div class="admin-form-group">
+                <label class="admin-form-label">
+                    <i class="bi bi-search"></i>
+                    Tìm kiếm tác giả
+                </label>
+                <input type="text" name="search" id="searchAuthorInput" class="form-control admin-form-control" 
+                       placeholder="Nhập tên tác giả, quốc tịch..." />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="admin-form-group">
+                <label class="admin-form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-admin-primary flex-fill">
+                        <i class="bi bi-search"></i>
+                        Tìm kiếm
+                    </button>
+                    <a href="/Admin/ManageAuthor" class="btn btn-admin-secondary" title="Reset">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="admin-table-wrapper">
+    <div id="authorTableContainer">
+        <div class="admin-loading">
+            <i class="bi bi-arrow-clockwise"></i>
+            <span class="ms-2">Đang tải dữ liệu...</span>
+        </div>
+    </div>
+</div>
+
+<nav id="paginationAuthorNav" aria-label="Author pagination" class="mt-4">
+    <ul class="pagination justify-content-center" id="paginationAuthorButtons"></ul>
+</nav>
+
+<!-- Modal Sửa Tác Giả -->
+<div class="modal fade" id="editAuthorModal" tabindex="-1" aria-labelledby="editAuthorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form id="editAuthorForm" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAuthorModalLabel">
+                    <i class="bi bi-pencil-square"></i>
+                    Sửa thông tin tác giả
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editAuthorId" name="authorId" />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="admin-form-group">
+                            <label for="editAuthorName" class="admin-form-label">
+                                <i class="bi bi-person"></i>
+                                Tên tác giả <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control admin-form-control" id="editAuthorName" name="name" 
+                                   required maxlength="30" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="admin-form-group">
+                            <label for="editAuthorDOB" class="admin-form-label">
+                                <i class="bi bi-calendar-date"></i>
+                                Ngày sinh
+                            </label>
+                            <input type="date" class="form-control admin-form-control" id="editAuthorDOB" name="dateOfBirth" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="admin-form-group">
+                            <label for="editAuthorNationality" class="admin-form-label">
+                                <i class="bi bi-globe"></i>
+                                Quốc tịch
+                            </label>
+                            <input type="text" class="form-control admin-form-control" id="editAuthorNationality" name="nationality" 
+                                   maxlength="50" placeholder="Ví dụ: Việt Nam" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="admin-form-group">
+                            <label for="editAuthorBio" class="admin-form-label">
+                                <i class="bi bi-card-text"></i>
+                                Tiểu sử
+                            </label>
+                            <textarea class="form-control admin-form-control" id="editAuthorBio" name="biography" 
+                                      rows="3" maxlength="100" placeholder="Mô tả về tác giả..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-admin-primary">
+                    <i class="bi bi-floppy"></i>
+                    Lưu thay đổi
+                </button>
+                <button type="button" class="btn btn-admin-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            const pageSize = 10;
+            let currentPage = 1;
+
+            // Initialize tooltips using site.js function
+            initTooltips();
+            
+            // Clean modal function
+            function cleanModalState() {
+                // Remove any stuck backdrops
+                $('.modal-backdrop').remove();
+                // Reset body
+                $('body').removeClass('modal-open').css({
+                    'padding-right': '',
+                    'overflow': ''
+                });
+                // Reset all modals
+                $('.modal').each(function() {
+                    $(this).removeAttr('style aria-hidden').removeClass('show');
+                });
+            }
+
+            function loadAuthors(page = 1) {
+                currentPage = page;
+                const currentSearch = $('#searchAuthorInput').val();
+
+                $('#authorTableContainer').html(`
+                    <div class="admin-loading">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        <span class="ms-2">Đang tải dữ liệu...</span>
+                    </div>
+                `);
+
+                $.get('/Admin/ManageAuthor?handler=AjaxSearch', {
+                    search: currentSearch,
+                    page: currentPage,
+                    pageSize: pageSize
+                })
+                .done(function (data) {
+                    console.log('Search data received:', data); // Debug log
+                    renderAuthors(data.authors);
+                    renderPagination('#paginationAuthorButtons', data.totalPages, currentPage, function (page) {
+                        loadAuthors(page);
+                    });
+                })
+                .fail(function() {
+                    console.log('Search failed'); // Debug log
+                    $('#authorTableContainer').html(`
+                        <div class="admin-alert admin-alert-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.
+                        </div>
+                    `);
+                })
+                .always(function() {
+                    console.log('Search request completed'); // Debug log
+                });
+            }
+
+            function renderAuthors(authors) {
+                console.log('Rendering authors:', authors); // Debug log
+                let html = '';
+                
+                if (!authors || authors.length === 0) {
+                    html = `
+                        <div class="text-center p-5">
+                            <i class="bi bi-person-x" style="font-size: 4rem; color: #6c757d;"></i>
+                            <h5 class="mt-3 text-muted">Không tìm thấy tác giả nào</h5>
+                            <p class="text-muted">Không có tác giả nào phù hợp với bộ lọc hiện tại.</p>
+                            <a href="/Admin/ManageAuthor" class="btn btn-admin-primary">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                Reset bộ lọc
+                            </a>
+                        </div>
+                    `;
+                    $('#paginationAuthorNav').hide();
+                } else {
+                    $('#paginationAuthorNav').show();
+                    html = `
+                        <table class="table admin-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <i class="bi bi-hash"></i>
+                                        ID
+                                    </th>
+                                    <th>
+                                        <i class="bi bi-person"></i>
+                                        Tên tác giả
+                                    </th>
+                                    <th>
+                                        <i class="bi bi-calendar-date"></i>
+                                        Ngày sinh
+                                    </th>
+                                    <th>
+                                        <i class="bi bi-globe"></i>
+                                        Quốc tịch
+                                    </th>
+                                    <th>
+                                        <i class="bi bi-card-text"></i>
+                                        Tiểu sử
+                                    </th>
+                                    <th style="width: 120px;">
+                                        <i class="bi bi-gear"></i>
+                                        Thao tác
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    authors.forEach(function(author) {
+                        const dateOfBirth = author.dateOfBirth 
+                            ? new Date(author.dateOfBirth).toLocaleDateString('vi-VN')
+                            : '<span class="text-muted">Chưa có</span>';
+                        
+                        const biography = author.biography 
+                            ? (author.biography.length > 50 ? author.biography.substring(0, 50) + '...' : author.biography)
+                            : '<span class="text-muted">Chưa có</span>';
+
+                        html += `
+                            <tr>
+                                <td><code>${author.authorId}</code></td>
+                                <td><strong>${author.name}</strong></td>
+                                <td>${dateOfBirth}</td>
+                                <td>
+                                    ${author.nationality 
+                                        ? `<span class="badge bg-info">${author.nationality}</span>`
+                                        : '<span class="text-muted">Chưa có</span>'
+                                    }
+                                </td>
+                                <td>${biography}</td>
+                                <td>
+                                    <div class="admin-action-buttons">
+                                        <button type="button" 
+                                                class="btn btn-warning btn-admin-sm btn-edit" 
+                                                data-id="${author.authorId}" 
+                                                data-name="${author.name || ''}" 
+                                                data-dob="${author.dateOfBirth || ''}"
+                                                data-nationality="${author.nationality || ''}"
+                                                data-bio="${author.biography || ''}"
+                                                title="Sửa"
+                                                data-bs-toggle="tooltip">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" 
+                                                class="btn btn-admin-danger btn-admin-sm btn-delete" 
+                                                data-id="${author.authorId}" 
+                                                data-name="${author.name}"
+                                                title="Xóa"
+                                                data-bs-toggle="tooltip">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                console.log('Setting HTML:', html); // Debug log
+                $('#authorTableContainer').html(html);
+                
+                // Re-initialize tooltips for new content
+                initTooltips();
+            }
+
+            // Add author form submit
+            $('#addAuthorForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const name = $(this).find('[name="Name"]').val().trim();
+                const dateOfBirth = $(this).find('[name="DateOfBirth"]').val().trim() || null;
+                const nationality = $(this).find('[name="Nationality"]').val().trim();
+                const biography = $(this).find('[name="Biography"]').val().trim();
+
+                if (!name) {
+                    showToast('Vui lòng nhập tên tác giả!', 'error');
+                    return;
+                }
+
+                $.post('/Admin/ManageAuthor?handler=AjaxAdd', { name, dateOfBirth, nationality, biography })
+                .done(function(response) {
+                    console.log('Add response:', response); // Debug log
+                    if (response.success) {
+                        showToast('Thêm tác giả thành công!', 'success');
+                        $('#addAuthorForm')[0].reset();
+                        $('#addAuthorModal').modal('hide');
+                        
+                        // Simple delay then reload
+                        setTimeout(function() {
+                            cleanModalState();
+                            loadAuthors(1);
+                        }, 500);
+                        
+                    } else {
+                        showToast('Thêm tác giả thất bại: ' + (response.message || 'Lỗi không xác định'), 'error');
+                    }
+                })
+                .fail(function(xhr, status, error) {
+                    console.log('Add failed:', xhr, status, error); // Debug log
+                    showToast('Có lỗi xảy ra khi thêm tác giả!', 'error');
+                });
+            });
+
+            // Edit author modal
+            $('#authorTableContainer').on('click', '.btn-edit', function() {
+                const authorId = $(this).data('id');
+                const name = $(this).data('name');
+                const dob = $(this).data('dob');
+                const nationality = $(this).data('nationality');
+                const biography = $(this).data('bio');
+
+                $('#editAuthorId').val(authorId);
+                $('#editAuthorName').val(name);
+                $('#editAuthorDOB').val(dob ? dob.split('T')[0] : ''); // Format date for input
+                $('#editAuthorNationality').val(nationality);
+                $('#editAuthorBio').val(biography);
+                
+                $('#editAuthorModal').modal('show');
+            });
+
+            // Edit author form submit
+            $('#editAuthorForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const authorId = $('#editAuthorId').val();
+                const name = $('#editAuthorName').val().trim();
+                const dateOfBirth = $('#editAuthorDOB').val().trim() || null;
+                const nationality = $('#editAuthorNationality').val().trim();
+                const biography = $('#editAuthorBio').val().trim();
+
+                if (!name) {
+                    showToast('Vui lòng nhập tên tác giả!', 'error');
+                    return;
+                }
+
+                $.post('/Admin/ManageAuthor?handler=AjaxEdit', { authorId, name, dateOfBirth, nationality, biography })
+                .done(function(response) {
+                    console.log('Edit response:', response); // Debug log
+                    if (response.success) {
+                        showToast('Cập nhật tác giả thành công!', 'success');
+                        $('#editAuthorModal').modal('hide');
+                        
+                        // Simple delay then reload
+                        setTimeout(function() {
+                            cleanModalState();
+                            loadAuthors(currentPage);
+                        }, 500);
+                        
+                    } else {
+                        showToast('Cập nhật tác giả thất bại: ' + (response.message || 'Lỗi không xác định'), 'error');
+                    }
+                })
+                .fail(function(xhr, status, error) {
+                    console.log('Edit failed:', xhr, status, error); // Debug log
+                    showToast('Có lỗi xảy ra khi cập nhật tác giả!', 'error');
+                });
+            });
+
+            // Delete author
+            $('#authorTableContainer').on('click', '.btn-delete', function() {
+                const authorId = $(this).data('id');
+                const authorName = $(this).data('name');
+
+                showConfirmModal(
+                    'Xác nhận xóa',
+                    `Bạn có chắc chắn muốn xóa tác giả "<strong>${authorName}</strong>"?<br><br>Hành động này không thể hoàn tác!`,
+                    function() {
+                        $.post('/Admin/ManageAuthor?handler=AjaxDelete', { authorId: authorId })
+                        .done(function(response) {
+                            if (response.success) {
+                                showToast('Xóa tác giả thành công!', 'success');
+                                loadAuthors(currentPage);
+                            } else {
+                                showToast('Xóa tác giả thất bại: ' + (response.message || 'Lỗi không xác định'), 'error');
+                            }
+                        })
+                        .fail(function() {
+                            showToast('Có lỗi xảy ra khi xóa tác giả!', 'error');
+                        });
+                    }
+                );
+            });
+
+            // Search form submit
+            $('#searchAuthorForm').on('submit', function(e) {
+                e.preventDefault();
+                loadAuthors(1);
+            });
+
+            // Load initial data
+            loadAuthors(1);
+            
+            // Fallback to clear any stuck loading states
+            setTimeout(function() {
+                if ($('#authorTableContainer .admin-loading').length > 0) {
+                    console.log('Clearing stuck loading state'); 
+                    $('#authorTableContainer').html(`
+                        <div class="admin-alert admin-alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Đang tải dữ liệu... Nếu trang không tải được, vui lòng refresh.
+                            <button class="btn btn-sm btn-primary ms-2" onclick="loadAuthors(1)">Thử lại</button>
+                        </div>
+                    `);
+                }
+            }, 10000); // 10 seconds timeout
+        });
+    </script>
+}
+
+<!-- Modal Thêm tác giả -->
+<div class="modal fade" id="addAuthorModal" tabindex="-1" aria-labelledby="addAuthorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form id="addAuthorForm" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAuthorModalLabel">
+                    <i class="bi bi-person-plus"></i> Thêm tác giả mới
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Tên tác giả *</label>
+                            <input type="text" name="Name" class="form-control" placeholder="Nhập tên tác giả..." required maxlength="100" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Ngày sinh</label>
+                            <input type="date" name="DateOfBirth" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Quốc tịch</label>
+                            <input type="text" name="Nationality" class="form-control" placeholder="Ví dụ: Việt Nam" maxlength="50" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Tiểu sử</label>
+                            <textarea name="Biography" class="form-control" placeholder="Mô tả ngắn về tác giả..." maxlength="500" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check"></i> Thêm tác giả
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            </div>
+        </form>
+    </div>
+</div>
+

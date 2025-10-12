@@ -1,0 +1,79 @@
+@page
+@model BookInfoFinder.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header text-center">
+                    <h3>Đăng nhập</h3>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @Model.ErrorMessage
+                        </div>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @Model.SuccessMessage
+                        </div>
+                    }
+
+                    <form method="post">
+                        <div class="form-group mb-3">
+                            <label asp-for="LoginRequest.Username" class="form-label">Tên đăng nhập:</label>
+                            <input asp-for="LoginRequest.Username" class="form-control" placeholder="Nhập tên đăng nhập" />
+                            <span asp-validation-for="LoginRequest.Username" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="LoginRequest.Password" class="form-label">Mật khẩu:</label>
+                            <input asp-for="LoginRequest.Password" type="password" class="form-control" placeholder="Nhập mật khẩu" />
+                            <span asp-validation-for="LoginRequest.Password" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <div class="form-check">
+                                <input asp-for="LoginRequest.RememberMe" class="form-check-input" type="checkbox" />
+                                <label asp-for="LoginRequest.RememberMe" class="form-check-label">
+                                    Ghi nhớ đăng nhập
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Đăng nhập</button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <a asp-page="/Account/ForgotPassword" class="text-decoration-none">Quên mật khẩu?</a>
+                    </div>
+                    
+                    <div class="text-center mt-2">
+                        <span>Chưa có tài khoản? </span>
+                        <a asp-page="/Account/Register" class="text-decoration-none">Đăng ký ngay</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

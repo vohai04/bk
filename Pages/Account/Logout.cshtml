@@ -1,0 +1,27 @@
+@page
+@model BookInfoFinder.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "Đăng xuất";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header text-center">
+                    <h3>Đăng xuất</h3>
+                </div>
+                <div class="card-body text-center">
+                    <p>Bạn có chắc chắn muốn đăng xuất không?</p>
+                    
+                    <form method="post">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button type="submit" class="btn btn-danger me-md-2">Đăng xuất</button>
+                            <a href="javascript:history.back()" class="btn btn-secondary">Hủy</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

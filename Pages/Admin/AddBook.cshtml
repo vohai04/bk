@@ -1,0 +1,361 @@
+@page
+@model BookInfoFinder.Pages.Admin.AddBookModel
+@{
+    ViewData["Title"] = "Thêm sách mới";
+    ViewData["Icon"] = "bi bi-plus-circle";
+    ViewData["Description"] = "Thêm sách mới vào hệ thống";
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="admin-alert admin-alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="admin-alert admin-alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="admin-form-wrapper">
+    <form method="post" id="addBookForm" enctype="multipart/form-data">
+        <div class="row">
+            <div class="col-lg-8">
+                <h3 class="mb-4">
+                    <i class="bi bi-info-circle"></i>
+                    Thông tin cơ bản
+                </h3>
+                
+                <div class="admin-form-group">
+                    <label asp-for="Book.Title" class="admin-form-label">
+                        <i class="bi bi-book"></i>
+                        Tên sách <span class="text-danger">*</span>
+                    </label>
+                    <input asp-for="Book.Title" class="form-control admin-form-control" placeholder="Nhập tên sách đầy đủ" />
+                    <span asp-validation-for="Book.Title" class="text-danger"></span>
+                </div>
+
+                <div class="admin-form-group">
+                    <label asp-for="Book.ISBN" class="admin-form-label">
+                        <i class="bi bi-upc"></i>
+                        Mã ISBN
+                    </label>
+                    <input asp-for="Book.ISBN" class="form-control admin-form-control" placeholder="Ví dụ: 978-3-16-148410-0" />
+                    <span asp-validation-for="Book.ISBN" class="text-danger"></span>
+                    <div class="form-text">Mã ISBN chuẩn quốc tế (không bắt buộc)</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="admin-form-group">
+                            <label asp-for="Book.AuthorId" class="admin-form-label">
+                                <i class="bi bi-person"></i>
+                                Tác giả <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Book.AuthorId" class="form-select admin-form-control">
+                                <option value="">-- Chọn tác giả --</option>
+                                @foreach (var author in Model.Authors)
+                                {
+                                    <option value="@author.AuthorId">@author.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Book.AuthorId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="admin-form-group">
+                            <label asp-for="Book.CategoryId" class="admin-form-label">
+                                <i class="bi bi-tag"></i>
+                                Thể loại <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Book.CategoryId" class="form-select admin-form-control">
+                                <option value="">-- Chọn thể loại --</option>
+                                @foreach (var cat in Model.Categories)
+                                {
+                                    <option value="@cat.CategoryId">@cat.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Book.CategoryId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="admin-form-group">
+                            <label asp-for="Book.PublisherId" class="admin-form-label">
+                                <i class="bi bi-building"></i>
+                                Nhà xuất bản <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Book.PublisherId" class="form-select admin-form-control">
+                                <option value="">-- Chọn nhà xuất bản --</option>
+                                @foreach (var pub in Model.Publishers)
+                                {
+                                    <option value="@pub.PublisherId">@pub.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="Book.PublisherId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="admin-form-group">
+                            <label asp-for="Book.PublicationDate" class="admin-form-label">
+                                <i class="bi bi-calendar"></i>
+                                Ngày xuất bản
+                            </label>
+                            <input asp-for="Book.PublicationDate" type="date" class="form-control admin-form-control" />
+                            <span asp-validation-for="Book.PublicationDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-form-group">
+                    <label asp-for="Book.Description" class="admin-form-label">
+                        <i class="bi bi-text-paragraph"></i>
+                        Mô tả ngắn
+                    </label>
+                    <input asp-for="Book.Description" class="form-control admin-form-control" placeholder="Mô tả ngắn gọn về sách" />
+                    <span asp-validation-for="Book.Description" class="text-danger"></span>
+                </div>
+
+                <div class="admin-form-group">
+                    <label asp-for="Book.Abstract" class="admin-form-label">
+                        <i class="bi bi-card-text"></i>
+                        Tóm tắt nội dung
+                    </label>
+                    <textarea asp-for="Book.Abstract" class="form-control admin-form-control" rows="4" placeholder="Tóm tắt chi tiết nội dung sách"></textarea>
+                    <span asp-validation-for="Book.Abstract" class="text-danger"></span>
+                </div>
+
+                <div class="admin-form-group">
+                    <label class="admin-form-label">
+                        <i class="bi bi-tags"></i>
+                        Tags
+                    </label>
+                    <div class="row">
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="SelectedTagIds" value="@tag.TagId" id="tag_@tag.TagId" />
+                                    <label class="form-check-label" for="tag_@tag.TagId">
+                                        @tag.Name
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="form-text">Chọn các tags phù hợp với nội dung sách</div>
+                    <div id="selectedTagsDisplay" class="mt-3">
+                        <!-- Selected tags will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <h3 class="mb-4">
+                    <i class="bi bi-image"></i>
+                    Hình ảnh
+                </h3>
+                
+                <div class="admin-form-group">
+                    <label class="admin-form-label">Ảnh hiện tại</label>
+                    <div class="text-center p-4 border rounded" id="currentImageContainer">
+                        @if (!string.IsNullOrWhiteSpace(Model.Book.ImageBase64))
+                        {
+                            <img src="@Model.Book.ImageBase64" alt="Ảnh sách" class="img-fluid rounded" style="max-width: 200px; max-height: 300px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <div class="text-muted">
+                                <i class="bi bi-image" style="font-size: 4rem;"></i>
+                                <p class="mt-2">Chưa có ảnh</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="admin-form-group">
+                    <label asp-for="ImageFile" class="admin-form-label">
+                        <i class="bi bi-upload"></i>
+                        Tải ảnh lên
+                    </label>
+                    <input asp-for="ImageFile" type="file" class="form-control admin-form-control" accept="image/*" />
+                    <span asp-validation-for="ImageFile" class="text-danger"></span>
+                    <div class="form-text">
+                        <i class="bi bi-info-circle"></i>
+                        Chấp nhận: JPG, PNG, GIF, WebP. Tối đa 5MB.
+                    </div>
+                </div>
+
+                <div class="admin-alert admin-alert-info">
+                    <i class="bi bi-lightbulb"></i>
+                    <strong>Mẹo:</strong> Sử dụng ảnh có tỷ lệ 3:4 (ví dụ: 600x800px) để hiển thị tốt nhất.
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex gap-3 justify-content-end">
+            <a asp-page="./ManageBook" class="btn btn-admin-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Quay lại
+            </a>
+            <button type="reset" class="btn btn-admin-secondary">
+                <i class="bi bi-arrow-clockwise"></i>
+                Đặt lại
+            </button>
+            <button type="submit" class="btn btn-admin-success" id="submitBtn">
+                <i class="bi bi-check-circle"></i>
+                Thêm sách mới
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            // Initialize tooltips using site.js
+            initTooltips();
+
+            // Preview image when file is selected
+            $('input[type="file"]').on('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validate file size (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        showToast('File quá lớn! Vui lòng chọn file nhỏ hơn 5MB.', 'warning');
+                        $(this).val('');
+                        return;
+                    }
+
+                    // Validate file type
+                    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!validTypes.includes(file.type)) {
+                        showToast('Định dạng file không hợp lệ! Vui lòng chọn file ảnh.', 'warning');
+                        $(this).val('');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#currentImageContainer').html(`
+                            <img src="${e.target.result}" alt="Preview" class="img-fluid rounded" style="max-width: 200px; max-height: 300px; object-fit: cover;" />
+                            <p class="mt-2 text-success">
+                                <i class="bi bi-check-circle"></i>
+                                Ảnh mới đã được chọn
+                            </p>
+                        `);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Form validation
+            $('#addBookForm').on('submit', function(e) {
+                const title = $('input[name="Book.Title"]').val().trim();
+                const authorId = $('select[name="Book.AuthorId"]').val();
+                const categoryId = $('select[name="Book.CategoryId"]').val();
+                const publisherId = $('select[name="Book.PublisherId"]').val();
+
+                if (!title) {
+                    showToast('Tên sách không được để trống!', 'warning');
+                    e.preventDefault();
+                    return;
+                }
+
+                if (!authorId) {
+                    showToast('Vui lòng chọn tác giả!', 'warning');
+                    e.preventDefault();
+                    return;
+                }
+
+                if (!categoryId) {
+                    showToast('Vui lòng chọn thể loại!', 'warning');
+                    e.preventDefault();
+                    return;
+                }
+
+                if (!publisherId) {
+                    showToast('Vui lòng chọn nhà xuất bản!', 'warning');
+                    e.preventDefault();
+                    return;
+                }
+
+                // Show loading state
+                const submitBtn = $('#submitBtn');
+                const originalText = submitBtn.html();
+                submitBtn.prop('disabled', true).html('<i class="bi bi-arrow-clockwise"></i> Đang xử lý...');
+
+                // Re-enable after timeout in case of server error
+                setTimeout(() => {
+                    submitBtn.prop('disabled', false).html(originalText);
+                }, 10000);
+            });
+
+            // Reset form
+            $('button[type="reset"]').on('click', function() {
+                $('#currentImageContainer').html(`
+                    <div class="text-muted">
+                        <i class="bi bi-image" style="font-size: 4rem;"></i>
+                        <p class="mt-2">Chưa có ảnh</p>
+                    </div>
+                `);
+                
+                // Reset tag selection display
+                setTimeout(updateSelectedTagsDisplay, 100);
+                showToast('Form đã được đặt lại!', 'info');
+            });
+
+            // Auto-hide alerts after 5 seconds
+            setTimeout(() => {
+                $('.admin-alert').fadeOut();
+            }, 5000);
+            
+            // Tag selection helper
+            const updateSelectedTagsDisplay = () => {
+                const selectedTags = $('input[name="SelectedTagIds"]:checked');
+                const count = selectedTags.length;
+                
+                if (count > 0) {
+                    const tagNames = selectedTags.map(function() {
+                        return $(this).siblings('label').text().trim();
+                    }).get();
+                    
+                    $('#selectedTagsDisplay').html(`
+                        <div class="admin-alert admin-alert-info">
+                            <i class="bi bi-tags"></i>
+                            <strong>Đã chọn ${count} tag${count > 1 ? 's' : ''}:</strong>
+                            <div class="mt-2">
+                                ${tagNames.map(name => `<span class="badge bg-primary me-1">${name}</span>`).join('')}
+                            </div>
+                        </div>
+                    `);
+                } else {
+                    $('#selectedTagsDisplay').html(`
+                        <div class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Chưa có tag nào được chọn
+                        </div>
+                    `);
+                }
+            };
+
+            // Initialize tag display
+            updateSelectedTagsDisplay();
+
+            // Update display when tags are selected/deselected
+            $('input[name="SelectedTagIds"]').on('change', updateSelectedTagsDisplay);
+        });
+    </script>
+}
