@@ -13,6 +13,88 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="modern-body">
+    <style>
+        /* Chatbot window styling */
+        .chatbot-window {
+            position: fixed;
+            right: 20px;
+            top: 80px;
+            width: 350px;
+            height: 400px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1060;
+            display: flex;
+            flex-direction: column;
+        }
+        .chatbot-header {
+            padding: 10px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ccc;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+        .chatbot-header span {
+            flex: 1;
+            text-align: center;
+        }
+        .chatbot-body {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        .chatbot-footer {
+            padding: 10px;
+            border-top: 1px solid #ccc;
+            border-radius: 0 0 10px 10px;
+            display: flex;
+            background: #f8f9fa;
+        }
+        .chatbot-footer input {
+            flex: 1;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            padding: 5px;
+        }
+        .chatbot-footer button {
+            border-radius: 5px;
+            border: none;
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+        }
+        /* Chat messages styling */
+        #chatMessages .chat-message {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        #chatMessages .chat-message.user {
+            justify-content: flex-end;
+        }
+        #chatMessages .chat-message.bot {
+            justify-content: flex-start;
+        }
+        #chatMessages .chat-bubble {
+            padding: 8px 12px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        #chatMessages .chat-message.user .chat-bubble {
+            background-color: #007bff;
+            color: white;
+        }
+        #chatMessages .chat-message.bot .chat-bubble {
+            background-color: #e9ecef;
+            color: #333;
+        }
+    </style>
     @{
         var isAdminPage = ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Admin") == true;
         var username = Context.Session.GetString("UserName") ?? Context.Request.Cookies["UserName"];
@@ -387,6 +469,93 @@
         });
     </script>
     
+    <script>
+        // Chatbot functions
+        function toggleChatbotModal() {
+            const windowEl = document.getElementById('chatbotWindow');
+            if (windowEl.style.display === 'none' || windowEl.style.display === '') {
+                windowEl.style.display = 'flex';
+                $('.floating-chatbot').hide();
+                setTimeout(() => {
+                    $('#chatInput').focus();
+                    if ($('#chatMessages').children().length === 0) {
+                        addMessage('bot', 'Xin chào! Tôi có thể giúp bạn tìm sách. Hãy nhập từ khóa như tên sách, tác giả, hoặc thể loại.');
+                    }
+                }, 100);
+            } else {
+                windowEl.style.display = 'none';
+                $('.floating-chatbot').show();
+            }
+        }
+
+        function addMessage(sender, text) {
+            const messages = document.getElementById('chatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-message ${sender}`;
+            msgDiv.innerHTML = `<div class="chat-bubble">${text}</div>`;
+            messages.appendChild(msgDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Use event delegation for dynamic elements
+        $(document).on('click', '#sendChat', function() {
+            const input = $('#chatInput');
+            const message = input.val().trim();
+            if (!message) return;
+            addMessage('user', message);
+            input.val('');
+            console.log('Sending message:', message);
+            // Send to server using fetch
+            fetch('/Index?handler=Chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response:', data);
+                addMessage('bot', data.reply);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addMessage('bot', 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.');
+            });
+        });
+
+        // Allow Enter key to send
+        $(document).on('keypress', '#chatInput', function(e) {
+            if (e.which === 13) {
+                $('#sendChat').trigger('click');
+            }
+        });
+    </script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+
+<!-- Floating Chatbot Button -->
+<div class="floating-chatbot">
+    <button onclick="toggleChatbotModal()" class="btn btn-primary rounded-circle" 
+            style="position: fixed; bottom: 20px; right: 20px; z-index: 1060; width: 60px; height: 60px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;" 
+            title="Chatbot" data-bs-toggle="tooltip" data-bs-placement="left">
+        <i class="bi bi-robot" style="font-size: 24px;"></i>
+    </button>
+</div>
+
+<!-- Chatbot Window -->
+<div id="chatbotWindow" class="chatbot-window" style="display: none;">
+    <div class="chatbot-header">
+        <span><i class="bi bi-robot"></i> Chatbot Tư Vấn Sách</span>
+        <button onclick="toggleChatbotModal()" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+    </div>
+    <div class="chatbot-body" id="chatMessages">
+        <!-- Messages will be added here -->
+    </div>
+    <div class="chatbot-footer">
+        <input type="text" id="chatInput" placeholder="Nhập từ khóa hoặc câu hỏi về sách...">
+        <button id="sendChat">Gửi</button>
+    </div>
+</div>
