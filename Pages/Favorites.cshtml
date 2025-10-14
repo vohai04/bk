@@ -208,35 +208,50 @@ function renderFavoriteBooks(books, totalPages, currentPage) {
         const $btn = $(this);
         const $card = $btn.closest('.card');
         
-        if (!confirm('Bạn có chắc muốn xóa sách này khỏi danh sách yêu thích?')) return;
-        
-        $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i>');
-        
-        fetch('/Favorites?handler=RemoveFavorite', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
-            },
-            body: JSON.stringify({ bookId: parseInt(bookId) })
-        })
-        .then(res => res.ok ? res.json() : Promise.reject(res.status))
-        .then(data => {
-            if (data.success) {
-                showToast("Đã xóa khỏi danh sách yêu thích", "success");
-                // Animate card removal
-                $card.fadeOut(300, () => {
-                    loadFavoriteBooks(currentGlobalPage);
+        showConfirmModal(
+            'Xác nhận xóa',
+            'Bạn có chắc muốn xóa sách này khỏi danh sách yêu thích không?',
+            function() {
+                $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i>');
+                
+                fetch('/Favorites?handler=RemoveFavorite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() || ''
+                    },
+                    body: JSON.stringify({ bookId: parseInt(bookId) })
+                })
+                .then(res => res.ok ? res.json() : Promise.reject(res.status))
+                .then(data => {
+                    if (data.success) {
+                        showToast("Đã xóa khỏi danh sách yêu thích", "success");
+                        // Remove card immediately
+                        $card.fadeOut(300, function() {
+                            $(this).remove();
+                            // Check if page is now empty and reload if needed
+                            const remainingCards = $('#favoriteBooksContainer .card').length - 1; // -1 because this card is being removed
+                            if (remainingCards === 0 && currentGlobalPage > 1) {
+                                // If page becomes empty and not first page, go to previous page
+                                loadFavoriteBooks(currentGlobalPage - 1);
+                            } else if (remainingCards === 0) {
+                                // If first page becomes empty, show empty state
+                                $('#favoriteBooksContainer').hide();
+                                $('#emptyState').show();
+                                $('#paginationNav').hide();
+                            }
+                        });
+                    } else {
+                        showToast(data.message || "Có lỗi khi xóa", "error");
+                        $btn.prop('disabled', false).html('<i class="bi bi-heart-fill"></i>');
+                    }
+                })
+                .catch(() => {
+                    showToast("Lỗi khi xóa khỏi danh sách yêu thích", "error");
+                    $btn.prop('disabled', false).html('<i class="bi bi-heart-fill"></i>');
                 });
-            } else {
-                showToast(data.message || "Có lỗi khi xóa", "error");
-                $btn.prop('disabled', false).html('<i class="bi bi-heart-fill"></i>');
             }
-        })
-        .catch(() => {
-            showToast("Lỗi khi xóa khỏi danh sách yêu thích", "error");
-            $btn.prop('disabled', false).html('<i class="bi bi-heart-fill"></i>');
-        });
+        );
     });
 }
 

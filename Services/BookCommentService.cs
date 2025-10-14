@@ -98,7 +98,7 @@ namespace BookInfoFinder.Services
             var directReplies = await _context.BookComments
                 .Where(c => c.ParentCommentId == parentCommentId)
                 .Include(c => c.User)
-                .OrderBy(c => c.CreatedAt)
+                .OrderByDescending(c => c.CreatedAt) // Sắp xếp mới nhất trước
                 .ToListAsync();
 
             foreach (var reply in directReplies)
@@ -146,7 +146,7 @@ namespace BookInfoFinder.Services
                 var replies = await _context.BookComments
                     .Where(c => c.ParentCommentId == parentCommentId)
                     .Include(c => c.User)
-                    .OrderBy(c => c.CreatedAt)
+                    .OrderByDescending(c => c.CreatedAt) // Sắp xếp mới nhất trước
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
@@ -400,7 +400,7 @@ namespace BookInfoFinder.Services
                 var replies = await _context.BookComments
                     .Where(r => r.ParentCommentId == commentId)
                     .Include(r => r.User)
-                    .OrderBy(r => r.CreatedAt)
+                    .OrderByDescending(r => r.CreatedAt) // Sắp xếp mới nhất trước
                     .Skip((replyPage - 1) * replyPageSize)
                     .Take(replyPageSize)
                     .ToListAsync();
@@ -440,7 +440,7 @@ namespace BookInfoFinder.Services
                         var replies = await _context.BookComments
                             .Where(r => r.ParentCommentId == rootComment.BookCommentId)
                             .Include(r => r.User)
-                            .OrderBy(r => r.CreatedAt)
+                            .OrderByDescending(r => r.CreatedAt) // Sắp xếp mới nhất trước
                             .ToListAsync();
 
                         commentDto.Replies = replies.Select(r => r.ToDto()).ToList();

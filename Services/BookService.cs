@@ -135,6 +135,8 @@ namespace BookInfoFinder.Services
                     Comments = comments.Select(c => new BookCommentDto
                     {
                         BookCommentId = c.BookCommentId,
+                        BookId = c.BookId,
+                        UserId = c.UserId,
                         Comment = c.Comment,
                         Star = c.Star ?? 0,
                         UserName = c.User?.UserName ?? "Ẩn danh",
@@ -259,6 +261,8 @@ namespace BookInfoFinder.Services
                 book.Comments = comments.Select(c => new BookCommentDto
                 {
                     BookCommentId = c.BookCommentId,
+                    BookId = c.BookId,
+                    UserId = c.UserId,
                     Comment = c.Comment,
                     Star = c.Star ?? 0,
                     UserName = c.User?.UserName ?? "Ẩn danh",
