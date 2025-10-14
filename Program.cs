@@ -7,8 +7,12 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Text;
 using BookInfoFinder.Services.Interface;
 // using BookInfoFinder.Hubs;
+using QuestPDF;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+// Cấu hình license cho QuestPDF
+QuestPDF.Settings.License = LicenseType.Community;
  
 builder.Services.AddRazorPages()
     .AddRazorRuntimeCompilation();

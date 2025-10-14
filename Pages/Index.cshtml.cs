@@ -365,8 +365,9 @@ namespace BookInfoFinder.Pages
             );
             totalCount = bookCount;
 
-            // Lưu lịch sử tìm kiếm (chỉ page 1)
-            if (page == 1)
+            // Lưu lịch sử tìm kiếm (chỉ page 1, có tiêu chí search, không phải chỉ filter hoặc paging)
+            bool hasSearch = !string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(author) || !string.IsNullOrWhiteSpace(category) || year > 0;
+            if (page == 1 && hasSearch)
             {
                 await SaveSearchHistory(title, author, category, year, totalCount, null);
             }
@@ -451,6 +452,21 @@ namespace BookInfoFinder.Pages
                     categoryId = cat?.CategoryId;
                 }
 
+                // Luôn tìm BookId nếu có title
+                int? bookId = null;
+                if (!string.IsNullOrWhiteSpace(title))
+                {
+                    var (books, totalCount) = await _bookService.SearchBooksAdminPagedAsync(
+                        title, null, null, null, 1, 1, null
+                    );
+                    var exactMatch = books.FirstOrDefault(b => b.Title.Equals(title, StringComparison.OrdinalIgnoreCase));
+                    if (exactMatch != null)
+                    {
+                        bookId = exactMatch.BookId;
+                        Console.WriteLine($"Found BookId: {bookId} for title: {title}");
+                    }
+                }
+
                 var historyDto = new SearchHistoryCreateDto
                 {
                     SearchQuery = searchQuery,
@@ -458,7 +474,8 @@ namespace BookInfoFinder.Pages
                     Author = string.IsNullOrWhiteSpace(author) ? null : author,
                     CategoryId = categoryId,
                     UserId = userId,
-                    ResultCount = (int)resultCount
+                    ResultCount = (int)resultCount,
+                    BookId = bookId
                 };
 
                 await _searchHistoryService.AddHistoryAsync(historyDto);

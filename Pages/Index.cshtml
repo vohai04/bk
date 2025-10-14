@@ -244,10 +244,8 @@
             function selectSuggestion(index) {
                 if (index >= 0 && index < currentSuggestions.length) {
                     const suggestion = currentSuggestions[index];
-                    
                     // Clear current state
                     state = { page: 1, pageSize: 8, title: '', author: '', category: '', year: '', tag: '', sort: '' };
-                    
                     // Set appropriate filter based on suggestion type
                     switch(suggestion.type) {
                         case 'title':
@@ -260,68 +258,12 @@
                             state.category = suggestion.text;
                             break;
                     }
-                    
                     $('#mainSearchInput').val(suggestion.text);
                     hideSuggestions();
-                    
-                    // Load books first to get result count
-                    loadBooksAndSaveHistory(suggestion);
-                    
+                    loadBooks();
                     showToast(`Tìm kiếm ${suggestion.searchType.toLowerCase()}: "${suggestion.text}"`, 'info');
                 }
             }
-
-            function loadBooksAndSaveHistory(suggestion) {
-                showLoading();
-                const params = Object.assign({}, state);
-                
-                $.getJSON('/Index?handler=Search', params)
-                    .done(function (res) {
-                        hideLoading();
-                        renderBooks(res.items || []);
-                        const totalPages = res.totalPages || 1;
-                        
-                        // Save search history with result count
-                        saveSearchHistory(suggestion.text, suggestion.type, res.total || 0);
-                        
-                        // Update pagination - using existing pagination logic
-                        if (totalPages > 1) {
-                            $('#paginationNav').show();
-                            renderPagination('#paginationButtons', totalPages, state.page, function (p) { 
-                                state.page = p; 
-                                loadBooks(); 
-                            });
-                        } else {
-                            $('#paginationNav').hide();
-                        }
-                    })
-                    .fail(function () {
-                        hideLoading();
-                        showToast('Lỗi khi tải sách', 'error');
-                    });
-            }
-
-            function saveSearchHistory(query, type, resultCount) {
-                // Only save if user is logged in
-                const userName = '@(ViewData["UserName"] ?? "")';
-                if (!userName) return;
-
-                const formData = new FormData();
-                formData.append('query', query);
-                formData.append('type', type);
-                formData.append('resultCount', resultCount.toString());
-
-                fetch('/Index?handler=SaveSearchHistory', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    }
-                }).catch(err => {
-                    console.log('Failed to save search history:', err);
-                });
-            }
-
             function loadBooks() {
                 showLoading();
                 const params = Object.assign({}, state);
@@ -332,15 +274,7 @@
                         renderBooks(res.items || []);
                         const totalPages = res.totalPages || 1;
                         
-                        // Save search history if this is a new search (page 1) and has criteria
-                        if (state.page === 1) {
-                            const hasSearch = state.title || state.author || state.category || state.year;
-                            if (hasSearch) {
-                                const query = state.title || state.author || state.category || state.year;
-                                const type = state.title ? 'title' : state.author ? 'author' : state.category ? 'category' : 'year';
-                                saveSearchHistory(query, type, res.total || 0);
-                            }
-                        }
+                        // Only backend saves history. No JS call here.
                         
                         if (totalPages > 1) {
                             $('#paginationNav').show();

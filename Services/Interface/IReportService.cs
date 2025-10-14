@@ -8,33 +8,11 @@ namespace BookInfoFinder.Services.Interface
         Task<DashboardReportDto> GetDashboardReportAsync();
         Task<DashboardReportDto> GetDashboardReportByDateRangeAsync(DateTime startDate, DateTime endDate);
         
-        // Book reports
-        Task<List<BookListDto>> GetBooksReportAsync(string? title = null, string? author = null, string? category = null, int? year = null, string? tag = null);
-        Task<(List<BookListDto> Books, int TotalCount)> GetBooksReportPagedAsync(int page, int pageSize, string? title = null, string? author = null, string? category = null, int? year = null, string? tag = null);
-        
-        // Statistics reports
-        Task<List<AuthorStatisticsDto>> GetAuthorStatisticsAsync();
-        Task<List<CategoryStatisticsDto>> GetCategoryStatisticsAsync();
-        Task<List<TagStatisticsDto>> GetTagStatisticsAsync();
-        Task<List<UserActivityDto>> GetUserActivityReportAsync(DateTime? startDate = null, DateTime? endDate = null);
-        
-        // Export functions
-        Task<byte[]> ExportBookListToPdfAsync(string? title = null, string? author = null, string? category = null);
-        Task<byte[]> ExportAuthorStatisticsToPdfAsync();
-        Task<byte[]> ExportCategoryStatisticsToPdfAsync();
-        Task<byte[]> ExportUserActivityToPdfAsync(DateTime? startDate = null, DateTime? endDate = null);
-        
-        // RDLX Export functions
-        Task<object> GetSystemStatisticsForReportAsync();
-        Task<object> GetChartDataForReportAsync();
-        Task<string> GenerateRDLXDataAsync();
-        Task<byte[]> ExportSystemReportToPdfAsync(string rdlxData);
-        
-        // Popular content
-        Task<List<BookListDto>> GetMostPopularBooksAsync(int count = 10);
-        Task<List<AuthorDto>> GetMostPopularAuthorsAsync(int count = 10);
-        Task<List<CategoryDto>> GetMostPopularCategoriesAsync(int count = 10);
-        Task<List<TagDto>> GetMostPopularTagsAsync(int count = 10);
+        // QuestPDF export methods
+        Task<byte[]> ExportTodayReportToPdfAsync();
+        Task<byte[]> ExportWeekReportToPdfAsync();
+        Task<byte[]> ExportMonthReportToPdfAsync();
+        Task<byte[]> ExportYearReportToPdfAsync();
     }
 }
 
