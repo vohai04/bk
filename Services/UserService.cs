@@ -52,12 +52,17 @@ namespace BookInfoFinder.Services
             if (user == null)
                 throw new ArgumentException("User not found");
 
+            // Apply updates. Do NOT modify CreatedAt here (it must remain the original creation time).
+            // UpdateEntity will set UpdatedAt; ensure UpdatedAt is set to now.
             userUpdateDto.UpdateEntity(user);
-            
+            user.UpdatedAt = DateTime.UtcNow;
+
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
-            
-            return user.ToDto();
+
+            // reload fresh entity from database to include any DB-side changes
+            var refreshed = await _context.Users.FindAsync(user.UserId);
+            return refreshed?.ToDto() ?? user.ToDto();
         }
 
         public async Task<bool> DeleteUserAsync(int userId)
@@ -86,8 +91,9 @@ namespace BookInfoFinder.Services
 
         public async Task<UserDto?> ValidateUserAsync(LoginRequestDto loginRequest)
         {
+            // Find user by username regardless of status so caller can decide how to handle locked accounts
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.UserName == loginRequest.UserName && u.Status == 1);
+                .FirstOrDefaultAsync(u => u.UserName == loginRequest.UserName);
 
             if (user == null || user.Password != loginRequest.Password)
                 return null;

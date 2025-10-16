@@ -152,8 +152,8 @@ namespace BookInfoFinder.Services
             try
             {
                 var categories = await _context.Categories
-                    .Where(c => c.Name.Contains(searchTerm) || 
-                               (c.Description != null && c.Description.Contains(searchTerm)))
+                    .Where(c => c.Name.ToLower().Contains(searchTerm.ToLower()) || 
+                               (c.Description != null && c.Description.ToLower().Contains(searchTerm.ToLower())))
                     .ToListAsync();
 
                 var categoryDtos = new List<CategoryDto>();

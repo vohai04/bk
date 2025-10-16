@@ -1,0 +1,206 @@
+@page
+@model BookInfoFinder.Pages.Account.ProfilePageModel
+@{
+    ViewData["Title"] = "Hồ sơ";
+}
+
+<div class="d-flex justify-content-center">
+    <div class="card w-100 shadow-sm" style="max-width:720px;">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <h3 class="card-title mb-1">Hồ sơ của tôi</h3>
+                    <p class="text-muted small mb-3">Thông tin tài khoản — kiểm tra và cập nhật khi cần thiết.</p>
+                </div>
+            </div>
+
+            <dl class="row mb-0">
+                <dt class="col-sm-4 text-muted">Tên hiển thị</dt>
+                <dd class="col-sm-8 mb-3">
+                    <div id="profileFullName" class="fs-5 fw-semibold">@(Model.Profile?.FullName ?? "")</div>
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Email</dt>
+                <dd class="col-sm-8 mb-3">
+                    <div id="profileEmail" class="fs-6">@(Model.Profile?.Email ?? "")</div>
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Ngày tạo</dt>
+                <dd class="col-sm-8 mb-3">
+                    <div id="profileCreatedAt" class="fs-6">@(Model.Profile?.CreatedAt.ToString("dd/MM/yyyy HH:mm") ?? "")</div>
+                </dd>
+
+                <dt class="col-sm-4 text-muted">Cập nhật</dt>
+                <dd class="col-sm-8 mb-3">
+                    <div id="profileUpdatedAt" class="fs-6">@(Model.Profile?.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "")</div>
+                </dd>
+            </dl>
+                    <div id="profileUpdatedAt" class="fs-6">@(Model.Profile?.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "")</div>
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#editProfileModal">Thay đổi hồ sơ</button>
+                <button class="btn btn-outline-secondary px-4" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Đổi mật khẩu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="editProfileForm" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-circle"></i> Chỉnh sửa hồ sơ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="profileUserId" value="@Model.Profile?.UserId" />
+
+                <div class="mb-3">
+                    <label class="form-label">Tên hiển thị</label>
+                    <input type="text" id="profileFullNameInput" name="FullName" class="form-control" maxlength="100" required value="@Model.Profile?.FullName" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Tên đăng nhập</label>
+                    <input type="text" id="profileUserNameInput" name="UserName" class="form-control" maxlength="50" required value="@Model.Profile?.UserName" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="profileEmailInput" name="Email" class="form-control" maxlength="100" required value="@Model.Profile?.Email" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Vai trò</label>
+                    <input type="text" id="profileRoleInput" name="Role" class="form-control" readonly value="@Model.Profile?.Role" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-primary" id="saveProfileBtn"><i class="bi bi-check-circle"></i> Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="changePasswordForm" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-lock"></i> Đổi mật khẩu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="changePwdUserId" value="@Model.Profile?.UserId" />
+
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu hiện tại</label>
+                    <input type="password" id="currentPassword" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu mới</label>
+                    <input type="password" id="newPassword" class="form-control" required minlength="6" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Xác nhận mật khẩu mới</label>
+                    <input type="password" id="confirmNewPassword" class="form-control" required minlength="6" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-primary" id="savePasswordBtn"><i class="bi bi-check-circle"></i> Đổi mật khẩu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Submit profile update via AJAX to handler
+            $('#editProfileForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const userId = parseInt($('#profileUserId').val() || '0');
+                const payload = {
+                    userId: userId,
+                        fullName: $('#profileFullNameInput').val() || '',
+                        email: $('#profileEmailInput').val() || '',
+                        userId: userId,
+                };
+
+                const btn = $('#saveProfileBtn');
+                const original = btn.html();
+                btn.prop('disabled', true).html('<i class="bi bi-arrow-clockwise"></i> Đang lưu...');
+
+                $.ajax({
+                    url: window.location.pathname + '?handler=Update',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify(payload)
+                })
+                .done(function (res) {
+                    if (res.success) {
+                        // Update visible fields on page
+                        $('#profileFullName').text(res.user.fullName);
+                        $('#profileEmail').text(res.user.email);
+                        $('#profileUpdatedAt').text(res.user.updatedAt || '');
+                        $('#editProfileModal').modal('hide');
+                        showToast('Cập nhật hồ sơ thành công!', 'success');
+                    } else {
+                        showToast(res.message || 'Cập nhật thất bại', 'error');
+                    }
+                })
+                .fail(function () {
+                    showToast('Có lỗi khi cập nhật hồ sơ.', 'error');
+                })
+                .always(function () {
+                    btn.prop('disabled', false).html(original);
+                });
+            });
+
+            // Change password via AJAX
+            $('#changePasswordForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const userId = parseInt($('#changePwdUserId').val() || '0');
+                const current = $('#currentPassword').val() || '';
+                const nw = $('#newPassword').val() || '';
+                const conf = $('#confirmNewPassword').val() || '';
+
+                if (nw !== conf) {
+                    showToast('Mật khẩu xác nhận không khớp', 'warning');
+                    return;
+                }
+
+                const btn = $('#savePasswordBtn');
+                const original = btn.html();
+                btn.prop('disabled', true).html('<i class="bi bi-arrow-clockwise"></i> Đang xử lý...');
+
+                $.ajax({
+                    url: window.location.pathname + '?handler=ChangePassword',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ userId: userId, currentPassword: current, newPassword: nw })
+                })
+                .done(function (res) {
+                    if (res.success) {
+                        $('#changePasswordModal').modal('hide');
+                        showToast('Mật khẩu đã được đổi thành công', 'success');
+                        $('#changePasswordForm')[0].reset();
+                    } else {
+                        showToast(res.message || 'Đổi mật khẩu thất bại', 'error');
+                    }
+                })
+                .fail(function () {
+                    showToast('Có lỗi khi đổi mật khẩu.', 'error');
+                })
+                .always(function () {
+                    btn.prop('disabled', false).html(original);
+                });
+            });
+        });
+    </script>
+}
+

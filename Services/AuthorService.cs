@@ -150,8 +150,8 @@ namespace BookInfoFinder.Services
             try
             {
                 var authors = await _context.Authors
-                    .Where(a => a.Name.Contains(searchTerm) || 
-                               (a.Biography != null && a.Biography.Contains(searchTerm)))
+                    .Where(a => a.Name.ToLower().Contains(searchTerm.ToLower()) || 
+                               (a.Biography != null && a.Biography.ToLower().Contains(searchTerm.ToLower())))
                     .ToListAsync();
 
                 var authorDtos = new List<AuthorDto>();

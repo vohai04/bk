@@ -293,19 +293,19 @@ namespace BookInfoFinder.Services
                     .AsQueryable();
 
                 if (!string.IsNullOrEmpty(title))
-                    query = query.Where(b => b.Title.Contains(title));
-                
+                    query = query.Where(b => b.Title.ToLower().Contains(title.ToLower()));
+
                 if (!string.IsNullOrEmpty(author))
-                    query = query.Where(b => b.Author != null && b.Author.Name.Contains(author));
-                
+                    query = query.Where(b => b.Author != null && b.Author.Name.ToLower().Contains(author.ToLower()));
+
                 if (!string.IsNullOrEmpty(category))
-                    query = query.Where(b => b.Category != null && b.Category.Name.Contains(category));
-                
+                    query = query.Where(b => b.Category != null && b.Category.Name.ToLower().Contains(category.ToLower()));
+
                 if (publicationDate.HasValue)
                     query = query.Where(b => b.PublicationDate.Year == publicationDate.Value.Year);
-                
+
                 if (!string.IsNullOrEmpty(tag))
-                    query = query.Where(b => b.BookTags.Any(bt => bt.Tag.Name.Contains(tag)));
+                    query = query.Where(b => b.BookTags.Any(bt => bt.Tag.Name.ToLower().Contains(tag.ToLower())));
 
                 var totalCount = await query.CountAsync();
 
