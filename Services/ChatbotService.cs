@@ -448,8 +448,35 @@ public class ChatbotService : IChatbotService
 
     private IntentAnalysis LocalIntentAnalysis(string message, ConversationContext context)
     {
-        var lower = Normalize(message);
-        var analysis = new IntentAnalysis();
+    var lower = Normalize(message);
+    var analysis = new IntentAnalysis();
+
+        // Extra robust checks for common Vietnamese count queries that sometimes
+        // fail heuristic token matching. We operate on the normalized (diacritics-removed)
+        // form in `lower` to keep checks simple and accent-insensitive.
+        try
+        {
+            // Book count patterns: e.g., "tổng số sách", "số sách là bao nhiêu", "có bao nhiêu sách"
+            if (System.Text.RegularExpressions.Regex.IsMatch(lower, "\\b(tong|tong so|so luong|co bao nhieu|co may|bao nhieu|so)\\b")
+                && System.Text.RegularExpressions.Regex.IsMatch(lower, "\\b(sach|book)\\b"))
+            {
+                analysis.Intent = "count_books";
+                analysis.QueryType = "count";
+                analysis.Explanation = "Detected Vietnamese book-count query (pattern match)";
+                return analysis;
+            }
+
+            // Category count patterns: e.g., "tổng thể loại", "có bao nhiêu thể loại"
+            if (System.Text.RegularExpressions.Regex.IsMatch(lower, "\\b(tong|tong so|so luong|co bao nhieu|co may|bao nhieu|so)\\b")
+                && System.Text.RegularExpressions.Regex.IsMatch(lower, "\\b(the loai|theloai|the-loai|the_loai|the|theloai|category|th e loai|the)\\b"))
+            {
+                analysis.Intent = "count_categories";
+                analysis.QueryType = "count";
+                analysis.Explanation = "Detected Vietnamese category-count query (pattern match)";
+                return analysis;
+            }
+    }
+    catch { }
 
         // Quick follow-up detection: user may reply with a title from the assistant's last list
         try
