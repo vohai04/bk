@@ -64,40 +64,40 @@ public class ChatbotService : IChatbotService
         }
         cleanedMessage = cleanedMessage.Trim();
 
-        // Apply normalization and typo correction to cleaned message for better pattern matching
-        var normalizedMessage = NormalizeVietnamese(cleanedMessage);
-
-        // Check for detail requests
-        if (normalizedMessage.Contains("chi tiết") || normalizedMessage.Contains("xem chi tiết") || 
-            normalizedMessage.Contains("thông tin") || normalizedMessage.Contains("view details"))
+        // Check for detail requests BEFORE normalization
+        if (cleanedMessage.Contains("chi tiết") || cleanedMessage.Contains("xem chi tiết") ||
+            cleanedMessage.Contains("thông tin") || cleanedMessage.Contains("view details"))
         {
             intent.IsDetailRequest = true;
         }
 
-        // Check for list/total requests
-        if (normalizedMessage.Contains("liệt kê") || normalizedMessage.Contains("nêu") || 
-            normalizedMessage.Contains("cho biết") || normalizedMessage.Contains("list") ||
-            normalizedMessage.Contains("show") || normalizedMessage.Contains("một số") ||
-            normalizedMessage.Contains("1 số") || normalizedMessage.Contains("vài") ||
-            normalizedMessage.Contains("mấy") || normalizedMessage.Contains("những"))
+        // Check for list/total requests BEFORE normalization
+        if (cleanedMessage.Contains("liệt kê") || cleanedMessage.Contains("nêu") ||
+            cleanedMessage.Contains("cho biết") || cleanedMessage.Contains("list") ||
+            cleanedMessage.Contains("show") || cleanedMessage.Contains("một số") ||
+            cleanedMessage.Contains("1 số") || cleanedMessage.Contains("vài") ||
+            cleanedMessage.Contains("mấy") || cleanedMessage.Contains("những"))
         {
             intent.IsListRequest = true;
         }
 
-        if (normalizedMessage.Contains("tổng") || normalizedMessage.Contains("số lượng") || 
-            normalizedMessage.Contains("bao nhiêu") || normalizedMessage.Contains("total") ||
-            normalizedMessage.Contains("count"))
+        if (cleanedMessage.Contains("tổng") || cleanedMessage.Contains("số lượng") ||
+            cleanedMessage.Contains("bao nhiêu") || cleanedMessage.Contains("total") ||
+            cleanedMessage.Contains("count"))
         {
             intent.IsTotalRequest = true;
-            
+
             // Special case for total tags
-            if (normalizedMessage.Contains("tag") || normalizedMessage.Contains("thẻ"))
+            if (cleanedMessage.Contains("tag") || cleanedMessage.Contains("thẻ"))
             {
                 intent.Type = "total_tags";
                 intent.IsTotalRequest = true;
                 return intent;
             }
         }
+
+        // Apply normalization AFTER keyword detection for better pattern matching
+        var normalizedMessage = NormalizeVietnamese(cleanedMessage);
 
         // Determine search type and extract keywords
         var vietnamesePatterns = new Dictionary<string, string[]>
@@ -111,17 +111,17 @@ public class ChatbotService : IChatbotService
             ["tags"] = new[] { "tags", "tag", "thẻ", "nhãn" }
         };
 
-        // Check for explicit type indicators
+        // Check for explicit type indicators using cleaned message (not normalized)
         foreach (var pattern in vietnamesePatterns)
         {
             foreach (var keyword in pattern.Value)
             {
-                if (normalizedMessage.Contains(keyword))
+                if (cleanedMessage.Contains(keyword))
                 {
                     intent.Type = pattern.Key;
                     
                     // Extract keywords after the type indicator
-                    var parts = normalizedMessage.Split(new[] { keyword }, StringSplitOptions.None);
+                    var parts = cleanedMessage.Split(new[] { keyword }, StringSplitOptions.None);
                     if (parts.Length > 1)
                     {
                         var remaining = parts[1].Trim();
@@ -147,12 +147,12 @@ public class ChatbotService : IChatbotService
             
             // If message is short and doesn't contain action words, might be a direct search
             var actionWords = new[] { "tìm", "kiếm", "search", "find", "xem", "liệt", "nêu", "cho", "biết", "tổng", "số" };
-            var hasActionWord = actionWords.Any(word => normalizedMessage.Contains(word));
+            var hasActionWord = actionWords.Any(word => cleanedMessage.Contains(word));
             
             if (!hasActionWord && words.Length >= 1 && words.Length <= 10)
             {
                 // Could be a direct book/author/category name
-                intent.Keywords = normalizedMessage;
+                intent.Keywords = cleanedMessage;
                 
                 // Default to book search for direct queries, but also check for category indicators
                 if (normalizedMessage.Contains("hài") || normalizedMessage.Contains("comedy") || 
@@ -172,14 +172,14 @@ public class ChatbotService : IChatbotService
             else if (!hasActionWord)
             {
                 intent.Type = "general";
-                intent.Keywords = normalizedMessage;
+                intent.Keywords = cleanedMessage;
             }
         }
 
         // Split keywords into search terms for better matching
         if (!string.IsNullOrEmpty(intent.Keywords))
         {
-            intent.SearchTerms = intent.Keywords.Split(new[] { ' ', ',', '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries)
+            intent.SearchTerms = NormalizeVietnamese(intent.Keywords).Split(new[] { ' ', ',', '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries)
                 .Where(term => term.Length > 1) // Filter out very short terms
                 .Distinct()
                 .ToList();
