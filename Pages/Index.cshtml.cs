@@ -566,7 +566,15 @@
             // Chatbot handler
             public async Task<JsonResult> OnPostChatAsync(string message)
             {
-                var reply = await _chatbotService.GetChatbotReplyAsync(message);
+                // Use user session or create a persistent one for the conversation
+                var sessionId = HttpContext.Session.GetString("ChatSessionId");
+                if (string.IsNullOrEmpty(sessionId))
+                {
+                    sessionId = Guid.NewGuid().ToString();
+                    HttpContext.Session.SetString("ChatSessionId", sessionId);
+                }
+
+                var reply = await _chatbotService.GetChatbotReplyAsync(message, sessionId);
                 return new JsonResult(new { reply });
             }
         }
