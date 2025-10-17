@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using System.Collections.Concurrent;
 using BookInfoFinder.Models.Entity;
+using System.Linq.Expressions;
 using BookInfoFinder.Models.Dto;
 
 namespace BookInfoFinder.Services;
@@ -971,16 +972,15 @@ Ghi chú: câu có thể rất dài và có từ thừa; hãy chỉ rút ra ph�
                     Console.WriteLine("[DEBUG] Generating list response");
 
                     var count = dbResults.Books.Count;
-                    var capped = Math.Min(count, 20);
+                    var capped = Math.Min(count, 15);
                     var list = dbResults.Books.Take(capped).Select((b, index) =>
                         $"{index + 1}. '{b.Title}' — {b.AuthorName ?? "Không rõ tác giả"}");
                     var titles = string.Join("\n", list);
-
                     var response = $"📚 Danh sách {count} sách:\n\n{titles}";
 
-                    if (count > 20)
+                    if (count > capped)
                     {
-                        response += $"\n\n... và {count - 20} sách khác. Bạn muốn xem chi tiết cuốn nào?";
+                        response += $"\n\n... và {count - capped} sách khác. Bạn muốn xem chi tiết cuốn nào?";
                     }
                     else
                     {
@@ -1139,8 +1139,8 @@ Chỉ trả về JSON, không thêm text khác.";
                         }
                     }
 
-                    // Nếu không có số cụ thể, mặc định lấy 10-20 sách
-                    var pageSize = Math.Clamp(requestedCount ?? 20, 1, 100);
+                    // Nếu không có số cụ thể, mặc định lấy 10-15 sách
+                    var pageSize = Math.Clamp(requestedCount ?? 15, 1, 100);
 
                     Console.WriteLine($"[DEBUG] Fetching {pageSize} books from database");
 
@@ -1244,13 +1244,30 @@ Chỉ trả về JSON, không thêm text khác.";
                         var tokens = term.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).Where(t => t.Length > 0).ToArray();
                         if (tokens.Length > 0)
                         {
-                            var efQuery = _db.Books
+                            // Build an expression predicate by OR-ing per-token conditions.
+                            // Avoid calling .ToLower() on entity properties or using tokens.Any(...) inside the EF expression
+                            // because those patterns are not translatable by EF Core in many providers. Instead we build
+                            // a combined Expression<Func<Book,bool>> using string.Contains (which translates to SQL LIKE).
+                            var booksQuery = _db.Books
                                 .Include(b => b.Author)
                                 .Include(b => b.Category)
-                                .Where(b => tokens.Any(t => (b.Title != null && EF.Functions.Like(b.Title.ToLower(), $"%{t}%"))
-                                                            || (b.Abstract != null && EF.Functions.Like(b.Abstract.ToLower(), $"%{t}%"))
-                                                            || (b.Author != null && EF.Functions.Like(b.Author.Name.ToLower(), $"%{t}%"))))
-                                .Take(100);
+                                .AsQueryable();
+
+                            // Start with a false predicate and OR in token-specific conditions
+                            Expression<Func<Book, bool>> predicate = b => false;
+                            foreach (var tok in tokens)
+                            {
+                                var t = tok; // capture loop variable
+                                // Keep EF predicate simple: only search Title and Abstract at the SQL level.
+                                // We'll handle author-name matching in-memory after fetching candidates.
+                                Expression<Func<Book, bool>> part = b =>
+                                    (b.Title != null && b.Title.Contains(t))
+                                    || (b.Abstract != null && b.Abstract.Contains(t));
+
+                                predicate = Or(predicate, part);
+                            }
+
+                            var efQuery = booksQuery.Where(predicate).Take(100);
 
                             var efList = await efQuery.ToListAsync();
 
@@ -1544,6 +1561,32 @@ Hãy trả lời tự nhiên, thân thiện và tiếp nối cuộc trò chuyệ
 
     #endregion
 
+    // Expression helpers for building dynamic EF predicates
+    private static Expression<Func<T, bool>> Or<T>(Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
+    {
+        // Combine two expressions with logical OR
+        var parameter = Expression.Parameter(typeof(T));
+        var leftVisitor = new ParameterReplacer(parameter);
+        var rightVisitor = new ParameterReplacer(parameter);
+        var left = leftVisitor.Visit(expr1.Body)!;
+        var right = rightVisitor.Visit(expr2.Body)!;
+        var body = Expression.OrElse(left, right);
+        return Expression.Lambda<Func<T, bool>>(body, parameter);
+    }
+
+    private class ParameterReplacer : ExpressionVisitor
+    {
+        private readonly ParameterExpression _parameter;
+        public ParameterReplacer(ParameterExpression parameter)
+        {
+            _parameter = parameter;
+        }
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            return _parameter;
+        }
+    }
+
     // Removed Groq integration. Using Gemini generativeContent only.
 
     #region Gemini API
@@ -1661,7 +1704,7 @@ Hãy trả lời tự nhiên, thân thiện và tiếp nối cuộc trò chuyệ
 public class ConversationContext
 {
     private readonly List<ChatMessage> _messages = new();
-    private readonly int _maxMessages = 20;
+    private readonly int _maxMessages = 15;
     public int MessageCount => _messages.Count;
 
     public void AddMessage(string role, string content)
