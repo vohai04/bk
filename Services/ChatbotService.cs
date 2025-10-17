@@ -64,14 +64,13 @@ public class ChatbotService : IChatbotService
         }
         cleanedMessage = cleanedMessage.Trim();
 
-        // Check for detail requests BEFORE normalization
-        if (cleanedMessage.Contains("chi tiết") || cleanedMessage.Contains("xem chi tiết") ||
-            cleanedMessage.Contains("thông tin") || cleanedMessage.Contains("view details"))
+        // Check for greetings first
+        var greetings = new[] { "hello", "hi", "chào", "xin chào", "chào bạn", "hi there", "hey", "good morning", "good afternoon", "good evening" };
+        if (greetings.Any(g => cleanedMessage.Contains(g.ToLower())))
         {
-            intent.IsDetailRequest = true;
-        }
-
-        // Check for list/total requests BEFORE normalization
+            intent.Type = "greeting";
+            return intent;
+        }        // Check for list/total requests BEFORE normalization
         if (cleanedMessage.Contains("liệt kê") || cleanedMessage.Contains("nêu") ||
             cleanedMessage.Contains("cho biết") || cleanedMessage.Contains("list") ||
             cleanedMessage.Contains("show") || cleanedMessage.Contains("một số") ||
@@ -81,12 +80,12 @@ public class ChatbotService : IChatbotService
             intent.IsListRequest = true;
         }
 
-        if (cleanedMessage.Contains("tổng") || cleanedMessage.Contains("số lượng") ||
+        if (cleanedMessage.Contains("tổng") || cleanedMessage.Contains("số lượng") || 
             cleanedMessage.Contains("bao nhiêu") || cleanedMessage.Contains("total") ||
             cleanedMessage.Contains("count"))
         {
             intent.IsTotalRequest = true;
-
+            
             // Special case for total tags
             if (cleanedMessage.Contains("tag") || cleanedMessage.Contains("thẻ"))
             {
@@ -94,7 +93,23 @@ public class ChatbotService : IChatbotService
                 intent.IsTotalRequest = true;
                 return intent;
             }
+
+            // Set type for total requests
+            if (cleanedMessage.Contains("thể loại") || cleanedMessage.Contains("category"))
+            {
+                intent.Type = "category";
+            }
+            else if (cleanedMessage.Contains("sách") || cleanedMessage.Contains("book"))
+            {
+                intent.Type = "book";
+            }
+            else if (cleanedMessage.Contains("tác giả") || cleanedMessage.Contains("author"))
+            {
+                intent.Type = "author";
+            }
         }
+
+        Console.WriteLine($"DEBUG Extract: After total check - Type='{intent.Type}', IsTotalRequest={intent.IsTotalRequest}");
 
         // Apply normalization AFTER keyword detection for better pattern matching
         var normalizedMessage = NormalizeVietnamese(cleanedMessage);
@@ -107,26 +122,28 @@ public class ChatbotService : IChatbotService
             ["category"] = new[] { "thể loại", "loại sách", "danh mục", "category", "genre", "văn" },
             ["publisher"] = new[] { "nhà xuất bản", "nxb", "publisher" },
             ["favorite_books"] = new[] { "yêu thích", "favorite", "ưa thích", "thích nhất" },
-            ["trending_books"] = new[] { "xu hướng", "trending", "hot", "phổ biến", "được tìm kiếm nhiều" },
+            ["trending_books"] = new[] { "xu hướng", "trending", "hot", "phổ biến", "được tìm kiếm nhiều", "đang hot", "nổi bật" },
             ["tags"] = new[] { "tags", "tag", "thẻ", "nhãn" }
         };
 
-        // Check for explicit type indicators using cleaned message (not normalized)
+        // Check for explicit type indicators using both normalized and original message
         foreach (var pattern in vietnamesePatterns)
         {
             foreach (var keyword in pattern.Value)
             {
-                if (cleanedMessage.Contains(keyword))
+                // Check both normalized and original message for better Unicode handling
+                if (normalizedMessage.Contains(NormalizeVietnamese(keyword)) || 
+                    cleanedMessage.Contains(keyword))
                 {
                     intent.Type = pattern.Key;
                     
                     // Extract keywords after the type indicator
-                    var parts = cleanedMessage.Split(new[] { keyword }, StringSplitOptions.None);
+                    var parts = normalizedMessage.Split(new[] { NormalizeVietnamese(keyword) }, StringSplitOptions.None);
                     if (parts.Length > 1)
                     {
                         var remaining = parts[1].Trim();
                         // Remove common connecting words
-                        var connectors = new[] { "về", "là", "có", "tên", "gì", "nào", "bao" };
+                        var connectors = new[] { "ve", "la", "co", "ten", "gi", "nao", "bao", "duoc", "dang", "la" };
                         foreach (var connector in connectors)
                         {
                             remaining = remaining.Replace($" {connector} ", " ").Replace($" {connector}", "").Replace($"{connector} ", "");
@@ -222,124 +239,135 @@ public class ChatbotService : IChatbotService
         // Handle based on search intent
         else if (!string.IsNullOrEmpty(searchIntent.Type))
         {
-            switch (searchIntent.Type)
+            try
             {
-                case "book":
-                    if (searchIntent.IsTotalRequest)
-                    {
-                        response = await GetTotalBooksAsync();
-                    }
-                    else if (searchIntent.IsDetailRequest)
-                    {
-                        response = await HandleBookDetailRequest(lowerMessage);
-                    }
-                    else if (searchIntent.IsListRequest || string.IsNullOrEmpty(searchIntent.Keywords))
-                    {
-                        var books = await _bookService.GetAllBooksAsync();
-                        var topBooks = books.Take(5).Select(b => b.Title).ToList();
-                        response = $"Một số sách trong hệ thống: {string.Join(", ", topBooks)}";
-                    }
-                    else
-                    {
-                        // Search for specific book
-                        response = await SearchBooksByKeywords(searchIntent);
-                    }
-                    break;
+                switch (searchIntent.Type)
+                {
+                    case "greeting":
+                        response = "Chào bạn! Tôi là chatbot hỗ trợ tìm kiếm sách. Bạn có thể hỏi tôi về sách, tác giả, thể loại, hoặc các chức năng khác. Ví dụ: 'tìm sách Harry Potter', 'tổng số sách', 'liệt kê thể loại'...";
+                        break;
 
-                case "author":
-                    if (searchIntent.IsTotalRequest)
-                    {
-                        response = await GetTotalAuthorsAsync();
-                    }
-                    else if (searchIntent.IsDetailRequest)
-                    {
-                        response = await HandleAuthorDetailRequest(lowerMessage);
-                    }
-                    else if (searchIntent.IsListRequest || string.IsNullOrEmpty(searchIntent.Keywords))
-                    {
-                        var authors = await _authorService.GetAllAuthorsAsync();
-                        var topAuthors = authors.Take(5).Select(a => a.Name).ToList();
-                        response = $"Một số tác giả trong hệ thống: {string.Join(", ", topAuthors)}";
-                    }
-                    else
-                    {
-                        // Search for specific author
-                        response = await SearchAuthorsByKeywords(searchIntent);
-                    }
-                    break;
-
-                case "category":
-                    if (searchIntent.IsTotalRequest)
-                    {
-                        response = await GetTotalCategoriesAsync();
-                    }
-                    else if (searchIntent.IsDetailRequest)
-                    {
-                        response = await HandleCategoryDetailRequest(lowerMessage);
-                    }
-                    else if (searchIntent.IsListRequest || string.IsNullOrEmpty(searchIntent.Keywords))
-                    {
-                        var categories = await _categoryService.GetAllCategoriesAsync();
-                        var topCategories = categories.Take(5).Select(c => c.Name).ToList();
-                        response = $"Một số thể loại sách: {string.Join(", ", topCategories)}";
-                    }
-                    else
-                    {
-                        // Search for specific category
-                        response = await SearchCategoriesByKeywords(searchIntent);
-                    }
-                    break;
-
-                case "favorite_books":
-                    response = await GetFavoriteBooksAsync();
-                    break;
-
-                case "trending_books":
-                    response = await GetTrendingBooksAsync();
-                    break;
-
-                case "tags":
-                    if (searchIntent.IsTotalRequest)
-                    {
-                        response = await GetTotalTagsAsync();
-                    }
-                    else
-                    {
-                        response = await GetAllTagsAsync();
-                    }
-                    break;
-
-                case "total_tags":
-                    response = await GetTotalTagsAsync();
-                    break;
-
-                case "general":
-                    // Handle general queries like totals
-                    if (searchIntent.IsTotalRequest)
-                    {
-                        if (lowerMessage.Contains("sách") || lowerMessage.Contains("book"))
+                    case "book":
+                        if (searchIntent.IsTotalRequest)
                         {
                             response = await GetTotalBooksAsync();
                         }
-                        else if (lowerMessage.Contains("thể loại") || lowerMessage.Contains("category"))
+                        else if (searchIntent.IsDetailRequest)
                         {
-                            response = await GetTotalCategoriesAsync();
+                            response = await HandleBookDetailRequest(lowerMessage);
                         }
-                        else if (lowerMessage.Contains("tác giả") || lowerMessage.Contains("author"))
+                        else if (searchIntent.IsListRequest || string.IsNullOrEmpty(searchIntent.Keywords))
                         {
-                            response = await GetTotalAuthorsAsync();
+                            var books = await _bookService.GetAllBooksAsync();
+                            var topBooks = books.Take(5).Select(b => b.Title).ToList();
+                            response = $"Một số sách trong hệ thống: {string.Join(", ", topBooks)}";
                         }
                         else
                         {
-                            response = "Bạn muốn biết tổng số gì? Ví dụ: tổng số sách, tổng số tác giả, tổng số thể loại...";
+                            // Search for specific book
+                            response = await SearchBooksByKeywords(searchIntent);
                         }
-                    }
-                    else
-                    {
-                        // Try to search across all types
-                        response = await SearchAllByKeywords(searchIntent);
-                    }
-                    break;
+                        break;
+
+                    case "author":
+                        if (searchIntent.IsTotalRequest)
+                        {
+                            response = await GetTotalAuthorsAsync();
+                        }
+                        else if (searchIntent.IsDetailRequest)
+                        {
+                            response = await HandleAuthorDetailRequest(lowerMessage);
+                        }
+                        else if (searchIntent.IsListRequest || string.IsNullOrEmpty(searchIntent.Keywords))
+                        {
+                            var authors = await _authorService.GetAllAuthorsAsync();
+                            var topAuthors = authors.Take(5).Select(a => a.Name).ToList();
+                            response = $"Một số tác giả trong hệ thống: {string.Join(", ", topAuthors)}";
+                        }
+                        else
+                        {
+                            // Search for specific author
+                            response = await SearchAuthorsByKeywords(searchIntent);
+                        }
+                        break;
+
+                    case "category":
+                        if (searchIntent.IsTotalRequest)
+                        {
+                            response = await GetTotalCategoriesAsync();
+                        }
+                        else if (searchIntent.IsDetailRequest)
+                        {
+                            response = await HandleCategoryDetailRequest(lowerMessage);
+                        }
+                        else if (searchIntent.IsListRequest || string.IsNullOrEmpty(searchIntent.Keywords))
+                        {
+                            var categories = await _categoryService.GetAllCategoriesAsync();
+                            var topCategories = categories.Take(5).Select(c => c.Name).ToList();
+                            response = $"Một số thể loại sách: {string.Join(", ", topCategories)}";
+                        }
+                        else
+                        {
+                            // Search for specific category
+                            response = await SearchCategoriesByKeywords(searchIntent);
+                        }
+                        break;
+
+                    case "favorite_books":
+                        response = await GetFavoriteBooksAsync();
+                        break;
+
+                    case "trending_books":
+                        response = await GetTrendingBooksAsync();
+                        break;
+
+                    case "tags":
+                        if (searchIntent.IsTotalRequest)
+                        {
+                            response = await GetTotalTagsAsync();
+                        }
+                        else
+                        {
+                            response = await GetAllTagsAsync();
+                        }
+                        break;
+
+                    case "total_tags":
+                        response = await GetTotalTagsAsync();
+                        break;
+
+                    case "general":
+                        // Handle general queries like totals
+                        if (searchIntent.IsTotalRequest)
+                        {
+                            if (lowerMessage.Contains("sách") || lowerMessage.Contains("book"))
+                            {
+                                response = await GetTotalBooksAsync();
+                            }
+                            else if (lowerMessage.Contains("thể loại") || lowerMessage.Contains("category"))
+                            {
+                                response = await GetTotalCategoriesAsync();
+                            }
+                            else if (lowerMessage.Contains("tác giả") || lowerMessage.Contains("author"))
+                            {
+                                response = await GetTotalAuthorsAsync();
+                            }
+                            else
+                            {
+                                response = "Bạn muốn biết tổng số gì? Ví dụ: tổng số sách, tổng số tác giả, tổng số thể loại...";
+                            }
+                        }
+                        else
+                        {
+                            // Try to search across all types
+                            response = await SearchAllByKeywords(searchIntent);
+                        }
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                response = $"Lỗi xử lý truy vấn '{searchIntent.Type}': {ex.Message}";
             }
         }
         // Fallback to Gemini API for other queries
@@ -712,12 +740,12 @@ public class ChatbotService : IChatbotService
             ["horror"] = "kinh di",
             ["kinhdi"] = "kinh di",
             ["romance"] = "tinh cam",
-            ["tinhcam"] = "tinh cam",
+           
             ["comedy"] = "hai",
             ["drama"] = "kich",
             ["mystery"] = "trinh tham",
             ["trinhtham"] = "trinh tham",
-            ["thriller"] = "gay can",
+           
             ["gaycan"] = "gay can",
             
             // Common name corrections
@@ -911,7 +939,7 @@ public class ChatbotService : IChatbotService
 
         // Check for book detail requests in context
         if (lowerMessage.Contains("xem chi tiết") || lowerMessage.Contains("chi tiết sách") || 
-            lowerMessage.Contains("view details") || lowerMessage.Contains("book details"))
+            lowerMessage.Contains("view details of") || lowerMessage.Contains("book details"))
         {
             return await HandleBookDetailRequest(lowerMessage);
         }
@@ -1268,7 +1296,7 @@ public class ChatbotService : IChatbotService
         var searchHistory = await _db.SearchHistories
             .Where(sh => sh.BookId.HasValue) // Only include records with non-null BookId
             .GroupBy(sh => sh.BookId)
-            .Select(g => new { BookId = g.Key.Value, SearchCount = g.Count() }) // Use .Value since we filtered nulls
+            .Select(g => new { BookId = g.Key, SearchCount = g.Count() }) // Directly use g.Key without .Value
             .OrderByDescending(g => g.SearchCount)
             .Take(5)
             .ToListAsync();
@@ -1278,7 +1306,7 @@ public class ChatbotService : IChatbotService
             var trendingBooks = new List<string>();
             foreach (var item in searchHistory)
             {
-                var book = await _bookService.GetBookByIdAsync(item.BookId);
+                var book = await _bookService.GetBookByIdAsync(item.BookId ?? 0);
                 if (book != null)
                 {
                     trendingBooks.Add($"{book.Title} ({item.SearchCount} lượt tìm)");
@@ -1343,4 +1371,3 @@ public class ChatbotService : IChatbotService
     }
 }
 
-   
