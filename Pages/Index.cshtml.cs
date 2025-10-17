@@ -23,32 +23,34 @@
             // Data for view (chỉ dùng Tags trên Index)
             public List<TagDto> Tags { get; set; } = new();
             public string? UserName { get; set; }
-    
-                    // FIX: Thêm IRatingService vào constructor
-            public IndexModel(
-                IBookService bookService,
-                ICategoryService categoryService,
-                ITagService tagService,
-                IFavoriteService favoriteService,
-                ISearchHistoryService searchHistoryService,
-                IAuthorService authorService,
-                IRatingService ratingService,
-                IBookTagService bookTagService,
-                IConfiguration config,
-                IChatbotService chatbotService      // Thêm
-            )
-            {
-                _bookService = bookService;
-                _categoryService = categoryService;
-                _tagService = tagService;
-                _favoriteService = favoriteService;
-                _searchHistoryService = searchHistoryService;
-                _authorService = authorService;
-                _ratingService = ratingService;  // FIX: Thêm dòng này
-                _bookTagService = bookTagService;
-                _config = config;  // Thêm
-                _chatbotService = chatbotService;  // Thêm
-            }
+
+        // FIX: Thêm IRatingService vào constructor
+        public IndexModel(
+            IBookService bookService,
+            ICategoryService categoryService,
+            ITagService tagService,
+            IFavoriteService favoriteService,
+            ISearchHistoryService searchHistoryService,
+            IAuthorService authorService,
+            IRatingService ratingService,
+            IBookTagService bookTagService,
+            IConfiguration config,
+            IChatbotService chatbotService      // Thêm
+        )
+        {
+            _bookService = bookService;
+            _categoryService = categoryService;
+            _tagService = tagService;
+            _favoriteService = favoriteService;
+            _searchHistoryService = searchHistoryService;
+            _authorService = authorService;
+            _ratingService = ratingService;  // FIX: Thêm dòng này
+            _bookTagService = bookTagService;
+            _config = config;  // Thêm
+            _chatbotService = chatbotService;  // Thêm
+        }
+            
+            
     
             public async Task OnGetAsync()
             {
