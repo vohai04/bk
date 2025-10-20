@@ -362,7 +362,7 @@
 
                 // Regular search without tags
                 var (books, bookCount) = await _bookService.SearchBooksAdminPagedAsync(
-                    title, author, category, publicationDate, page, pageSize, null
+                    title, author, category, publicationDate, page, pageSize, null, sort
                 );
                 totalCount = bookCount;
 
@@ -373,34 +373,8 @@
                     await SaveSearchHistory(title, author, category, year, totalCount);
                 }
 
-                // Server-side sorting options
-                IEnumerable<BookInfoFinder.Models.Dto.BookDto> ordered = books;
-                if (!string.IsNullOrWhiteSpace(sort))
-                {
-                    switch (sort)
-                    {
-                        case "rating":
-                            ordered = books.OrderByDescending(b => b.AverageRating).ThenByDescending(b => b.RatingCount);
-                            break;
-                        case "favorites":
-                            ordered = books.OrderByDescending(b => b.TotalFavorites).ThenByDescending(b => b.AverageRating);
-                            break;
-                        case "searched":
-                            // Fallback: approximate by rating count if no search metric
-                            ordered = books.OrderByDescending(b => b.RatingCount).ThenByDescending(b => b.AverageRating);
-                            break;
-                        case "title":
-                            ordered = books.OrderBy(b => b.Title);
-                            break;
-                        case "year":
-                            ordered = books.OrderByDescending(b => b.PublicationDate);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                var resultItems = ordered.Select(b => new
+                // No need for server-side sorting anymore - it's done in the database
+                var resultItems = books.Select(b => new
                 {
                     id = b.BookId,
                     title = b.Title,

@@ -275,5 +275,69 @@ namespace BookInfoFinder.Services
                 return 0;
             }
         }
+
+        public async Task<(List<BookListDto> Books, int TotalCount)> GetMostSearchedBooksPagedAsync(int page, int pageSize)
+        {
+            try
+            {
+                // Get search counts for all books that have been searched
+                var searchStats = await _context.SearchHistories
+                    .Where(sh => sh.BookId.HasValue)
+                    .GroupBy(sh => sh.BookId!.Value)
+                    .Select(g => new { BookId = g.Key, Count = g.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .ToListAsync();
+
+                var totalCount = searchStats.Count;
+                var pagedStats = searchStats
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                var bookIds = pagedStats.Select(x => x.BookId).ToList();
+
+                var books = await _context.Books
+                    .Where(b => bookIds.Contains(b.BookId))
+                    .Include(b => b.Author)
+                    .Include(b => b.Category)
+                    .Include(b => b.BookTags)
+                        .ThenInclude(bt => bt.Tag)
+                    .ToListAsync();
+
+                // Get ratings
+                var ratings = await _context.Ratings
+                    .Where(r => bookIds.Contains(r.BookId))
+                    .GroupBy(r => r.BookId)
+                    .Select(g => new { BookId = g.Key, Avg = g.Average(r => r.Star), Count = g.Count() })
+                    .ToListAsync();
+
+                var ratingsMap = ratings.ToDictionary(x => x.BookId, x => new { x.Avg, x.Count });
+                var searchMap = pagedStats.ToDictionary(x => x.BookId, x => x.Count);
+
+                var bookListDtos = books.Select(book =>
+                {
+                    var ratingInfo = ratingsMap.TryGetValue(book.BookId, out var info) ? info : null;
+                    return new BookListDto
+                    {
+                        BookId = book.BookId,
+                        Title = book.Title,
+                        ImageBase64 = book.ImageBase64 ?? "",
+                        PublicationDate = book.PublicationDate,
+                        AuthorName = book.Author?.Name ?? "Không rõ",
+                        CategoryName = book.Category?.Name ?? "Không rõ",
+                        Tags = book.BookTags.Select(bt => bt.Tag.Name).ToList(),
+                        AverageRating = Math.Round(ratingInfo?.Avg ?? 0, 2),
+                        RatingCount = ratingInfo?.Count ?? 0
+                    };
+                }).OrderByDescending(b => searchMap.TryGetValue(b.BookId, out var count) ? count : 0).ToList();
+
+                return (bookListDtos, totalCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting most searched books paged");
+                return (new List<BookListDto>(), 0);
+            }
+        }
     }
 }

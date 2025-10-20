@@ -14,5 +14,6 @@ namespace BookInfoFinder.Services.Interface
         Task<IEnumerable<SearchHistoryDto>> GetRecentSearchHistoriesAsync(int userId, int count = 10);
         Task<IEnumerable<string>> GetPopularSearchQueriesAsync(int count = 10);
         Task<int> GetSearchHistoryCountByUserAsync(int userId);
+        Task<(List<BookListDto> Books, int TotalCount)> GetMostSearchedBooksPagedAsync(int page, int pageSize);
     }
 }

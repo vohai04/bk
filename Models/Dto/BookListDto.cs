@@ -12,5 +12,6 @@ public class BookListDto
     public List<string> Tags { get; set; } = new();
     public double AverageRating { get; set; }
     public int RatingCount { get; set; }
+    public int TotalFavorites { get; set; }
 }
  

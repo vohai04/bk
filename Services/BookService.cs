@@ -351,7 +351,7 @@ namespace BookInfoFinder.Services
             }
         }
 
-        public async Task<(List<BookDto> Books, int TotalCount)> SearchBooksAdminPagedAsync(string? title, string? author, string? category, DateTime? publicationDate, int page, int pageSize, string? tag)
+        public async Task<(List<BookDto> Books, int TotalCount)> SearchBooksAdminPagedAsync(string? title, string? author, string? category, DateTime? publicationDate, int page, int pageSize, string? tag, string? sort = null)
         {
             try
             {
@@ -381,11 +381,91 @@ namespace BookInfoFinder.Services
 
                 var totalCount = await query.CountAsync();
 
-                var books = await query
-                    .OrderBy(b => b.BookId)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
+                List<Book> books;
+                if (!string.IsNullOrEmpty(sort))
+                {
+                    // For complex sorting, we need to get all matching books first, then sort
+                    var allBooks = await query.ToListAsync();
+                    var allBookIds = allBooks.Select(b => b.BookId).ToList();
+
+                    // Get ratings and favorites for sorting
+                    var allRatings = await _context.Ratings
+                        .Where(r => allBookIds.Contains(r.BookId))
+                        .GroupBy(r => r.BookId)
+                        .Select(g => new { BookId = g.Key, Avg = g.Average(r => r.Star), Count = g.Count() })
+                        .ToDictionaryAsync(x => x.BookId, x => x);
+
+                    var allFavorites = await _context.Favorites
+                        .Where(f => allBookIds.Contains(f.BookId))
+                        .GroupBy(f => f.BookId)
+                        .Select(g => new { BookId = g.Key, Count = g.Count() })
+                        .ToDictionaryAsync(x => x.BookId, x => x.Count);
+
+                    // Sort books based on criteria
+                    switch (sort)
+                    {
+                        case "rating":
+                            allBooks = allBooks
+                                .Select(b => {
+                                    var rating = allRatings.TryGetValue(b.BookId, out var r) ? r : null;
+                                    return new { Book = b, AvgRating = rating?.Avg ?? 0, RatingCount = rating?.Count ?? 0 };
+                                })
+                                .OrderByDescending(x => x.AvgRating)
+                                .ThenByDescending(x => x.RatingCount)
+                                .Select(x => x.Book)
+                                .ToList();
+                            break;
+                        case "favorites":
+                            allBooks = allBooks
+                                .Select(b => {
+                                    var favCount = allFavorites.TryGetValue(b.BookId, out var count) ? count : 0;
+                                    var avgRating = allRatings.TryGetValue(b.BookId, out var r) ? r.Avg : 0;
+                                    return new { Book = b, FavoriteCount = favCount, AvgRating = avgRating };
+                                })
+                                .OrderByDescending(x => x.FavoriteCount)
+                                .ThenByDescending(x => x.AvgRating)
+                                .Select(x => x.Book)
+                                .ToList();
+                            break;
+                        case "searched":
+                            // Use rating count as approximation for search popularity
+                            allBooks = allBooks
+                                .Select(b => {
+                                    var ratingCount = allRatings.TryGetValue(b.BookId, out var r) ? r.Count : 0;
+                                    var avgRating = r?.Avg ?? 0;
+                                    return new { Book = b, RatingCount = ratingCount, AvgRating = avgRating };
+                                })
+                                .OrderByDescending(x => x.RatingCount)
+                                .ThenByDescending(x => x.AvgRating)
+                                .Select(x => x.Book)
+                                .ToList();
+                            break;
+                        case "title":
+                            allBooks = allBooks.OrderBy(b => b.Title).ToList();
+                            break;
+                        case "year":
+                            allBooks = allBooks.OrderByDescending(b => b.PublicationDate).ToList();
+                            break;
+                        default:
+                            allBooks = allBooks.OrderBy(b => b.BookId).ToList();
+                            break;
+                    }
+
+                    // Apply pagination after sorting
+                    books = allBooks
+                        .Skip((page - 1) * pageSize)
+                        .Take(pageSize)
+                        .ToList();
+                }
+                else
+                {
+                    // Default sorting - no need for complex logic
+                    books = await query
+                        .OrderBy(b => b.BookId)
+                        .Skip((page - 1) * pageSize)
+                        .Take(pageSize)
+                        .ToListAsync();
+                }
 
                 var bookIds = books.Select(b => b.BookId).ToList();
 

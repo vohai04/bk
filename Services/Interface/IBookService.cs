@@ -12,6 +12,6 @@ namespace BookInfoFinder.Services.Interface
         Task<bool> DeleteBookAsync(int bookId);
         Task<BookDetailDto?> GetBookDetailWithStatsAndCommentsAsync(int bookId, int page, int pageSize);
         Task<(List<BookListDto> Books, int TotalCount)> SearchBooksWithStatsPagedAsync(string? title, string? author, string? category, DateTime? publicationDate, int page, int pageSize, string? tag);
-        Task<(List<BookDto> Books, int TotalCount)> SearchBooksAdminPagedAsync(string? title, string? author, string? category, DateTime? publicationDate, int page, int pageSize, string? tag);
+        Task<(List<BookDto> Books, int TotalCount)> SearchBooksAdminPagedAsync(string? title, string? author, string? category, DateTime? publicationDate, int page, int pageSize, string? tag, string? sort = null);
     }
 }
