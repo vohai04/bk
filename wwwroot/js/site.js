@@ -45,22 +45,41 @@ function initTooltips() {
     });
 }
 
-// Navbar scroll hide/show
-$(function () {
-    const $navbar = $(".modern-navbar");
-    if ($navbar.length === 0) return;
-    let lastScrollTop = $(window).scrollTop();
-    let isHidden = false;
-    $(window).on("scroll", function () {
-        const scrollTop = $(this).scrollTop();
-        if (scrollTop > lastScrollTop && scrollTop > 60) {
-            if (!isHidden) { $navbar.addClass("navbar-hidden"); isHidden = true; }
-        } else if (scrollTop < lastScrollTop) {
-            if (isHidden) { $navbar.removeClass("navbar-hidden"); isHidden = false; }
+// Header hide/show on scroll (hide when scrolling down, show when scrolling up)
+(function () {
+    const $header = $(".modern-header");
+    if ($header.length === 0) return;
+
+    let lastScroll = window.pageYOffset || document.documentElement.scrollTop;
+    let ticking = false;
+    const delta = 10; // minimum change to trigger
+
+    function update() {
+        const current = window.pageYOffset || document.documentElement.scrollTop;
+        if (Math.abs(current - lastScroll) <= delta) {
+            ticking = false;
+            return;
         }
-        lastScrollTop = scrollTop;
-    });
-});
+
+        if (current > lastScroll && current > ($header.outerHeight() || 64)) {
+            // scrolling down
+            $header.addClass('header-hidden');
+        } else if (current < lastScroll) {
+            // scrolling up
+            $header.removeClass('header-hidden');
+        }
+
+        lastScroll = current;
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', function () {
+        if (!ticking) {
+            window.requestAnimationFrame(update);
+            ticking = true;
+        }
+    }, { passive: true });
+})();
 
 // Phân trang tiện ích
 function renderPagination(containerSelector, totalPages, currentPage, onPageClick) {

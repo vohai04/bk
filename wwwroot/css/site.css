@@ -102,7 +102,7 @@ body {
     box-shadow: var(--shadow-lg);
     position: sticky;
     top: 0;
-    z-index: 1000;
+    z-index: 1100; /* raised so header and its toggle sit above admin sidebar */
     backdrop-filter: blur(10px);
 }
 
@@ -416,6 +416,7 @@ body {
     margin-top: auto;
     position: relative;
     overflow: hidden;
+    z-index: 900; /* Lower than admin sidebar z-index: 1000 */
 }
 
 .modern-footer::before {
@@ -1807,7 +1808,46 @@ body {
     box-shadow: 0 4px 24px rgba(0,0,0,0.1);
     position: sticky;
     top: 0;
-    z-index: 1000;
+    z-index: 1100; /* raised so header and its toggle sit above admin sidebar */
+    transition: transform 220ms cubic-bezier(.4,0,.2,1), opacity 180ms linear;
+}
+
+/* When hidden we move header up and reduce opacity */
+.modern-header.header-hidden {
+    transform: translateY(-100%);
+    opacity: 0.0;
+    pointer-events: none;
+}
+
+/* Header sidebar toggle button (visible on admin pages) */
+.modern-header .sidebar-toggle {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1200; /* above header content and other floating elements */
+    color: white;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.modern-header .sidebar-toggle:hover {
+    background: rgba(255,255,255,0.12);
+    transform: translateY(-50%) scale(1.02);
+}
+
+@media (max-width: 992px) {
+    .modern-header .sidebar-toggle {
+        left: 8px;
+    }
 }
 
 .navbar {

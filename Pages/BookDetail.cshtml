@@ -74,12 +74,23 @@ else
                                 <div class="meta-item">
                                     <i class="bi bi-person-fill"></i>
                                     <span class="meta-label">Tác giả:</span>
-                                    <span class="meta-value">@book.AuthorName</span>
+                                    <span class="meta-value">
+                                        <a href="#" class="detail-link" data-type="author" data-id="@book.AuthorId">@book.AuthorName</a>
+                                    </span>
                                 </div>
                                 <div class="meta-item">
                                     <i class="bi bi-tag-fill"></i>
                                     <span class="meta-label">Thể loại:</span>
-                                    <span class="meta-value">@book.CategoryName</span>
+                                    <span class="meta-value">
+                                        <a href="#" class="detail-link" data-type="category" data-id="@book.CategoryId">@book.CategoryName</a>
+                                    </span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="bi bi-building"></i>
+                                    <span class="meta-label">Nhà xuất bản:</span>
+                                    <span class="meta-value">
+                                        <a href="#" class="detail-link" data-type="publisher" data-id="@book.PublisherId">@book.PublisherName</a>
+                                    </span>
                                 </div>
                                 <div class="meta-item">
                                     <i class="bi bi-calendar-fill"></i>
@@ -92,10 +103,11 @@ else
                                         <i class="bi bi-tags-fill"></i>
                                         <span class="meta-label">Tags:</span>
                                         <div class="book-tags">
-                                            @foreach (var tag in book.Tags)
-                                            {
-                                                <span class="tag-badge">@tag</span>
-                                            }
+                                                @foreach (var tag in book.Tags)
+                                                {
+                                                    // Use data-name to allow lookup by tag name (BookDetailDto has tag names only)
+                                                    <a href="#" class="tag-badge detail-link" data-type="tag" data-name="@tag">@tag</a>
+                                                }
                                         </div>
                                     </div>
                                 }
@@ -289,7 +301,12 @@ else
  
         // Mặc định 5 sao được chọn
         $(document).ready(function () {
-            $(".star-selector[data-value='5']").addClass("selected");
+            // Chọn tất cả sao từ 1 đến 5 khi mặc định là 5 sao
+            $(".star-selector").each(function() {
+                if ($(this).data("value") <= 5) {
+                    $(this).addClass("selected");
+                }
+            });
         });
  
         // GỬI ĐÁNH GIÁ
@@ -854,6 +871,92 @@ else
             
             return html;
         }
+    </script>
+    
+    <!-- Entity Detail Modal -->
+    <div class="modal fade" id="entityDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="entityDetailTitle">Thông tin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="entityDetailBody">
+                    <div class="text-center py-4">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Click handler for detail-link elements (author/category/publisher/tag)
+        $(document).on('click', '.detail-link', function (e) {
+            e.preventDefault();
+            const $el = $(this);
+            const type = $el.data('type');
+            const id = $el.data('id');
+            const name = $el.data('name');
+
+            $('#entityDetailTitle').text('Thông tin ' + (type || ''));
+            $('#entityDetailBody').html('<div class="text-center py-4"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+            var modal = new bootstrap.Modal(document.getElementById('entityDetailModal'));
+            modal.show();
+
+            if (type === 'tag') {
+                $.get('?handler=TagDetail', { name: name })
+                    .done(function (res) {
+                        if (res.success) {
+                            const data = res.data;
+                            let html = `<h5>${data.name}</h5>`;
+                            html += `<p>Số sách: ${data.bookCount}</p>`;
+                            html += `<p>${data.description || ''}</p>`;
+                            $('#entityDetailBody').html(html);
+                        } else {
+                            $('#entityDetailBody').html('<div class="alert alert-warning">' + res.message + '</div>');
+                        }
+                    }).fail(function () {
+                        $('#entityDetailBody').html('<div class="alert alert-danger">Không thể tải thông tin.</div>');
+                    });
+                return;
+            }
+
+            // author/category/publisher by id
+            $.get('?handler=EntityDetail', { type: type, id: id })
+                .done(function (res) {
+                    if (!res.success) {
+                        $('#entityDetailBody').html('<div class="alert alert-warning">' + res.message + '</div>');
+                        return;
+                    }
+                    const data = res.data;
+                    let html = '<div class="entity-detail">';
+                    if (type === 'author') {
+                        html += `<h5>${data.name}</h5>`;
+                        html += `<p>Tiểu sử: ${data.biography || ''}</p>`;
+                        html += `<p>Quốc tịch: ${data.nationality || ''}</p>`;
+                        html += `<p>Số sách: ${data.bookCount || 0}</p>`;
+                    } else if (type === 'category') {
+                        html += `<h5>${data.name}</h5>`;
+                        html += `<p>Mô tả: ${data.description || ''}</p>`;
+                        html += `<p>Số sách: ${data.bookCount || 0}</p>`;
+                    } else if (type === 'publisher') {
+                        html += `<h5>${data.name}</h5>`;
+                        html += `<p>Địa chỉ: ${data.address || ''}</p>`;
+                        html += `<p>Thông tin liên hệ: ${data.contactInfo || ''}</p>`;
+                        html += `<p>Số sách: ${data.bookCount || 0}</p>`;
+                    }
+                    html += '</div>';
+                    $('#entityDetailBody').html(html);
+                }).fail(function () {
+                    $('#entityDetailBody').html('<div class="alert alert-danger">Không thể tải thông tin.</div>');
+                });
+        });
     </script>
     
     <style>

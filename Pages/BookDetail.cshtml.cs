@@ -34,6 +34,63 @@ public class BookDetailModel : PageModel
         _userService = userService;
     }
 
+    // Generic handler to fetch details for author/category/publisher by id
+    public async Task<JsonResult> OnGetEntityDetailAsync(string type, int id)
+    {
+        if (string.IsNullOrEmpty(type)) return new JsonResult(new { success = false, message = "Missing type" });
+
+        try
+        {
+            switch (type.ToLower())
+            {
+                case "author":
+                    var author = await _authorService.GetAuthorByIdAsync(id);
+                    if (author == null) return new JsonResult(new { success = false, message = "Không tìm thấy tác giả" });
+                    return new JsonResult(new { success = true, data = author });
+                case "category":
+                    var category = await (_publisherService is null ? Task.FromResult<CategoryDto?>(null) : Task.FromResult<CategoryDto?>(null));
+                    // Use CategoryService if available via DI through PageModel - try to resolve via HttpContext.RequestServices
+                    var categoryService = HttpContext.RequestServices.GetService(typeof(BookInfoFinder.Services.Interface.ICategoryService)) as BookInfoFinder.Services.Interface.ICategoryService;
+                    if (categoryService != null)
+                    {
+                        category = await categoryService.GetCategoryByIdAsync(id);
+                        if (category == null) return new JsonResult(new { success = false, message = "Không tìm thấy thể loại" });
+                        return new JsonResult(new { success = true, data = category });
+                    }
+                    return new JsonResult(new { success = false, message = "Service category không khả dụng" });
+                case "publisher":
+                    var publisher = await _publisherService.GetPublisherByIdAsync(id);
+                    if (publisher == null) return new JsonResult(new { success = false, message = "Không tìm thấy nhà xuất bản" });
+                    return new JsonResult(new { success = true, data = publisher });
+                default:
+                    return new JsonResult(new { success = false, message = "Loại không hợp lệ" });
+            }
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { success = false, message = ex.Message });
+        }
+    }
+
+    // Handler to fetch Tag details by name (TagDto contains nice fields)
+    public async Task<JsonResult> OnGetTagDetailAsync(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return new JsonResult(new { success = false, message = "Missing name" });
+        try
+        {
+            var tagService = HttpContext.RequestServices.GetService(typeof(BookInfoFinder.Services.Interface.ITagService)) as BookInfoFinder.Services.Interface.ITagService;
+            if (tagService == null) return new JsonResult(new { success = false, message = "Service tag không khả dụng" });
+            var all = await tagService.SearchTagsAsync(name);
+            var found = all.FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
+            if (found == null) return new JsonResult(new { success = false, message = "Không tìm thấy tag" });
+            return new JsonResult(new { success = true, data = found });
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { success = false, message = ex.Message });
+        }
+    }
+
     // Lấy danh sách bình luận gốc (phân trang) - Facebook style
     public async Task<JsonResult> OnGetGetBookDetailAsync(int id)
     {

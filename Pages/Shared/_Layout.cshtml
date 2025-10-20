@@ -106,6 +106,12 @@
     <header class="modern-header">
         <nav class="navbar navbar-expand-lg">
             <div class="container">
+                @if (isAdminPage)
+                {
+                    <button class="btn btn-link sidebar-toggle" id="sidebarToggle" title="Toggle Sidebar">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                }
                 <a class="navbar-brand modern-brand" asp-area="" asp-page="@(isAdminPage ? "/Admin/Dashboard" : "/Index")">
                     <div class="brand-icon">
                         <i class="bi bi-book"></i>
@@ -489,6 +495,36 @@
         $(document).ready(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
             initHeaderFilters();
+            
+            // Admin sidebar toggle
+            $('#sidebarToggle').on('click', function() {
+                const $icon = $(this).find('i');
+                if ($(window).width() < 768) {
+                    // Mobile: use show class for overlay
+                    $('.admin-sidebar').toggleClass('show');
+                } else {
+                    // Desktop: use collapsed class for push layout
+                    const isCollapsed = $('.admin-sidebar').hasClass('collapsed');
+                    $('.admin-sidebar').toggleClass('collapsed');
+                    $('.admin-main').toggleClass('expanded');
+                    
+                    // Update icon
+                    if (isCollapsed) {
+                        $icon.removeClass('bi-chevron-right').addClass('bi-chevron-left');
+                    } else {
+                        $icon.removeClass('bi-chevron-left').addClass('bi-chevron-right');
+                    }
+                }
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            $(document).on('click', function(e) {
+                if ($(window).width() < 768) {
+                    if (!$(e.target).closest('.admin-sidebar, #sidebarToggle').length) {
+                        $('.admin-sidebar').removeClass('show');
+                    }
+                }
+            });
         });
     </script>
     <!-- Profile modal / ajax removed; profile page will handle view/edit/password -->
