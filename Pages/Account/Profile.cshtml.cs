@@ -95,11 +95,13 @@ namespace BookInfoFinder.Pages.Account
 
             try
             {
-                // Note: this implementation does not verify current password because passwords
-                // are stored in plaintext in this sample app's UserService. If you store hashed
-                // passwords, you should validate the current password first.
-                var success = await _userService.ResetPasswordAsync(req.UserId, req.NewPassword);
-                if (!success) return new JsonResult(new { success = false, message = "Không thể đổi mật khẩu" });
+                // Delegate change-password logic to the service layer
+                var changed = await _userService.ChangePasswordAsync(req.UserId, req.CurrentPassword, req.NewPassword);
+                if (!changed)
+                {
+                    // Could be wrong current password or user not found
+                    return new JsonResult(new { success = false, message = "Mật khẩu hiện tại không đúng hoặc không thể đổi" });
+                }
                 return new JsonResult(new { success = true });
             }
             catch (Exception ex)

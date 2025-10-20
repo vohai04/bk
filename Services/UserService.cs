@@ -89,6 +89,23 @@ namespace BookInfoFinder.Services
             return true;
         }
 
+        // Change password with validation of current password
+        public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return false;
+
+            // In this sample app passwords are stored in plain text. Validate directly.
+            if (user.Password != currentPassword) return false;
+
+            user.Password = newPassword;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<UserDto?> ValidateUserAsync(LoginRequestDto loginRequest)
         {
             // Find user by username regardless of status so caller can decide how to handle locked accounts

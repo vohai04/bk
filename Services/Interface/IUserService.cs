@@ -11,6 +11,8 @@ namespace BookInfoFinder.Services.Interface
         Task<UserDto> UpdateUserAsync(UserUpdateDto userUpdateDto);
         Task<bool> DeleteUserAsync(int userId);
         Task<bool> ResetPasswordAsync(int userId, string newPassword);
+    // Change password with current-password validation
+    Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
         Task<UserDto?> ValidateUserAsync(LoginRequestDto loginRequest);
         Task<bool> IsUserNameExistsAsync(string userName); // Fixed property name
         Task<bool> IsEmailExistsAsync(string email);

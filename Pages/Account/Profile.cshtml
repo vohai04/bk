@@ -34,8 +34,7 @@
                 <dd class="col-sm-8 mb-3">
                     <div id="profileUpdatedAt" class="fs-6">@(Model.Profile?.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "")</div>
                 </dd>
-            </dl>
-                    <div id="profileUpdatedAt" class="fs-6">@(Model.Profile?.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? "")</div>
+        </dl>
             <div class="d-flex gap-2 mt-4">
                 <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#editProfileModal">Thay đổi hồ sơ</button>
                 <button class="btn btn-outline-secondary px-4" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Đổi mật khẩu</button>
@@ -60,20 +59,14 @@
                     <input type="text" id="profileFullNameInput" name="FullName" class="form-control" maxlength="100" required value="@Model.Profile?.FullName" />
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Tên đăng nhập</label>
-                    <input type="text" id="profileUserNameInput" name="UserName" class="form-control" maxlength="50" required value="@Model.Profile?.UserName" />
-                </div>
+                <!-- Username and role are intentionally hidden from profile edit -->
 
                 <div class="mb-3">
                     <label class="form-label">Email</label>
                     <input type="email" id="profileEmailInput" name="Email" class="form-control" maxlength="100" required value="@Model.Profile?.Email" />
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Vai trò</label>
-                    <input type="text" id="profileRoleInput" name="Role" class="form-control" readonly value="@Model.Profile?.Role" />
-                </div>
+                <!-- Role is not editable and will not be displayed in the edit form -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>

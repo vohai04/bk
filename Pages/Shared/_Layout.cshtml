@@ -341,7 +341,7 @@
     </footer>
 
     <!-- Toast Notification -->
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055">
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1201">
         <div id="sharedToast" class="toast modern-toast" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="toast-header">
                 <i class="bi bi-info-circle-fill text-primary me-2"></i>
@@ -493,38 +493,39 @@
         
         // Initialize tooltips
         $(document).ready(function() {
+            console.log('Layout scripts loaded');
             $('[data-bs-toggle="tooltip"]').tooltip();
             initHeaderFilters();
-            
-            // Admin sidebar toggle
-            $('#sidebarToggle').on('click', function() {
-                const $icon = $(this).find('i');
-                if ($(window).width() < 768) {
-                    // Mobile: use show class for overlay
-                    $('.admin-sidebar').toggleClass('show');
+        });
+
+        // Use delegated handlers outside of ready to make this robust if layout is re-rendered
+        // Admin sidebar toggle (delegated)
+        $(document).on('click', '#sidebarToggle', function() {
+            const $icon = $(this).find('i');
+            if ($(window).width() < 768) {
+                // Mobile: use show class for overlay
+                $('.admin-sidebar').toggleClass('show');
+            } else {
+                // Desktop: toggle collapsed/expanded and compute new state
+                $('.admin-sidebar').toggleClass('collapsed');
+                $('.admin-main').toggleClass('expanded');
+                const collapsedNow = $('.admin-sidebar').hasClass('collapsed');
+                // When collapsed, show chevron-right (indicates it will expand)
+                if (collapsedNow) {
+                    $icon.removeClass('bi-chevron-left').addClass('bi-chevron-right');
                 } else {
-                    // Desktop: use collapsed class for push layout
-                    const isCollapsed = $('.admin-sidebar').hasClass('collapsed');
-                    $('.admin-sidebar').toggleClass('collapsed');
-                    $('.admin-main').toggleClass('expanded');
-                    
-                    // Update icon
-                    if (isCollapsed) {
-                        $icon.removeClass('bi-chevron-right').addClass('bi-chevron-left');
-                    } else {
-                        $icon.removeClass('bi-chevron-left').addClass('bi-chevron-right');
-                    }
+                    $icon.removeClass('bi-chevron-right').addClass('bi-chevron-left');
                 }
-            });
-            
-            // Close sidebar when clicking outside on mobile
-            $(document).on('click', function(e) {
-                if ($(window).width() < 768) {
-                    if (!$(e.target).closest('.admin-sidebar, #sidebarToggle').length) {
-                        $('.admin-sidebar').removeClass('show');
-                    }
+            }
+        });
+
+        // Close sidebar when clicking outside on mobile
+        $(document).on('click', function(e) {
+            if ($(window).width() < 768) {
+                if (!$(e.target).closest('.admin-sidebar, #sidebarToggle').length) {
+                    $('.admin-sidebar').removeClass('show');
                 }
-            });
+            }
         });
     </script>
     <!-- Profile modal / ajax removed; profile page will handle view/edit/password -->

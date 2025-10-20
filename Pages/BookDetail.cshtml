@@ -913,14 +913,13 @@ else
                 $.get('?handler=TagDetail', { name: name })
                     .done(function (res) {
                         if (res.success) {
-                            const data = res.data;
-                            let html = `<h5>${data.name}</h5>`;
-                            html += `<p>Số sách: ${data.bookCount}</p>`;
-                            html += `<p>${data.description || ''}</p>`;
-                            $('#entityDetailBody').html(html);
-                        } else {
-                            $('#entityDetailBody').html('<div class="alert alert-warning">' + res.message + '</div>');
-                        }
+                                    const data = res.data;
+                                    let html = `<h5>${data.name}</h5>`;
+                                    html += `<p>${data.description || ''}</p>`;
+                                    $('#entityDetailBody').html(html);
+                                } else {
+                                    $('#entityDetailBody').html('<div class="alert alert-warning">' + res.message + '</div>');
+                                }
                     }).fail(function () {
                         $('#entityDetailBody').html('<div class="alert alert-danger">Không thể tải thông tin.</div>');
                     });
@@ -940,16 +939,13 @@ else
                         html += `<h5>${data.name}</h5>`;
                         html += `<p>Tiểu sử: ${data.biography || ''}</p>`;
                         html += `<p>Quốc tịch: ${data.nationality || ''}</p>`;
-                        html += `<p>Số sách: ${data.bookCount || 0}</p>`;
                     } else if (type === 'category') {
                         html += `<h5>${data.name}</h5>`;
                         html += `<p>Mô tả: ${data.description || ''}</p>`;
-                        html += `<p>Số sách: ${data.bookCount || 0}</p>`;
                     } else if (type === 'publisher') {
                         html += `<h5>${data.name}</h5>`;
                         html += `<p>Địa chỉ: ${data.address || ''}</p>`;
                         html += `<p>Thông tin liên hệ: ${data.contactInfo || ''}</p>`;
-                        html += `<p>Số sách: ${data.bookCount || 0}</p>`;
                     }
                     html += '</div>';
                     $('#entityDetailBody').html(html);
