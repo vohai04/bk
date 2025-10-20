@@ -13,13 +13,11 @@ namespace BookInfoFinder.Models.Entity
         [StringLength(100)]
         public string? Title { get; set; }
  
-        [StringLength(100)]
+                [StringLength(100)]
         public string? Author { get; set; }
- 
-        public int? CategoryId { get; set; }
-        public Category? Category { get; set; }
- 
-        public DateTime? Date { get; set; }
+
+        [StringLength(50)]
+        public string? CategoryName { get; set; }
 
         [StringLength(200)]
         public string SearchQuery { get; set; } = string.Empty;

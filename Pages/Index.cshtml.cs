@@ -196,21 +196,14 @@
                         var userIdStr = HttpContext.Session.GetString("UserId");
                         if (int.TryParse(userIdStr, out int userId))
                         {
-                            int? categoryId = null;
-                            if (!string.IsNullOrWhiteSpace(category))
-                            {
-                                var cat = await _categoryService.GetCategoryByNameAsync(category);
-                                categoryId = cat?.CategoryId;
-                            }
-    
                             var historyDto = new SearchHistoryCreateDto
                             {
                                 Title = string.IsNullOrWhiteSpace(title) ? null : title,
                                 Author = string.IsNullOrWhiteSpace(author) ? null : author,
-                                CategoryId = categoryId,
+                                CategoryName = !string.IsNullOrWhiteSpace(category) ? category : null,
                                 UserId = userId
                             };
-    
+
                             await _searchHistoryService.AddHistoryAsync(historyDto);
                         }
                     }
@@ -343,7 +336,7 @@
                             // Lưu lịch sử tìm kiếm tag (chỉ page 1)
                             if (page == 1)
                             {
-                                await SaveSearchHistory(firstTag, null, null, 0, totalCount, 0);
+                                await SaveSearchHistory(firstTag, null, null, 0, totalCount);
                             }
                             
                             var items = tagBooks.Select(b => new
@@ -377,7 +370,7 @@
                 bool hasSearch = !string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(author) || !string.IsNullOrWhiteSpace(category) || year > 0;
                 if (page == 1 && hasSearch)
                 {
-                    await SaveSearchHistory(title, author, category, year, totalCount, null);
+                    await SaveSearchHistory(title, author, category, year, totalCount);
                 }
 
                 // Server-side sorting options
@@ -425,7 +418,7 @@
             }
 
             // Helper method để lưu lịch sử tìm kiếm
-            private async Task SaveSearchHistory(string? title, string? author, string? category, int year, long resultCount, int? categoryId)
+            private async Task SaveSearchHistory(string? title, string? author, string? category, int year, long resultCount)
             {
                 bool hasCriteria = !string.IsNullOrWhiteSpace(title)
                     || !string.IsNullOrWhiteSpace(author)
@@ -453,13 +446,6 @@
 
                     var searchQuery = string.Join(", ", searchParts);
 
-                    // Lấy categoryId nếu chưa có
-                    if (categoryId == null && !string.IsNullOrWhiteSpace(category))
-                    {
-                        var cat = await _categoryService.GetCategoryByNameAsync(category);
-                        categoryId = cat?.CategoryId;
-                    }
-
                     // Luôn tìm BookId nếu có title
                     int? bookId = null;
                     if (!string.IsNullOrWhiteSpace(title))
@@ -480,7 +466,7 @@
                         SearchQuery = searchQuery,
                         Title = string.IsNullOrWhiteSpace(title) ? null : title,
                         Author = string.IsNullOrWhiteSpace(author) ? null : author,
-                        CategoryId = categoryId,
+                        CategoryName = !string.IsNullOrWhiteSpace(category) ? category : null,
                         UserId = userId,
                         ResultCount = (int)resultCount,
                         BookId = bookId
@@ -526,8 +512,7 @@
                             historyDto.Author = query;
                             break;
                         case "category":
-                            var cat = await _categoryService.GetCategoryByNameAsync(query);
-                            historyDto.CategoryId = cat?.CategoryId;
+                            historyDto.CategoryName = query;
                             break;
                     }
 

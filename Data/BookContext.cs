@@ -177,12 +177,6 @@ namespace BookInfoFinder.Data
         .WithOne(static b => b.Category)
         .HasForeignKey(static b => b.CategoryId)
         .IsRequired(false);
-
-    // Quan hệ: Category → SearchHistories
-    entity.HasMany(static c => c.SearchHistories)
-        .WithOne(static sh => sh.Category)
-        .HasForeignKey(static sh => sh.CategoryId)
-        .IsRequired(false);
 });
 
             modelBuilder.Entity<Publisher>(static entity =>
@@ -242,16 +236,12 @@ namespace BookInfoFinder.Data
     entity.Property(static sh => sh.SearchHistoryId).ValueGeneratedOnAdd();
     entity.Property(static sh => sh.Title).HasMaxLength(100);
     entity.Property(static sh => sh.Author).HasMaxLength(100);
+    entity.Property(static sh => sh.CategoryName).HasMaxLength(50);
 
     entity.HasOne(static sh => sh.User)
         .WithMany(static u => u.SearchHistories)
         .HasForeignKey(static sh => sh.UserId)
         .IsRequired();
-
-    entity.HasOne(static sh => sh.Category)
-        .WithMany(static c => c.SearchHistories)
-        .HasForeignKey(static sh => sh.CategoryId)
-        .IsRequired(false);
 
     entity.HasOne(static sh => sh.Book)
         .WithMany(static b => b.SearchHistories)
@@ -570,7 +560,7 @@ namespace BookInfoFinder.Data
                     UserId = 2,
                     Title = "Harry Potter",
                     Author = "J.K. Rowling",
-                    CategoryId = 1,
+                    CategoryName = "Fantasy",
                     BookId = 1,
                     SearchQuery = "Harry Potter fantasy",
                     SearchedAt = seedDate,
@@ -582,7 +572,7 @@ namespace BookInfoFinder.Data
                     UserId = 2,
                     Title = "1984",
                     Author = "George Orwell",
-                    CategoryId = 4,
+                    CategoryName = "Dystopian",
                     BookId = 2,
                     SearchQuery = "1984 dystopian",
                     SearchedAt = seedDate,

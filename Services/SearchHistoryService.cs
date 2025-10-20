@@ -144,7 +144,7 @@ namespace BookInfoFinder.Services
                     SearchQuery = searchHistoryCreateDto.SearchQuery,
                     Title = searchHistoryCreateDto.Title,
                     Author = searchHistoryCreateDto.Author,
-                    CategoryId = searchHistoryCreateDto.CategoryId,
+                    CategoryName = searchHistoryCreateDto.CategoryName,
                     // Date = searchHistoryCreateDto.Date, // Removed because SearchHistoryCreateDto does not contain 'Date'
                     SearchedAt = DateTime.UtcNow,
                     ResultCount = searchHistoryCreateDto.ResultCount,

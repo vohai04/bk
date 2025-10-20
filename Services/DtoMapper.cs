@@ -250,7 +250,7 @@ namespace BookInfoFinder.Services
                 UserName = userName, // Fixed property name
                 Title = searchHistory.Title,
                 Author = searchHistory.Author,
-                CategoryId = searchHistory.CategoryId,
+                CategoryName = searchHistory.CategoryName,
                 BookId = searchHistory.BookId,
                 SearchQuery = searchHistory.SearchQuery,
                 SearchedAt = searchHistory.SearchedAt,
@@ -265,7 +265,7 @@ namespace BookInfoFinder.Services
                 UserId = dto.UserId,
                 Title = dto.Title,
                 Author = dto.Author,
-                CategoryId = dto.CategoryId,
+                CategoryName = dto.CategoryName,
                 BookId = dto.BookId,
                 SearchQuery = dto.SearchQuery,
                 ResultCount = dto.ResultCount,
