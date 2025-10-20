@@ -28,7 +28,23 @@ namespace BookInfoFinder.Services
                     .OrderByDescending(c => c.CreatedAt)
                     .ToListAsync();
 
-                return comments.Select(c => c.ToDto()).ToList();
+                return comments.Select(c => new BookCommentDto
+                {
+                    BookCommentId = c.BookCommentId,
+                    BookId = c.BookId,
+                    UserId = c.UserId,
+                    UserName = c.User?.UserName ?? "",
+                    Role = (int)(c.User?.Role ?? Models.Role.User),
+                    RoleName = (c.User?.Role ?? Models.Role.User).ToString(),
+                    ParentCommentId = c.ParentCommentId,
+                    Comment = c.Comment,
+                    Star = c.Star,
+                    CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt,
+                    ReplyCount = c.Replies?.Count ?? 0,
+                    TotalRepliesCount = c.Replies?.Count ?? 0,
+                    Replies = c.Replies?.Select(r => r.ToDto()).ToList() ?? new List<BookCommentDto>()
+                }).ToList();
             }
             catch (Exception ex)
             {

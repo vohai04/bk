@@ -100,6 +100,11 @@ namespace BookInfoFinder.Services
                     .Where(f => f.UserId == userId)
                     .Include(f => f.Book)
                         .ThenInclude(b => b.Author)
+                    .Include(f => f.Book)
+                        .ThenInclude(b => b.Category)
+                    .Include(f => f.Book)
+                        .ThenInclude(b => b.BookTags)
+                            .ThenInclude(bt => bt.Tag)
                     .Include(f => f.User)
                     .OrderByDescending(f => f.CreatedAt)
                     .ToListAsync();
@@ -108,7 +113,9 @@ namespace BookInfoFinder.Services
                     f.Book?.Title ?? "",
                     f.Book?.ImageBase64 ?? "",
                     f.Book?.Author?.Name ?? "",
-                    f.User?.UserName ?? ""
+                    f.User?.UserName ?? "",
+                    f.Book?.Category?.Name ?? "Không rõ",
+                    f.Book?.BookTags?.Select(bt => bt.Tag.Name).ToList() ?? new List<string>()
                 )).ToList();
             }
             catch (Exception ex)
@@ -130,6 +137,11 @@ namespace BookInfoFinder.Services
                     .Where(f => f.UserId == userId)
                     .Include(f => f.Book)
                         .ThenInclude(b => b.Author)
+                    .Include(f => f.Book)
+                        .ThenInclude(b => b.Category)
+                    .Include(f => f.Book)
+                        .ThenInclude(b => b.BookTags)
+                            .ThenInclude(bt => bt.Tag)
                     .Include(f => f.User)
                     .OrderByDescending(f => f.CreatedAt)
                     .Skip((page - 1) * pageSize)
@@ -140,7 +152,9 @@ namespace BookInfoFinder.Services
                     f.Book?.Title ?? "",
                     f.Book?.ImageBase64 ?? "",
                     f.Book?.Author?.Name ?? "",
-                    f.User?.UserName ?? ""
+                    f.User?.UserName ?? "",
+                    f.Book?.Category?.Name ?? "Không rõ",
+                    f.Book?.BookTags?.Select(bt => bt.Tag.Name).ToList() ?? new List<string>()
                 )).ToList();
 
                 return (favoriteDtos, totalCount);

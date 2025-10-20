@@ -67,7 +67,8 @@ public class BookDetailModel : PageModel
                 star = comment.Star,
                 userName = comment.UserName,
                 roleName = comment.RoleName,
-                createdAt = comment.CreatedAt,
+                // Adjusted to parse `CreatedAt` and `UpdatedAt` as DateTime before formatting
+                createdAt = comment.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm", new System.Globalization.CultureInfo("vi-VN")),
                 timeAgo = GetTimeAgo(comment.CreatedAt),
                 repliesCount = replies.Count,
                 replies = latestReplies.Select(r => new
@@ -77,7 +78,8 @@ public class BookDetailModel : PageModel
                     comment = r.Comment,
                     userName = r.UserName,
                     roleName = r.RoleName,
-                    createdAt = r.CreatedAt,
+                    // Ensure proper parsing of `CreatedAt` as DateTime before applying methods
+                    createdAt = GetTimeAgo(r.CreatedAt),
                     timeAgo = GetTimeAgo(r.CreatedAt)
                 }),
                 hasMoreReplies = replies.Count > 3
@@ -106,8 +108,7 @@ public class BookDetailModel : PageModel
             comment = r.Comment,
             userName = r.UserName,
             roleName = r.RoleName,
-            createdAt = r.CreatedAt,
-            timeAgo = GetTimeAgo(r.CreatedAt)
+            createdAt = GetTimeAgo(r.CreatedAt)
         }).ToList();
 
         var hasMore = allReplies.Count > skip + take;
@@ -124,8 +125,9 @@ public class BookDetailModel : PageModel
     // Helper method to convert DateTime to "time ago" format like Facebook
     private string GetTimeAgo(DateTime dateTime)
     {
-        var timeSpan = DateTime.Now - dateTime;
-        
+        var localDateTime = dateTime.ToLocalTime();
+        var timeSpan = DateTime.Now - localDateTime;
+
         if (timeSpan.TotalMinutes < 1)
             return "Vừa xong";
         if (timeSpan.TotalMinutes < 60)
@@ -259,7 +261,9 @@ public class BookDetailModel : PageModel
                     star = Star,
                     comment = Comment,
                     roleName = user?.Role ?? "user",
-                    createdAt = saved.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    // Adjusted to parse `CreatedAt` as DateTime before formatting
+                    createdAt = saved.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm", new System.Globalization.CultureInfo("vi-VN")),
+                    timeAgo = GetTimeAgo(saved.CreatedAt),
                 },
                 averageRating = avgStar,
                 ratingCount = ratingCount
@@ -308,7 +312,7 @@ public class BookDetailModel : PageModel
                     userName = user?.FullName ?? "Bạn",
                     comment = Comment,
                     roleName = user?.Role ?? "user",
-                    createdAt = saved.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                    createdAt = GetTimeAgo(saved.CreatedAt),
                     timeAgo = GetTimeAgo(saved.CreatedAt),
                     parentCommentId = ParentCommentId
                 }
@@ -351,7 +355,8 @@ public class BookDetailModel : PageModel
                 {
                     bookCommentId = updated.BookCommentId,
                     comment = updated.Comment,
-                    updatedAt = updated.UpdatedAt?.ToString("dd/MM/yyyy HH:mm") ?? DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
+                    // Adjusted to parse `UpdatedAt` as DateTime before formatting
+                    updatedAt = updated.UpdatedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm", new System.Globalization.CultureInfo("vi-VN")) ?? DateTime.Now.ToLocalTime().ToString("dd/MM/yyyy HH:mm", new System.Globalization.CultureInfo("vi-VN")),
                     isEdited = true
                 }
             });

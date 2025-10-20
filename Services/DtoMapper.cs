@@ -213,7 +213,7 @@ namespace BookInfoFinder.Services
         }
 
         // Favorite Mapping
-        public static FavoriteDto ToDto(this Favorite favorite, string bookTitle = "", string bookImage = "", string authorName = "", string userName = "")
+        public static FavoriteDto ToDto(this Favorite favorite, string bookTitle = "", string bookImage = "", string authorName = "", string userName = "", string categoryName = "Không rõ", List<string>? tags = null)
         {
             return new FavoriteDto
             {
@@ -224,6 +224,8 @@ namespace BookInfoFinder.Services
                 AuthorName = authorName,
                 UserId = favorite.UserId,
                 UserName = userName, // Fixed property name
+                CategoryName = categoryName ?? "Không rõ", // Ensure non-null value
+                Tags = tags ?? new List<string>(), // Ensure non-null value
                 CreatedAt = favorite.CreatedAt
             };
         }

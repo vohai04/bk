@@ -142,7 +142,7 @@ namespace BookInfoFinder.Services
                         UserName = c.User?.UserName ?? "Ẩn danh",
                         Role = (int)c.User?.Role!,
                         RoleName = c.User?.Role.ToString() ?? "user",
-                        CreatedAt = c.CreatedAt,
+                        CreatedAt = c.CreatedAt.ToLocalTime(),
                         ReplyCount = 0 // Will be populated separately if needed
                     }).ToList(),
                     TotalComments = await _context.BookComments.CountAsync(c => c.BookId == bookId)
@@ -268,7 +268,7 @@ namespace BookInfoFinder.Services
                     UserName = c.User?.UserName ?? "Ẩn danh",
                     Role = (int)c.User?.Role!,
                     RoleName = c.User?.Role.ToString() ?? "user",
-                    CreatedAt = c.CreatedAt,
+                    CreatedAt = c.CreatedAt.ToLocalTime(),
                     ReplyCount = 0
                 }).ToList();
 

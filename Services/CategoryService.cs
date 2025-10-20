@@ -68,7 +68,7 @@ namespace BookInfoFinder.Services
                 if (category == null) return null;
 
                 var bookCount = await _context.Books.CountAsync(b => b.CategoryId == category.CategoryId);
-                return category.ToDto(bookCount);
+                return DtoMapper.ToDto(category, bookCount);
             }
             catch (Exception ex)
             {

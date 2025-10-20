@@ -9,6 +9,8 @@ public class FavoriteDto
     public string AuthorName { get; set; } = string.Empty;
     public int UserId { get; set; }
     public string UserName { get; set; } = string.Empty; // Match entity property name
+    public string CategoryName { get; set; } = string.Empty; // Added property for category name
+    public List<string> Tags { get; set; } = new(); // Added property for tags
     public DateTime CreatedAt { get; set; }
 }
 

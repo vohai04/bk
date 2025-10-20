@@ -58,7 +58,9 @@ namespace BookInfoFinder.Pages
         title = f.BookTitle ?? "Không có tiêu đề",
         imageBase64 = f.BookImage,
         author = f.AuthorName ?? "Không rõ",
-        createdAt = f.CreatedAt.ToString("dd/MM/yyyy")
+        category = f.CategoryName ?? "Không rõ",
+        tags = f.Tags ?? new List<string>(),
+        createdAt = f.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm", new System.Globalization.CultureInfo("vi-VN"))
     }).ToList();    return new JsonResult(new
     {
         success = true,

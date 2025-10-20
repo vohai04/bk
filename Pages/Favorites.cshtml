@@ -140,8 +140,9 @@ function renderFavoriteBooks(books, totalPages, currentPage) {
     let html = '<div class="row g-4">';
     books.forEach((book, index) => {
         const imageSrc = book.imageBase64 && book.imageBase64 !== "" ? book.imageBase64 : "/images/default-book.jpg";
-        const tags = book.tags?.length ? book.tags.join(", ") : "Chưa có tags";
-        
+        const tags = book.tags?.length ? book.tags.join(", ") : "Không rõ"; // Ensure tags are joined as a string
+        const category = book.category || "Không rõ"; // Ensure category has a fallback
+
         html += `
             <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
                 <div class="card h-100 shadow-sm book-card-hover" data-book-id="${book.bookId}">
@@ -162,11 +163,11 @@ function renderFavoriteBooks(books, totalPages, currentPage) {
                         <div class="book-info mb-3">
                             <p class="mb-1 text-muted">
                                 <i class="bi bi-person me-1"></i>
-                                <strong>Tác giả:</strong> ${book.author?.name || 'Không rõ'}
+                                <strong>Tác giả:</strong> ${book.author || 'Không rõ'}
                             </p>
                             <p class="mb-1 text-muted">
                                 <i class="bi bi-bookmark me-1"></i>
-                                <strong>Thể loại:</strong> ${book.category?.name || 'Không rõ'}
+                                <strong>Thể loại:</strong> ${category}
                             </p>
                             <p class="mb-2 text-muted">
                                 <i class="bi bi-tags me-1"></i>
@@ -187,7 +188,7 @@ function renderFavoriteBooks(books, totalPages, currentPage) {
         `;
     });
     html += "</div>";
-    
+
     $container.html(html);
 
     // Show pagination if needed

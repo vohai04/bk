@@ -11,7 +11,7 @@ namespace BookInfoFinder.Models.Dto
         public int Role { get; set; }
         public string RoleName { get; set; } = "";
         public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; } = null;
         public int? ParentCommentId { get; set; } // null = comment gốc, !null = reply
         
         // Hierarchy information
