@@ -120,5 +120,41 @@ $(document).on('submit', '#sidebarSearchForm', function (e) {
 
 // Khởi chạy chung
 $(document).ready(function () {
+    // Header hide/show on scroll (hide when scrolling down, show when scrolling up)
+    (function () {
+        const $header = $(".modern-header");
+        if ($header.length === 0) return;
+
+        let lastScroll = window.pageYOffset || document.documentElement.scrollTop;
+        let ticking = false;
+        const delta = 10; // minimum change to trigger
+
+        function update() {
+            const current = window.pageYOffset || document.documentElement.scrollTop;
+            if (Math.abs(current - lastScroll) <= delta) {
+                ticking = false;
+                return;
+            }
+
+            if (current > lastScroll && current > ($header.outerHeight() || 64)) {
+                // scrolling down
+                $header.addClass('header-hidden');
+            } else if (current < lastScroll) {
+                // scrolling up
+                $header.removeClass('header-hidden');
+            }
+
+            lastScroll = current;
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', function () {
+            if (!ticking) {
+                window.requestAnimationFrame(update);
+                ticking = true;
+            }
+        }, { passive: true });
+    })();
+
     initTooltips();
 });
