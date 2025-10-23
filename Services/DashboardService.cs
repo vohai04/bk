@@ -194,50 +194,82 @@ namespace BookInfoFinder.Services
                     EntityType = "Category"
                 });
 
-            var commentsQ = _context.BookComments
-                .Select(c => new
+            var today = DateTime.UtcNow.Date;
+            var tomorrow = today.AddDays(1);
+
+            // Fetch each entity's today's activities separately and materialize to avoid EF set-operation translation issues
+            var booksList = await _context.Books
+                .Where(b => b.PublicationDate >= today && b.PublicationDate < tomorrow)
+                .Select(b => new RecentActivityDto
+                {
+                    Type = "book",
+                    Title = b.Title,
+                    Description = "Đã thêm sách",
+                    UserName = b.User != null ? b.User.UserName : "Hệ thống",
+                    CreatedAt = b.PublicationDate,
+                    ActionUrl = "/BookDetail/" + b.BookId,
+                    EntityId = b.BookId,
+                    EntityType = "Book"
+                })
+                .ToListAsync();
+
+            var usersList = await _context.Users
+                .Where(u => u.CreatedAt >= today && u.CreatedAt < tomorrow)
+                .Select(u => new RecentActivityDto
+                {
+                    Type = "user",
+                    Title = u.UserName,
+                    Description = "Đã đăng ký tài khoản",
+                    UserName = u.UserName,
+                    CreatedAt = u.CreatedAt,
+                    ActionUrl = "/Admin/Users",
+                    EntityId = u.UserId,
+                    EntityType = "User"
+                })
+                .ToListAsync();
+
+            var categoriesList = await _context.Categories
+                .Where(c => c.CreatedAt >= today && c.CreatedAt < tomorrow)
+                .Select(c => new RecentActivityDto
+                {
+                    Type = "category",
+                    Title = c.Name,
+                    Description = "Thể loại mới",
+                    UserName = "Hệ thống",
+                    CreatedAt = c.CreatedAt,
+                    ActionUrl = "/Admin/Categories",
+                    EntityId = c.CategoryId,
+                    EntityType = "Category"
+                })
+                .ToListAsync();
+
+            var commentsList = await _context.BookComments
+                .Where(c => c.CreatedAt >= today && c.CreatedAt < tomorrow)
+                .Select(c => new RecentActivityDto
                 {
                     Type = "comment",
                     Title = c.Comment.Substring(0, Math.Min(60, c.Comment.Length)),
                     Description = c.Comment,
-                    UserName = (string) (c.User != null ? c.User.UserName : "Unknown"),
+                    UserName = c.User != null ? c.User.UserName : "Unknown",
                     CreatedAt = c.CreatedAt,
-                    // Use the actual DOM id used in BookDetail (comment-content-{id}) so fragment navigation lands on the comment element
                     ActionUrl = "/BookDetail/" + c.BookId + "#comment-content-" + c.BookCommentId,
-                    EntityId = (int?)c.BookCommentId,
+                    EntityId = c.BookCommentId,
                     EntityType = "BookComment"
-                });
+                })
+                .ToListAsync();
 
-            // Use Concat to unify queries; EF Core will translate to UNION ALL where possible
-            var unionQ = booksQ
-                .Concat(usersQ)
-                .Concat(categoriesQ)
-                .Concat(commentsQ);
+            // Combine lists in-memory and apply ordering + paging
+            var all = booksList
+                .Concat(usersList)
+                .Concat(categoriesList)
+                .Concat(commentsList)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToList();
 
-            var today = DateTime.UtcNow.Date;
-            var tomorrow = today.AddDays(1);
+            var total = all.Count;
+            var pageItems = all.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-            // restrict to today's activities only
-            unionQ = unionQ.Where(x => x.CreatedAt >= today && x.CreatedAt < tomorrow);
-
-            var orderedQ = unionQ.OrderByDescending(x => x.CreatedAt);
-
-            var total = await orderedQ.CountAsync();
-            var pageItems = await orderedQ.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-
-            var result = pageItems.Select(x => new RecentActivityDto
-            {
-                Type = x.Type,
-                Title = x.Type == "book" ? $"Sách mới: {x.Title}" : (x.Type == "user" ? $"Người dùng mới: {x.Title}" : (x.Type == "category" ? $"Thể loại mới: {x.Title}" : "Bình luận mới")),
-                Description = x.Description,
-                UserName = x.UserName,
-                CreatedAt = x.CreatedAt,
-                ActionUrl = x.ActionUrl,
-                EntityId = x.EntityId ?? 0,
-                EntityType = x.EntityType
-            }).ToList();
-
-            return (result, total);
+            return (pageItems, total);
         }
 
         public async Task<(IEnumerable<ActivityLogDto> ActivityLogs, int TotalCount)> GetActivityLogsPagedAsync(int page, int pageSize, DateTime? startDate = null, DateTime? endDate = null, string? entityType = null)
