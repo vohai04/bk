@@ -701,28 +701,36 @@
 
 /* Desktop: ensure header is fixed and sidebar starts below header to avoid overlap */
 @media (min-width: 993px) {
-    .modern-header {
-        position: fixed;
-        width: 100%;
-        top: 0;
-        left: 0;
-        z-index: 1150; /* explicit here to ensure stacking */
-    }
-
-    /* Push page content below the fixed header */
-    .modern-body, .index-layout, .admin-layout {
+    /* Keep header fixed at top and let the body carry the top offset so
+       scrollbars affect the page and header remains visible. */
+    body {
         padding-top: var(--header-height);
     }
 
-    /* Sidebar already uses position:fixed; ensure it starts below header to avoid overlap */
+    /* Avoid double-padding on other layout helpers */
+    .modern-body, .index-layout, .admin-layout {
+        padding-top: 0;
+    }
+
+    /* Position the sidebar below the header and prevent it from overlapping content */
     .sidebar-left {
         top: var(--header-height);
         height: calc(100vh - var(--header-height));
-        z-index: 1050; /* below header but above footer */
+        z-index: 1100;
     }
-    /* Ensure modals remain above header */
+
+    .admin-sidebar {
+        top: var(--header-height);
+        height: calc(100vh - var(--header-height));
+        z-index: 1105;
+    }
+
+    /* No global left padding here; pages control content offsets per their sidebar width
+       (admin pages apply their own margin-left when sidebar is present). */
+
+    /* Ensure modals remain above header and sidebar */
     .modal {
-        z-index: 1250 !important;
+        z-index: 1500 !important;
     }
 }
 
@@ -1821,7 +1829,7 @@
     left: 0;
     right: 0;
     width: 100%;
-    z-index: 1300; /* ensure header sits above sidebars and content */
+    z-index: 100000 !important; /* ensure header sits above sidebars and content */
     transition: transform 220ms cubic-bezier(.4,0,.2,1), opacity 180ms linear;
     height: var(--header-height);
     min-height: var(--header-height);
@@ -1876,16 +1884,17 @@
         padding-top: var(--header-height) !important;
     }
 
+    /* Sidebar should start at the top; header overlays it via higher z-index */
     .sidebar-left {
-        top: var(--header-height) !important;
-        height: calc(100vh - var(--header-height)) !important;
-        z-index: 1100;
+        top: 0 !important;
+        height: 100vh !important;
+        z-index: 900 !important; /* intentionally lower so header overlays */
     }
 
     .admin-sidebar {
-        top: var(--header-height) !important;
-        height: calc(100vh - var(--header-height)) !important;
-        z-index: 1105 !important;
+        top: 0 !important;
+        height: 100vh !important;
+        z-index: 905 !important; /* intentionally lower so header overlays */
     }
 
     /* Ensure modals remain above header */

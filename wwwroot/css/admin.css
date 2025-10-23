@@ -30,7 +30,7 @@
 
 /* Admin Header */
 .admin-header {
-    height: 70px;
+    height: var(--admin-header-height);
     background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-light) 100%);
     color: white;
     box-shadow: var(--admin-shadow);
@@ -38,7 +38,7 @@
     top: 0;
     left: 0;
     right: 0;
-    z-index: 1030;
+    z-index: 1330; /* above sidebar but below global modals */
 }
 
 /* Force flat sidebar appearance: remove all rounded corners for a cleaner, square look */
@@ -138,15 +138,15 @@
     border-radius: 0 12px 12px 0; /* smoother right edge */
     position: fixed; /* fixed full-height column */
     left: 0;
-    top: 0;
-    bottom: 0;
-    height: 100vh;
+    top: var(--admin-header-height); /* start below the admin header */
+    bottom: var(--admin-footer-height);
+    height: calc(100vh - (var(--admin-header-height) + var(--admin-footer-height)));
     overflow-y: auto; /* allow scrolling only if content truly overflows */
     -webkit-overflow-scrolling: touch;
     /* Use flex column so header / nav / footer can be positioned vertically */
     display: flex;
     flex-direction: column;
-    z-index: 1035;
+    z-index: 1335; /* sit above main content but below header */
 }
 
 /* Collapsed sidebar (desktop) */
@@ -252,8 +252,10 @@
 }
 
 /* Admin Layout (final harmonized block) */
+
+/* Ensure admin layout accounts for fixed header and footer heights */
 .admin-layout {
-    margin-top: var(--admin-header-height);
+    margin-top: 0; /* body/page-level padding provides top offset */
     display: flex;
     min-height: calc(100vh - (var(--admin-header-height) + var(--admin-footer-height)));
 }
