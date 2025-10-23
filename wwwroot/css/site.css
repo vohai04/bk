@@ -1901,6 +1901,21 @@
     .modal {
         z-index: 1400 !important;
     }
+
+    /* Desktop-only: make page wrapper a column flex container so footer
+       sticks to bottom when content is short, but keep header offset
+       via existing padding-top to avoid overlap. This targets desktop
+       only to avoid changing mobile behavior. */
+    .modern-body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* full viewport — header padding prevents overlap */
+    }
+
+    /* Ensure main content area grows to push footer down when needed */
+    .modern-body > main, .admin-layout > .admin-main, .index-layout > .main-content {
+        flex: 1 0 auto;
+    }
 }
 
 @media (max-width: 992px) {
