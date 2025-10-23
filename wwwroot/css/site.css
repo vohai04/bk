@@ -1993,14 +1993,27 @@
 /* ===== MODAL Z-INDEX FIX FOR ADMIN (header was overlapping modals) ===== */
 /* The header uses z-index:1100 and some toggles use 1200; ensure modals are above them */
 :root {
-    /* raise modal z-index used by Bootstrap (override variable) */
-    --bs-modal-zindex: 1250;
+    /* The header uses a very large z-index; raise overlays so toasts/modals appear above it.
+       Values chosen to be safely higher than .modern-header (which uses a very large z-index).
+       Adjust these if header z-index changes. */
+    --app-header-zindex: 100000;
+    --app-overlay-zindex: calc(var(--app-header-zindex) + 10);
+    --app-modal-zindex: calc(var(--app-header-zindex) + 20);
+    --app-toast-zindex: calc(var(--app-header-zindex) + 30);
 }
 
 /* Backup explicit overrides in case CSS variables aren't applied in some environments */
 .modal {
-    z-index: 1250 !important;
+    z-index: var(--app-modal-zindex) !important;
 }
 .modal-backdrop {
-    z-index: 1240 !important;
+    z-index: calc(var(--app-modal-zindex) - 5) !important; /* backdrop under modal */
+}
+
+/* Toast container and toasts should appear above header so showToast is visible */
+.toast-container.position-fixed {
+    z-index: var(--app-toast-zindex) !important;
+}
+.toast, .modern-toast {
+    z-index: calc(var(--app-toast-zindex) + 1) !important;
 }
