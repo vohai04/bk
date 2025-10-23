@@ -16,7 +16,7 @@
     --admin-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     /* Align admin spacing with site header/footer to avoid overlap */
-    --admin-header-height: 70px; /* keep in sync with .modern-header */
+    --admin-header-height: var(--header-height, 70px); /* keep in sync with .modern-header */
     --admin-footer-height: 80px; /* reserve space so sidebar doesn't cover footer */
 }
 
