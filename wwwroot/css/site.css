@@ -5,6 +5,8 @@
 
 /* ===== CSS VARIABLES ===== */
 :root {
+    /* Header height used for layout offsets on desktop */
+    --header-height: 80px;
     /* Primary Colors */
     --primary-50: #f0f9ff;
     --primary-100: #e0f2fe;
@@ -102,7 +104,7 @@ body {
     box-shadow: var(--shadow-lg);
     position: sticky;
     top: 0;
-    z-index: 1100; /* raised so header and its toggle sit above admin sidebar */
+    z-index: 1150; /* raised so header and its toggle sit above admin sidebar */
     backdrop-filter: blur(10px);
 }
 
@@ -338,7 +340,8 @@ body {
 /* ===== ADMIN LAYOUT ===== */
 .admin-layout {
     display: flex;
-    min-height: calc(100vh - 80px);
+    /* Ensure layout accounts for header height on desktop */
+    min-height: calc(100vh - var(--header-height));
 }
 
 .admin-sidebar {
@@ -1438,10 +1441,32 @@ body {
 }
 
 .tag-label {
-    flex: 1;
+    z-index: 1050; /* below header z-index (1150) so header always overlays */
     font-size: 0.875rem;
     color: var(--gray-700);
     cursor: pointer;
+
+/* Desktop: make header fixed (not just sticky) so it doesn't shift when scroll or when switching desktops
+   and ensure the main content is pushed down by the header height so sidebar and header align consistently. */
+@media (min-width: 993px) {
+    .modern-header {
+        position: fixed;
+        width: 100%;
+        top: 0;
+        left: 0;
+    }
+
+    /* Push page content below the fixed header */
+    .modern-body, .index-layout, .admin-layout {
+        padding-top: var(--header-height);
+    }
+
+    /* Sidebar already uses position:fixed; ensure it starts below header to avoid overlap */
+    .sidebar-left {
+        top: var(--header-height);
+        height: calc(100vh - var(--header-height));
+    }
+}
 }
 
 .tag-count {
@@ -1816,7 +1841,7 @@ body {
     box-shadow: 0 4px 24px rgba(0,0,0,0.1);
     position: sticky;
     top: 0;
-    z-index: 1100; /* raised so header and its toggle sit above admin sidebar */
+    z-index: 1150; /* keep header above admin sidebar (matches earlier rule) */
     transition: transform 220ms cubic-bezier(.4,0,.2,1), opacity 180ms linear;
 }
 
