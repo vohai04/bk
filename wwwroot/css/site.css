@@ -79,35 +79,6 @@
     box-sizing: border-box;
 }
 
-html {
-    scroll-behavior: smooth;
-}
-
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
-    color: var(--gray-800);
-    background: linear-gradient(135deg, var(--gray-50) 0%, var(--primary-50) 100%);
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-.modern-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-/* ===== HEADER STYLES ===== */
-.modern-header {
-    background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
-    box-shadow: var(--shadow-lg);
-    position: sticky;
-    top: 0;
-    z-index: 1150; /* raised so header and its toggle sit above admin sidebar */
-    backdrop-filter: blur(10px);
-}
-
 .modern-header .navbar {
     padding: var(--space-md) 0;
 }
@@ -748,6 +719,10 @@ body {
         top: var(--header-height);
         height: calc(100vh - var(--header-height));
         z-index: 1050; /* below header but above footer */
+    }
+    /* Ensure modals remain above header */
+    .modal {
+        z-index: 1250 !important;
     }
 }
 
@@ -1842,8 +1817,10 @@ body {
     box-shadow: 0 4px 24px rgba(0,0,0,0.1);
     position: sticky;
     top: 0;
-    z-index: 1150; /* keep header above admin sidebar (matches earlier rule) */
+    z-index: 1150; /* keep header above admin sidebar */
     transition: transform 220ms cubic-bezier(.4,0,.2,1), opacity 180ms linear;
+    height: var(--header-height);
+    min-height: var(--header-height);
 }
 
 /* When hidden we move header up and reduce opacity */
@@ -1871,6 +1848,15 @@ body {
     justify-content: center;
     cursor: pointer;
     transition: background 0.18s ease, transform 0.18s ease;
+}
+
+/* Ensure navbar content vertically centers in the header and uses the header height */
+.modern-header .navbar {
+    height: var(--header-height);
+    min-height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0;
 }
 
 .modern-header .sidebar-toggle:hover {
