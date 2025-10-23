@@ -728,6 +728,29 @@ body {
     }
 }
 
+/* Desktop: ensure header is fixed and sidebar starts below header to avoid overlap */
+@media (min-width: 993px) {
+    .modern-header {
+        position: fixed;
+        width: 100%;
+        top: 0;
+        left: 0;
+        z-index: 1150; /* explicit here to ensure stacking */
+    }
+
+    /* Push page content below the fixed header */
+    .modern-body, .index-layout, .admin-layout {
+        padding-top: var(--header-height);
+    }
+
+    /* Sidebar already uses position:fixed; ensure it starts below header to avoid overlap */
+    .sidebar-left {
+        top: var(--header-height);
+        height: calc(100vh - var(--header-height));
+        z-index: 1050; /* below header but above footer */
+    }
+}
+
 /* ===== UTILITY CLASSES ===== */
 .text-gradient {
     background: linear-gradient(135deg, var(--primary-600), var(--secondary-600));
@@ -1440,34 +1463,12 @@ body {
     cursor: pointer;
 }
 
-.tag-label {
-    z-index: 1050; /* below header z-index (1150) so header always overlays */
-    font-size: 0.875rem;
-    color: var(--gray-700);
-    cursor: pointer;
-
-/* Desktop: make header fixed (not just sticky) so it doesn't shift when scroll or when switching desktops
-   and ensure the main content is pushed down by the header height so sidebar and header align consistently. */
-@media (min-width: 993px) {
-    .modern-header {
-        position: fixed;
-        width: 100%;
-        top: 0;
-        left: 0;
+    .tag-label {
+        flex: 1;
+        font-size: 0.875rem;
+        color: var(--gray-700);
+        cursor: pointer;
     }
-
-    /* Push page content below the fixed header */
-    .modern-body, .index-layout, .admin-layout {
-        padding-top: var(--header-height);
-    }
-
-    /* Sidebar already uses position:fixed; ensure it starts below header to avoid overlap */
-    .sidebar-left {
-        top: var(--header-height);
-        height: calc(100vh - var(--header-height));
-    }
-}
-}
 
 .tag-count {
     background: var(--gray-200);
