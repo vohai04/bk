@@ -383,6 +383,46 @@
     z-index: 900; /* Lower than admin sidebar z-index: 1000 */
 }
 
+/* ===== STICKY FOOTER LAYOUT (safe, non-invasive) ===== */
+/* Use a flex column on a top-level layout container so the footer naturally
+   sits after content when present, and sticks to the bottom when the
+   content height is less than the viewport. We use .modern-body as the
+   primary page wrapper (many layouts already reference it). */
+html, body {
+    height: 100%;
+}
+
+/* Ensure the modern-body spans full viewport and becomes a column flex container */
+.modern-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* full viewport height */
+}
+
+/* Main content area should expand to fill available space so footer pushes
+   to the bottom when content exists, otherwise footer stays at viewport bottom. */
+.main-content, .admin-main, .index-layout, .modern-body > .container, .modern-body > .content {
+    flex: 1 1 auto;
+}
+
+/* Make sure footer doesn't overlay content and keeps its normal flow. */
+.modern-footer {
+    position: relative; /* ensure normal flow */
+    margin-top: 0; /* reset any auto margin that could interfere */
+}
+
+/* Small safeguard: when admin-sidebar or sidebar-left are fixed, ensure the
+   page content area keeps proper left margin (admin pages already handle this,
+   but this avoids accidental overlap on index pages). */
+@media (min-width: 993px) {
+    body.index-page .main-content, body.index-page .admin-main {
+        margin-left: 340px; /* match .sidebar-left width when present */
+    }
+    body.admin-page .main-content, body.admin-page .admin-main {
+        margin-left: 280px; /* match .admin-sidebar width when present */
+    }
+}
+
 .modern-footer::before {
     content: '';
     position: absolute;
@@ -1898,8 +1938,13 @@
     }
 
     /* Ensure modals remain above header */
+    /* Modals must appear above the fixed header (header uses a very high z-index) */
     .modal {
-        z-index: 1400 !important;
+        z-index: 100100 !important; /* above header (100000) */
+    }
+
+    .modal-backdrop {
+        z-index: 100090 !important;
     }
 }
 
