@@ -295,8 +295,9 @@ namespace BookInfoFinder.Services
 
             if (!string.IsNullOrWhiteSpace(entityType))
             {
-                var t = entityType.ToLower();
-                query = query.Where(a => (a.EntityType ?? string.Empty).ToLower().Contains(t));
+                // Use case-insensitive exact match instead of substring so 'book' doesn't match 'bookcomment'
+                var t = entityType.ToLowerInvariant();
+                query = query.Where(a => ((a.EntityType ?? string.Empty).ToLower() == t));
             }
 
             query = query.OrderByDescending(a => a.CreatedAt);

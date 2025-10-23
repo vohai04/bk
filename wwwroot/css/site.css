@@ -265,6 +265,37 @@
     padding: var(--space-2xl) 0;
 }
 
+/* Sticky footer: use a page wrapper `.modern-body` as the flex root so we don't alter
+   global `body` layout (avoids breaking filters/activities). When `.modern-body` is
+   present the footer will stay at the bottom for short pages and follow content for
+   long pages. */
+html, body {
+    height: 100%;
+}
+
+.modern-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.modern-body > .index-layout,
+.modern-body > .main-content,
+.modern-body > .admin-main,
+.modern-body > .container,
+.modern-body > .content {
+    flex: 1 1 auto;
+}
+
+/* Some layout sections set min-height:100vh by default (e.g. .index-layout).
+   When used as a flex child we must allow them to shrink — reset min-height to 0
+   so the flex container (.modern-body) controls the page height and the footer
+   can be pushed to the bottom on short pages. */
+.modern-body > .index-layout,
+.modern-body > .admin-layout {
+    min-height: 0;
+}
+
 /* ===== HERO SECTION ===== */
 .hero-section {
     padding: var(--space-xl) 0;
