@@ -10,7 +10,7 @@ function showToast(message, type = "success", duration = 3000) {
     const toast = new bootstrap.Toast(document.getElementById("sharedToast"), { delay: duration });
     toast.show();
 }
-
+ 
 // Modal xác nhận (dùng Bootstrap modal runtime)
 function showConfirmModal(title, message, onConfirm) {
     const modalHtml = `
@@ -37,30 +37,30 @@ function showConfirmModal(title, message, onConfirm) {
     });
     modal.show();
 }
-
+ 
 // Khởi tạo tooltip Popper/Bootstrap toàn cục
 function initTooltips() {
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
         new bootstrap.Tooltip(el, { trigger: 'hover focus' });
     });
 }
-
+ 
 // Header hide/show on scroll (hide when scrolling down, show when scrolling up)
 (function () {
     const $header = $(".modern-header");
     if ($header.length === 0) return;
-
+ 
     let lastScroll = window.pageYOffset || document.documentElement.scrollTop;
     let ticking = false;
     const delta = 10; // minimum change to trigger
-
+ 
     function update() {
         const current = window.pageYOffset || document.documentElement.scrollTop;
         if (Math.abs(current - lastScroll) <= delta) {
             ticking = false;
             return;
         }
-
+ 
         if (current > lastScroll && current > ($header.outerHeight() || 64)) {
             // scrolling down
             $header.addClass('header-hidden');
@@ -68,11 +68,11 @@ function initTooltips() {
             // scrolling up
             $header.removeClass('header-hidden');
         }
-
+ 
         lastScroll = current;
         ticking = false;
     }
-
+ 
     window.addEventListener('scroll', function () {
         if (!ticking) {
             window.requestAnimationFrame(update);
@@ -80,7 +80,7 @@ function initTooltips() {
         }
     }, { passive: true });
 })();
-
+ 
 // Phân trang tiện ích
 function renderPagination(containerSelector, totalPages, currentPage, onPageClick) {
     const $pagination = $(containerSelector);
@@ -101,7 +101,7 @@ function renderPagination(containerSelector, totalPages, currentPage, onPageClic
         if (!isNaN(page) && page >= 1 && page <= totalPages) onPageClick(page);
     });
 }
-
+ 
 // Sidebar search form submit => phát event toàn cục
 $(document).on('submit', '#sidebarSearchForm', function (e) {
     e.preventDefault();
@@ -117,44 +117,9 @@ $(document).on('submit', '#sidebarSearchForm', function (e) {
         bootstrap.Offcanvas.getInstance(offcanvasEl)?.hide();
     }
 });
-
+ 
 // Khởi chạy chung
 $(document).ready(function () {
-    // Header hide/show on scroll (hide when scrolling down, show when scrolling up)
-    (function () {
-        const $header = $(".modern-header");
-        if ($header.length === 0) return;
-
-        let lastScroll = window.pageYOffset || document.documentElement.scrollTop;
-        let ticking = false;
-        const delta = 10; // minimum change to trigger
-
-        function update() {
-            const current = window.pageYOffset || document.documentElement.scrollTop;
-            if (Math.abs(current - lastScroll) <= delta) {
-                ticking = false;
-                return;
-            }
-
-            if (current > lastScroll && current > ($header.outerHeight() || 64)) {
-                // scrolling down
-                $header.addClass('header-hidden');
-            } else if (current < lastScroll) {
-                // scrolling up
-                $header.removeClass('header-hidden');
-            }
-
-            lastScroll = current;
-            ticking = false;
-        }
-
-        window.addEventListener('scroll', function () {
-            if (!ticking) {
-                window.requestAnimationFrame(update);
-                ticking = true;
-            }
-        }, { passive: true });
-    })();
-
     initTooltips();
 });
+ 

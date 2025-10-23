@@ -741,6 +741,19 @@ body {
     background: linear-gradient(135deg, var(--secondary-500), var(--secondary-600));
 }
 
+/* Strawberry themed admin button */
+.btn-admin-strawberry {
+    background: linear-gradient(135deg, #d6336c 0%, #ff4d6d 100%);
+    color: #ffffff;
+    border: none;
+}
+
+.btn-admin-strawberry:hover {
+    background: linear-gradient(135deg, #ff4d6d 0%, #d6336c 100%);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
 .shadow-modern {
     box-shadow: var(--shadow-lg);
 }
@@ -1909,4 +1922,19 @@ body {
         opacity: 1;
         transform: scale(1);
     }
+}
+
+/* ===== MODAL Z-INDEX FIX FOR ADMIN (header was overlapping modals) ===== */
+/* The header uses z-index:1100 and some toggles use 1200; ensure modals are above them */
+:root {
+    /* raise modal z-index used by Bootstrap (override variable) */
+    --bs-modal-zindex: 1250;
+}
+
+/* Backup explicit overrides in case CSS variables aren't applied in some environments */
+.modal {
+    z-index: 1250 !important;
+}
+.modal-backdrop {
+    z-index: 1240 !important;
 }

@@ -6,131 +6,996 @@
     ViewData["Description"] = "Tổng quan hệ thống";
 }
 
-<div class="admin-stats-grid">
-    <div class="admin-stat-card">
-        <div class="admin-stat-icon">
-            <i class="bi bi-people-fill"></i>
+<!-- Quick Actions (moved to top) -->
+<div class="admin-form-wrapper mb-4">
+    <h3 class="mb-3">
+        <i class="bi bi-lightning-fill"></i>
+        Thao tác nhanh
+    </h3>
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <a href="/Admin/AddBook" class="btn btn-admin-success w-100 border border-2 border-success">
+                <i class="bi bi-plus-circle me-2"></i>
+                Thêm sách mới
+            </a>
         </div>
-        <div class="admin-stat-value">@Model.TotalUsers</div>
-        <div class="admin-stat-label">Tổng người dùng</div>
-        <a href="/Admin/Users" class="btn btn-admin-primary btn-admin-sm mt-3">
-            <i class="bi bi-eye"></i>
-            Xem chi tiết
-        </a>
+        <div class="col-md-3 mb-3">
+            <a href="/Admin/Categories" class="btn btn-admin-primary w-100 border border-2 border-primary">
+                <i class="bi bi-plus-circle me-2"></i>
+                Thêm thể loại
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="/Admin/ManageAuthor" class="btn btn-admin-strawberry w-100 fw-bold">
+                <i class="bi bi-person-plus me-2"></i>
+                Quản lý tác giả
+            </a>
+        </div>
+        <div class="col-md-3 mb-3">
+            <a href="/Admin/Report" class="btn btn-admin-secondary w-100 border border-2 border-secondary text-dark">
+                <i class="bi bi-file-text me-2"></i>
+                Xem báo cáo
+            </a>
+        </div>
     </div>
-    
+</div>
+
+<!-- Statistics Cards -->
+<div class="admin-stats-grid">
     <div class="admin-stat-card">
         <div class="admin-stat-icon">
             <i class="bi bi-book-fill"></i>
         </div>
-        <div class="admin-stat-value">@Model.TotalBooks</div>
+        <div class="admin-stat-value">@Model.Stats.TotalBooks</div>
         <div class="admin-stat-label">Tổng số sách</div>
+        <div class="text-success small mt-1">
+            <i class="bi bi-plus-circle"></i>
+            +@Model.Stats.NewBooksToday hôm nay
+        </div>
         <a href="/Admin/ManageBook" class="btn btn-admin-primary btn-admin-sm mt-3">
             <i class="bi bi-eye"></i>
-            Xem chi tiết
+            Quản lý sách
         </a>
     </div>
-    
+
+    <div class="admin-stat-card">
+        <div class="admin-stat-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="admin-stat-value">@Model.Stats.TotalUsers</div>
+        <div class="admin-stat-label">Tổng người dùng</div>
+        <div class="text-success small mt-1">
+            <i class="bi bi-person-plus"></i>
+            +@Model.Stats.NewUsersToday hôm nay
+        </div>
+        <a href="/Admin/Users" class="btn btn-admin-primary btn-admin-sm mt-3">
+            <i class="bi bi-eye"></i>
+            Quản lý người dùng
+        </a>
+    </div>
+
     <div class="admin-stat-card">
         <div class="admin-stat-icon">
             <i class="bi bi-tags-fill"></i>
         </div>
-        <div class="admin-stat-value">@Model.TotalCategories</div>
+        <div class="admin-stat-value">@Model.Stats.TotalCategories</div>
         <div class="admin-stat-label">Thể loại sách</div>
+        <div class="text-success small mt-1">
+            <i class="bi bi-plus-circle"></i>
+            +@Model.Stats.NewCategoriesToday hôm nay
+        </div>
         <a href="/Admin/Categories" class="btn btn-admin-primary btn-admin-sm mt-3">
             <i class="bi bi-eye"></i>
-            Xem chi tiết
+            Quản lý thể loại
         </a>
     </div>
-    
+
     <div class="admin-stat-card">
         <div class="admin-stat-icon">
-            <i class="bi bi-person-badge-fill"></i>
+            <i class="bi bi-chat-dots-fill"></i>
         </div>
-        <div class="admin-stat-value">@Model.TotalAuthors</div>
-        <div class="admin-stat-label">Tác giả</div>
-        <a href="/Admin/ManageAuthor" class="btn btn-admin-primary btn-admin-sm mt-3">
+        <div class="admin-stat-value">@Model.Stats.TotalComments</div>
+        <div class="admin-stat-label">Tổng bình luận</div>
+        <div class="text-info small mt-1">
+            <i class="bi bi-chat-quote"></i>
+            +@Model.Stats.NewCommentsToday hôm nay
+        </div>
+        <a href="/Admin/Report" class="btn btn-admin-primary btn-admin-sm mt-3">
             <i class="bi bi-eye"></i>
-            Xem chi tiết
+            Xem báo cáo
         </a>
     </div>
-    
+
     <div class="admin-stat-card">
         <div class="admin-stat-icon">
-            <i class="bi bi-building-fill"></i>
+            <i class="bi bi-activity"></i>
         </div>
-        <div class="admin-stat-value">@Model.TotalPublishers</div>
-        <div class="admin-stat-label">Nhà xuất bản</div>
-        <a href="/Admin/ManageNXB" class="btn btn-admin-primary btn-admin-sm mt-3">
-            <i class="bi bi-eye"></i>
-            Xem chi tiết
-        </a>
+        <div class="admin-stat-value">@Model.Stats.ActiveUsersToday</div>
+        <div class="admin-stat-label">Người dùng hoạt động</div>
+        <div class="text-primary small mt-1">
+            <i class="bi bi-graph-up"></i>
+            Hôm nay
+        </div>
     </div>
-    
+
     <div class="admin-stat-card">
         <div class="admin-stat-icon">
-            <i class="bi bi-tag-fill"></i>
+            <i class="bi bi-bell-fill"></i>
         </div>
-        <div class="admin-stat-value">@Model.TotalTags</div>
-        <div class="admin-stat-label">Tags</div>
-        <a href="/Admin/Tags" class="btn btn-admin-primary btn-admin-sm mt-3">
-            <i class="bi bi-eye"></i>
-            Xem chi tiết
-        </a>
+        <div class="admin-stat-value">@Model.UnreadNotificationCount</div>
+        <div class="admin-stat-label">Thông báo chưa đọc</div>
+        <button class="btn btn-admin-warning btn-admin-sm mt-3" onclick="markAllNotificationsRead()">
+            <i class="bi bi-check-all"></i>
+            Đánh dấu đã đọc
+        </button>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-8">
+<div class="row mt-4">
+    <!-- Recent Activities -->
+    <div class="col-lg-6">
         <div class="admin-form-wrapper">
             <h3 class="mb-4">
-                <i class="bi bi-graph-up"></i>
-                Thống kê nhanh
+                <i class="bi bi-clock-history"></i>
+                Hoạt động gần đây
             </h3>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="admin-alert admin-alert-info">
-                        <i class="bi bi-info-circle-fill"></i>
-                        <div>
-                            <strong>Hệ thống hoạt động tốt</strong><br>
-                            Tất cả dịch vụ đang chạy ổn định
+            <div id="activities-container" class="activity-list">
+                @if (Model.RecentActivities.Any())
+                {
+                    foreach (var activity in Model.RecentActivities)
+                    {
+                    <div class="activity-item d-flex align-items-start mb-3 pb-3 border-bottom activity-clickable"
+                        data-entity-type="@activity.EntityType"
+                        data-entity-id="@(activity.EntityId.HasValue ? activity.EntityId.ToString() : "")"
+                        data-action-url="@(activity.ActionUrl ?? string.Empty)"
+                        style="cursor: pointer;">
+                            <div class="activity-icon me-3">
+                                @switch (activity.Type)
+                                {
+                                    case "book":
+                                        <i class="bi bi-book-fill text-primary"></i>
+                                        break;
+                                    case "user":
+                                        <i class="bi bi-person-fill text-success"></i>
+                                        break;
+                                    case "category":
+                                        <i class="bi bi-tag-fill text-warning"></i>
+                                        break;
+                                    case "comment":
+                                        <i class="bi bi-chat-dots-fill text-info"></i>
+                                        break;
+                                    default:
+                                        <i class="bi bi-circle-fill text-secondary"></i>
+                                        break;
+                                }
+                            </div>
+                            <div class="activity-content flex-grow-1">
+                                <div class="activity-title fw-semibold">@activity.Title</div>
+                                <div class="activity-description small text-muted">@activity.Description</div>
+                                <div class="activity-meta small text-muted">
+                                    <i class="bi bi-person"></i> @activity.UserName •
+                                    <i class="bi bi-clock"></i> @activity.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
                         </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-info-circle display-4"></i>
+                        <p class="mt-2">Chưa có hoạt động nào</p>
+                    </div>
+                }
+            </div>
+            <!-- Activity Pagination -->
+            <nav aria-label="Activity pagination" class="mt-3">
+                <ul class="pagination justify-content-center" id="activity-pagination">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Trước</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#" data-page="1">1</a></li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Sau</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Activity Logs & Notifications -->
+    <div class="col-lg-6">
+        <div class="admin-form-wrapper">
+            <h3 class="mb-4">
+                <i class="bi bi-bell"></i>
+                Thông báo & Log hoạt động
+            </h3>
+
+            <!-- Notifications -->
+            <div class="notifications-section mb-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-bell-fill"></i>
+                    Thông báo (@Model.UnreadNotificationCount chưa đọc)
+                </h5>
+                <!-- notifications list (will be updated via AJAX) -->
+                <div id="notifications-list">
+                    @if (Model.Notifications.Any())
+                    {
+                        foreach (var notification in Model.Notifications)
+                        {
+                            <div class="notification-item p-3 mb-2 rounded @(notification.IsRead ? "bg-light" : "bg-primary bg-opacity-10 border border-primary") notification-clickable"
+                                 data-notification-id="@notification.NotificationId"
+                                 data-notification-type="@notification.Type"
+                                 data-related-entity-type="@notification.RelatedEntityType"
+                                 data-related-entity-id="@(notification.RelatedEntityId.HasValue ? notification.RelatedEntityId.Value.ToString() : "")"
+                                 style="cursor: pointer;">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="notification-title fw-semibold">
+                                            @if (notification.RelatedEntityType == "book" && notification.RelatedEntityId.HasValue)
+                                            {
+                                                <a href="/BookDetail?id=@notification.RelatedEntityId" class="text-decoration-none text-dark" onclick="event.stopPropagation()">
+                                                    @notification.Title
+                                                    <i class="bi bi-box-arrow-up-right small ms-1"></i>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                @notification.Title
+                                            }
+                                        </div>
+                                        <div class="notification-message small">@notification.Message</div>
+                                        <div class="notification-meta small text-muted mt-1">
+                                            <i class="bi bi-clock"></i> @notification.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                            @if (!notification.IsRead)
+                                            {
+                                                <span class="badge bg-primary ms-2">Mới</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    @if (!notification.IsRead && notification.Type != "comment_reply")
+                                    {
+                                        <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); markNotificationRead(@notification.NotificationId)">
+                                            <i class="bi bi-check"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-bell-slash"></i>
+                            <p class="small mt-1">Không có thông báo nào</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- notification pagination (AJAX) -->
+                <nav aria-label="Notification pagination" class="mt-2">
+                    <ul class="pagination justify-content-center" id="notification-pagination"></ul>
+                </nav>
+            </div>
+
+            <!-- Activity Logs (AJAX paginated, mirrors Recent Activities) -->
+            <div class="activity-logs-section">
+                <h5 class="mb-3">
+                    <i class="bi bi-journal-text"></i>
+                    Log hoạt động
+                </h5>
+                <div class="mb-3 d-flex gap-2 align-items-center">
+                    <input type="date" id="logStartDate" class="form-control form-control-sm" />
+                    <input type="date" id="logEndDate" class="form-control form-control-sm" />
+                    <select id="logEntityType" class="form-select form-select-sm">
+                        <option value="">Tất cả</option>
+                        <option value="book">Sách</option>
+                        <option value="user">Người dùng</option>
+                        <option value="category">Thể loại</option>
+                        <option value="comment">Bình luận</option>
+                    </select>
+                    <button class="btn btn-sm btn-primary" id="filterLogsBtn">Lọc</button>
+                </div>
+
+                <!-- Placeholder for AJAX-loaded logs -->
+                <div id="activity-logs-list">
+                    <div class="text-center text-muted py-4" id="activity-logs-placeholder">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Đang tải log hoạt động...</p>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="admin-alert admin-alert-success">
-                        <i class="bi bi-check-circle-fill"></i>
-                        <div>
-                            <strong>Cập nhật thành công</strong><br>
-                            Dữ liệu đã được đồng bộ hóa
-                        </div>
-                    </div>
-                </div>
+
+                <!-- pagination for logs (rendered by client) -->
+                <nav aria-label="Log pagination" class="mt-3">
+                    <ul class="pagination justify-content-center" id="log-pagination"></ul>
+                </nav>
             </div>
         </div>
     </div>
-    
-    <div class="col-lg-4">
-        <div class="admin-form-wrapper">
-            <h3 class="mb-4">
-                <i class="bi bi-lightning-fill"></i>
-                Thao tác nhanh
-            </h3>
-            <div class="d-grid gap-3">
-                <a href="/Admin/AddBook" class="btn btn-admin-success">
-                    <i class="bi bi-plus-circle"></i>
-                    Thêm sách mới
-                </a>
-                <a href="/Admin/Categories" class="btn btn-admin-primary">
-                    <i class="bi bi-plus-circle"></i>
-                    Thêm thể loại
-                </a>
-                <a href="/Admin/Report" class="btn btn-admin-secondary">
-                    <i class="bi bi-file-text"></i>
-                    Xem báo cáo
+</div>
+
+<nav aria-label="Log pagination" class="mt-2">
+    <ul class="pagination justify-content-center" id="log-pagination"></ul>
+</nav>
+
+
+
+<!-- Reply Details Modal -->
+<div class="modal fade" id="replyDetailsModal" tabindex="-1" aria-labelledby="replyDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="replyDetailsModalLabel">
+                    <i class="bi bi-chat-quote"></i>
+                    Chi tiết trả lời bình luận
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="replyDetailsContent">
+                <!-- Content will be loaded here -->
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Đang tải...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <a id="viewBookLink" href="#" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-eye"></i>
+                    Xem sách
                 </a>
             </div>
         </div>
     </div>
 </div>
- 
+
+@section Scripts {
+    <script>
+        let autoRefreshInterval;
+        let currentActivityPage = 1;
+        let hasMoreActivities = true;
+
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(refreshDashboardData, 30000); // Refresh every 30 seconds
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        }
+
+        function refreshDashboardData() {
+            // Refresh stats
+            refreshStats();
+
+            // Refresh notifications
+            refreshNotifications();
+
+            console.log('Dashboard data refreshed at', new Date().toLocaleTimeString());
+        }
+
+        function refreshStats() {
+            $.getJSON(window.location.pathname + '?handler=GetStats')
+                .done(function (data) { updateStatsDisplay(data); })
+                .fail(function (xhr, status, error) { console.error('Error refreshing stats:', error); });
+        }
+
+        function updateStatsDisplay(stats) {
+            // Update stat values with animation
+            const statCards = document.querySelectorAll('.admin-stat-value');
+            const statLabels = [
+                stats && stats.totalBooks ? stats.totalBooks : 0,
+                stats && stats.totalUsers ? stats.totalUsers : 0,
+                stats && stats.totalCategories ? stats.totalCategories : 0,
+                stats && stats.totalComments ? stats.totalComments : 0,
+                stats && stats.activeUsersToday ? stats.activeUsersToday : 0,
+                stats && stats.unreadNotificationCount ? stats.unreadNotificationCount : 0
+            ];
+
+            statCards.forEach((card, index) => {
+                if (index < statLabels.length) {
+                    const currentValue = parseInt(card.textContent) || 0;
+                    const newValue = statLabels[index];
+
+                    if (currentValue !== newValue) {
+                        animateValue(card, currentValue, newValue);
+                    }
+                }
+            });
+
+            // Update "new today" counters
+            const newBooksElement = document.querySelector('.admin-stat-card:nth-child(1) .text-success');
+            const newUsersElement = document.querySelector('.admin-stat-card:nth-child(2) .text-success');
+            const newCommentsElement = document.querySelector('.admin-stat-card:nth-child(4) .text-info');
+
+            if (newBooksElement) newBooksElement.innerHTML = `<i class="bi bi-plus-circle"></i> +${(stats && stats.newBooksToday) ? stats.newBooksToday : 0} hôm nay`;
+            if (newUsersElement) newUsersElement.innerHTML = `<i class="bi bi-person-plus"></i> +${(stats && stats.newUsersToday) ? stats.newUsersToday : 0} hôm nay`;
+            if (newCommentsElement) newCommentsElement.innerHTML = `<i class="bi bi-chat-quote"></i> +${(stats && stats.newCommentsToday) ? stats.newCommentsToday : 0} hôm nay`;
+            // New categories today
+            const newCats = stats && stats.newCategoriesToday ? stats.newCategoriesToday : 0;
+            const newCatsElement = document.querySelector('.admin-stat-card:nth-child(3) .text-success');
+            if (newCatsElement) newCatsElement.innerHTML = `<i class="bi bi-plus-circle"></i> +${newCats} hôm nay`;
+        }
+
+        function animateValue(element, start, end) {
+            const duration = 1000;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const current = Math.floor(start + (end - start) * progress);
+                element.textContent = current;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function refreshActivities() {
+            // Reset to first page for auto-refresh
+            loadActivityPage(1);
+        }
+
+        function updateActivitiesDisplay(activities) {
+            const activityList = document.getElementById('activities-container');
+            if (!activityList) return;
+
+            if (currentActivityPage === 1) {
+                // Clear existing activities for first page
+                activityList.innerHTML = '';
+            }
+
+            if (!activities || !activities.length) {
+                if (currentActivityPage === 1) {
+                    activityList.innerHTML = `
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-info-circle display-4"></i>
+                            <p class="mt-2">Chưa có hoạt động nào</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            let html = '';
+            activities.forEach(activity => {
+                let iconClass = 'bi bi-circle-fill text-secondary';
+                switch (activity.type) {
+                    case 'book':
+                        iconClass = 'bi bi-book-fill text-primary';
+                        break;
+                    case 'user':
+                        iconClass = 'bi bi-person-fill text-success';
+                        break;
+                    case 'category':
+                        iconClass = 'bi bi-tag-fill text-warning';
+                        break;
+                    case 'comment':
+                        iconClass = 'bi bi-chat-dots-fill text-info';
+                        break;
+                }
+
+                const actionUrl = activity.actionUrl || '';
+
+                html += `
+                    <div class="activity-item d-flex align-items-start mb-3 pb-3 border-bottom activity-clickable"
+                         data-entity-type="${activity.entityType || activity.type}"
+                         data-entity-id="${activity.entityId}"
+                         data-action-url="${actionUrl}">
+                        <div class="activity-icon me-3">
+                            <i class="${iconClass}"></i>
+                        </div>
+                        <div class="activity-content flex-grow-1">
+                            <div class="activity-title fw-semibold">${activity.title}</div>
+                            <div class="activity-description small text-muted">${activity.description}</div>
+                            <div class="activity-meta small text-muted">
+                                <i class="bi bi-person"></i> ${activity.userName} •
+                                <i class="bi bi-clock"></i> ${new Date(activity.createdAt).toLocaleString('vi-VN')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // For dashboard small block pagination we replace the content each page
+            activityList.innerHTML = html;
+        }
+
+        function updateLoadMoreButton() {
+            // This function is no longer needed with pagination
+        }
+
+        function loadMoreActivities() {
+            // This function is no longer needed with pagination
+        }
+
+        function handleActivityClick(entityType, entityId) {
+            if (!entityId) return;
+
+            const t = (entityType || '').toString().toLowerCase();
+            let url = '';
+
+            // If the clicked element has a direct action URL (server-provided), prefer it
+            try {
+                const active = document.activeElement;
+            } catch (e) { }
+
+            if (t === 'book') {
+                url = `/BookDetail?id=${entityId}`;
+            } else if (t === 'user') {
+                url = '/Admin/Users'; // Could be enhanced to go to specific user
+            } else if (t === 'category') {
+                url = '/Admin/Categories'; // Could be enhanced to go to specific category
+            } else if (t === 'bookcomment' || t === 'book_comment' || t === 'comment') {
+                // If comment entity refers to a comment id, try to fetch its book id via a quick endpoint
+                // We'll optimistically navigate to ManageBook if backend endpoint is not available
+                // Try fetch book id for comment
+                // Call BookDetail page handler to resolve which book/page contains this comment
+                $.get('/BookDetail', { handler: 'GetCommentPage', commentId: entityId, pageSize: 10 })
+                    .done(function (data) {
+                        if (data && data.success && data.bookId) {
+                            window.location.href = `/BookDetail?id=${data.bookId}#comment-content-${entityId}`;
+                        } else if (data && data.bookId) {
+                            // older non-standard response
+                            window.location.href = `/BookDetail?id=${data.bookId}#comment-content-${entityId}`;
+                        } else {
+                            window.location.href = '/Admin/ManageBook';
+                        }
+                    })
+                    .fail(function () {
+                        window.location.href = '/Admin/ManageBook';
+                    });
+                return;
+            } else {
+                return;
+            }
+
+            if (url) window.location.href = url;
+        }
+
+        function loadActivityPage(page) {
+            currentActivityPage = page;
+
+            console.log('loadActivityPage requested page:', page);
+
+            // Build explicit query string so server receives page param reliably and add cache-busting
+            const url = `${window.location.pathname}?handler=GetActivities&page=${encodeURIComponent(currentActivityPage)}&pageSize=10&t=${Date.now()}`;
+            console.log('Fetching activities URL:', url);
+
+            $.getJSON(url)
+                .done(function (data) {
+                    console.log('GetActivities response currentPage:', data.currentPage, 'totalPages:', data.totalPages, 'activities:', (data.activities || []).length, 'titles:', data.sampleTitles);
+                    updateActivitiesDisplay(data.activities);
+                    updateActivityPagination(data.currentPage, data.totalPages);
+                })
+                .fail(function (xhr, status, error) {
+                    console.error('Error loading activity page:', error);
+                });
+        }
+
+        function updateActivityPagination(currentPage, totalPages) {
+            const container = '#activity-pagination';
+            // Use the shared renderPagination helper from site.js
+            renderPagination(container, totalPages, currentPage, function (page) {
+                console.log('activity pagination clicked:', page);
+                loadActivityPage(page);
+            });
+        }
+
+        function refreshNotifications() {
+            loadNotifications(1);
+        }
+
+        function updateNotificationsDisplay(data) {
+            const notificationsContainer = document.querySelector('.notifications-section');
+            const unreadCountElement = document.querySelector('.admin-stat-card:nth-child(6) .admin-stat-value');
+
+            // Update unread count
+            if (unreadCountElement) {
+                const currentCount = parseInt(unreadCountElement.textContent) || 0;
+                if (currentCount !== data.unreadCount) {
+                    animateValue(unreadCountElement, currentCount, data.unreadCount);
+                }
+            }
+
+            // Update notifications header
+            const headerElement = notificationsContainer.querySelector('h5');
+            if (headerElement) {
+                headerElement.innerHTML = `<i class="bi bi-bell-fill"></i> Thông báo (${data.unreadCount} chưa đọc)`;
+            }
+
+            if (!data.notifications || !data.notifications.length) {
+                const emptyHtml = `
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-bell-slash"></i>
+                        <p class="small mt-1">Không có thông báo nào</p>
+                    </div>
+                `;
+                notificationsContainer.innerHTML = `<h5 class="mb-3"><i class="bi bi-bell-fill"></i> Thông báo (${data.unreadCount} chưa đọc)</h5>` + emptyHtml;
+                return;
+            }
+
+            let html = `<h5 class="mb-3"><i class="bi bi-bell-fill"></i> Thông báo (${data.unreadCount} chưa đọc)</h5>`;
+
+            data.notifications.forEach(notification => {
+                const isRead = notification.isRead;
+                const itemClass = isRead ? 'bg-light' : 'bg-primary bg-opacity-10 border border-primary';
+                const showMarkReadButton = !isRead && notification.type !== 'comment_reply';
+
+                let titleHtml = notification.title;
+                if (notification.relatedEntityType === 'book' && notification.relatedEntityId) {
+                    titleHtml = `<a href="/BookDetail?id=${notification.relatedEntityId}" class="text-decoration-none text-dark" onclick="event.stopPropagation()">${notification.title} <i class="bi bi-box-arrow-up-right small ms-1"></i></a>`;
+                }
+
+                html += `
+                    <div class="notification-item p-3 mb-2 rounded ${itemClass} notification-clickable"
+                         data-notification-id="${notification.notificationId}"
+                         data-notification-type="${notification.type}"
+                         onclick="handleNotificationClick(${notification.notificationId}, '${notification.type}')">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="notification-title fw-semibold">${titleHtml}</div>
+                                <div class="notification-message small">${notification.message}</div>
+                                <div class="notification-meta small text-muted mt-1">
+                                    <i class="bi bi-clock"></i> ${new Date(notification.createdAt).toLocaleString('vi-VN')}
+                                    ${!isRead ? '<span class="badge bg-primary ms-2">Mới</span>' : ''}
+                                </div>
+                            </div>
+                            ${showMarkReadButton ? `<button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); markNotificationRead(${notification.notificationId})"><i class="bi bi-check"></i></button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            notificationsContainer.innerHTML = html;
+        }
+
+        // Notifications pagination & loader
+        let currentNotificationPage = 1;
+
+        function loadNotifications(page) {
+            currentNotificationPage = page || 1;
+            const pageSize = 5; // show 5 notifications per page in dashboard
+            const url = `${window.location.pathname}?handler=GetNotifications&page=${encodeURIComponent(currentNotificationPage)}&pageSize=${pageSize}&t=${Date.now()}`;
+
+            console.log('Loading notifications URL:', url);
+
+            $.getJSON(url)
+                .done(function (data) {
+                    console.log('GetNotifications response currentPage:', data.currentPage, 'totalPages:', data.totalPages, 'count:', (data.notifications || []).length);
+                    updateNotificationsDisplay(data);
+                    updateNotificationPagination(data.currentPage || 1, data.totalPages || 1);
+                })
+                .fail(function (xhr, status, error) {
+                    console.error('Error loading notifications:', error);
+                });
+        }
+
+        function updateNotificationPagination(currentPage, totalPages) {
+            const container = '#notification-pagination';
+            renderPagination(container, totalPages, currentPage, function (page) {
+                console.log('notification pagination clicked:', page);
+                loadNotifications(page);
+            });
+        }
+
+        // notificationType may come from server as PascalCase or snake_case; normalize
+        function handleNotificationClick(notificationId, notificationType, relatedEntityType, relatedEntityId) {
+            const type = (notificationType || '').toString().toLowerCase();
+
+            if (type === 'comment_reply' || type === 'comment-reply' || type === 'commentreply') {
+                showReplyDetails(notificationId);
+                return;
+            }
+
+            // If the notification references a book (or other entity), navigate to it
+            const relType = (relatedEntityType || '').toString().toLowerCase();
+            const relId = relatedEntityId || null;
+
+            if (relType === 'book' && relId) {
+                // Mark read first, then navigate
+                markNotificationRead(notificationId);
+                window.location.href = `/BookDetail?id=${relId}`;
+                return;
+            }
+
+            // Default: mark as read and refresh notifications
+            markNotificationRead(notificationId);
+        }
+
+        function showReplyDetails(notificationId) {
+            const modal = new bootstrap.Modal(document.getElementById('replyDetailsModal'));
+            const contentDiv = document.getElementById('replyDetailsContent');
+            const viewBookLink = document.getElementById('viewBookLink');
+
+            // Show loading
+            contentDiv.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Đang tải chi tiết trả lời...</p>
+                </div>
+            `;
+
+            modal.show();
+
+            $.ajax({
+                url: window.location.pathname,
+                type: 'POST',
+                data: {
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                    handler: 'GetReplyDetails',
+                    notificationId: notificationId
+                },
+                success: function(data) {
+                    if (data.success && data.reply) {
+                        const reply = data.reply;
+                        contentDiv.innerHTML = `
+                            <div class="reply-details">
+                                <div class="mb-4">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="bi bi-chat-quote"></i>
+                                        Bình luận gốc
+                                    </h6>
+                                    <div class="border rounded p-3 bg-light">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <strong>${reply.parentCommentUserName}</strong>
+                                            <small class="text-muted ms-2">
+                                                <i class="bi bi-clock"></i>
+                                                ${new Date(reply.replyCreatedAt).toLocaleString('vi-VN')}
+                                            </small>
+                                        </div>
+                                        <p class="mb-0">${reply.parentCommentContent}</p>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h6 class="text-success mb-3">
+                                        <i class="bi bi-reply"></i>
+                                        Trả lời của ${reply.replyUserName}
+                                    </h6>
+                                    <div class="border rounded p-3 bg-success bg-opacity-10 border-success">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <strong>${reply.replyUserName}</strong>
+                                            <small class="text-muted ms-2">
+                                                <i class="bi bi-clock"></i>
+                                                ${new Date(reply.replyCreatedAt).toLocaleString('vi-VN')}
+                                            </small>
+                                            <span class="badge bg-success ms-2">${reply.replyUserRole}</span>
+                                        </div>
+                                        <p class="mb-0">${reply.replyContent}</p>
+                                    </div>
+                                </div>
+
+                                <div class="text-muted small">
+                                    <i class="bi bi-book"></i>
+                                    Từ sách: <strong>${reply.bookTitle}</strong>
+                                </div>
+                            </div>
+                        `;
+
+                        // Update view book link
+                        viewBookLink.href = reply.bookUrl;
+                        viewBookLink.style.display = 'inline-block';
+                    } else {
+                        contentDiv.innerHTML = `
+                            <div class="text-center text-danger">
+                                <i class="bi bi-exclamation-triangle display-4"></i>
+                                <p class="mt-2">Không thể tải chi tiết trả lời</p>
+                            </div>
+                        `;
+                        viewBookLink.style.display = 'none';
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading reply details:', error);
+                    contentDiv.innerHTML = `
+                        <div class="text-center text-danger">
+                            <i class="bi bi-exclamation-triangle display-4"></i>
+                            <p class="mt-2">Có lỗi xảy ra khi tải dữ liệu</p>
+                        </div>
+                    `;
+                    viewBookLink.style.display = 'none';
+                }
+            });
+        }
+
+        function markNotificationRead(notificationId) {
+            $.ajax({
+                url: window.location.pathname,
+                type: 'POST',
+                data: {
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                    handler: 'MarkNotificationRead',
+                    notificationId: notificationId
+                },
+                success: function(data) {
+                    if (data.success) {
+                        refreshNotifications(); // Refresh notifications after marking as read
+                        try { showToast('Cập nhật thông báo thành công', 'success'); } catch(e) { console.log('showToast not available', e); }
+                    } else {
+                        try { showToast('Có lỗi xảy ra: ' + (data.message || 'Lỗi'), 'error'); } catch(e) { alert('Có lỗi xảy ra: ' + (data.message || 'Lỗi')); }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    try { showToast('Có lỗi xảy ra khi cập nhật thông báo', 'error'); } catch(e) { alert('Có lỗi xảy ra khi cập nhật thông báo'); }
+                }
+            });
+        }
+
+        function markAllNotificationsRead() {
+            if (!confirm('Bạn có muốn đánh dấu tất cả thông báo là đã đọc?')) {
+                return;
+            }
+
+            $.ajax({
+                url: window.location.pathname,
+                type: 'POST',
+                data: {
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+                    handler: 'MarkAllNotificationsRead'
+                },
+                success: function(data) {
+                    if (data.success) {
+                        refreshNotifications(); // Refresh notifications after marking all as read
+                        try { showToast('Đã đánh dấu tất cả thông báo là đã đọc', 'success'); } catch(e) { console.log('showToast not available', e); }
+                    } else {
+                        try { showToast('Có lỗi xảy ra: ' + (data.message || 'Lỗi'), 'error'); } catch(e) { alert('Có lỗi xảy ra: ' + (data.message || 'Lỗi')); }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error);
+                    try { showToast('Có lỗi xảy ra khi cập nhật thông báo', 'error'); } catch(e) { alert('Có lỗi xảy ra khi cập nhật thông báo'); }
+                }
+            });
+        }
+
+        // Start auto-refresh when page loads
+        $(document).ready(function() {
+            // Initialize activity pagination
+            loadActivityPage(1);
+
+            // Load activity logs first page
+            loadActivityLogs(1);
+
+            // Load notifications first page via AJAX
+            loadNotifications(1);
+
+            startAutoRefresh();
+        });
+
+        // Delegated handler for server-rendered notification items (and to catch dynamically added ones)
+        $(document).on('click', '.notification-clickable', function (e) {
+            // If click was on a button or link inside the item, don't override their behavior
+            if ($(e.target).closest('button, a').length) return;
+
+            const $el = $(this);
+            const id = $el.data('notification-id');
+            const type = $el.data('notification-type');
+            const relType = $el.data('related-entity-type') || '';
+            const relId = $el.data('related-entity-id') || null;
+
+            handleNotificationClick(id, type, relType, relId);
+        });
+
+        // Delegated handler for server-rendered activity items
+        $(document).on('click', '.activity-clickable', function (e) {
+            if ($(e.target).closest('button, a').length) return;
+
+            const $el = $(this);
+            const actionUrl = $el.data('action-url') || $el.data('actionUrl') || '';
+            if (actionUrl) {
+                window.location.href = actionUrl;
+                return;
+            }
+
+            const entityType = $el.data('entity-type') || $el.data('entityType') || '';
+            const entityId = $el.data('entity-id') || $el.data('entityId') || null;
+
+            handleActivityClick(entityType, entityId);
+        });
+
+        // Activity logs handling (mirrors Recent Activities pagination)
+        let currentLogPage = 1;
+
+        function loadActivityLogs(page) {
+            currentLogPage = page || 1;
+
+            // Read filters from UI so pagination keeps filters applied
+            const start = $('#logStartDate').val() || '';
+            const end = $('#logEndDate').val() || '';
+            const entityType = $('#logEntityType').val() || '';
+
+            console.log('loadActivityLogs requested page:', currentLogPage, 'start:', start, 'end:', end, 'entityType:', entityType);
+
+            // Build explicit query to match activities approach and include filters
+            const qs = [];
+            qs.push(`handler=GetActivityLogs`);
+            qs.push(`page=${encodeURIComponent(currentLogPage)}`);
+            qs.push(`pageSize=10`);
+            if (start) qs.push(`startDate=${encodeURIComponent(start)}`);
+            if (end) qs.push(`endDate=${encodeURIComponent(end)}`);
+            if (entityType) qs.push(`entityType=${encodeURIComponent(entityType)}`);
+            qs.push(`t=${Date.now()}`);
+
+            const url = `${window.location.pathname}?${qs.join('&')}`;
+            console.log('Fetching logs URL:', url);
+
+            $.getJSON(url)
+                .done(function (data) {
+                    console.log('GetActivityLogs response currentPage:', data.currentPage, 'totalPages:', data.totalPages, 'logs:', (data.logs || []).length);
+                    updateLogsDisplay(data.logs);
+                    updateLogPagination(data.currentPage, data.totalPages);
+                })
+                .fail(function (xhr, status, error) {
+                    console.error('Error loading logs:', error);
+                    const container = document.getElementById('activity-logs-list');
+                    if (container) container.innerHTML = `<div class="text-center text-danger py-3">Có lỗi khi tải log hoạt động</div>`;
+                });
+        }
+
+        function updateLogsDisplay(logs) {
+            const listContainer = document.getElementById('activity-logs-list');
+            if (!listContainer) return;
+
+            if (!logs || !logs.length) {
+                listContainer.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-journal-x"></i>
+                        <p class="small mt-1">Chưa có log hoạt động</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = logs.map(l => `
+                <div class="activity-log-item p-2 mb-2 rounded bg-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="log-action small fw-semibold">${l.action}</div>
+                            <div class="log-description small">${l.description}</div>
+                            <div class="log-meta small text-muted">
+                                <i class="bi bi-person"></i> ${l.userName} •
+                                <i class="bi bi-clock"></i> ${new Date(l.createdAt).toLocaleString('vi-VN')}
+                                ${l.ipAddress ? `• <i class="bi bi-globe"></i> ${l.ipAddress}` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            listContainer.innerHTML = html;
+        }
+
+        function updateLogPagination(currentPage, totalPages) {
+            const container = '#log-pagination';
+            renderPagination(container, totalPages, currentPage, function (page) {
+                console.log('log pagination clicked:', page);
+                loadActivityLogs(page);
+            });
+        }
+
+        $('#filterLogsBtn').on('click', function () { loadActivityLogs(1); });
+
+        // Stop auto-refresh when page is hidden (user switches tabs)
+        $(document).on('visibilitychange', function() {
+            if (document.hidden) {
+                stopAutoRefresh();
+            } else {
+                startAutoRefresh();
+            }
+        });
+    </script>
+}

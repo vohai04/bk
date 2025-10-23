@@ -12,7 +12,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="modern-body">
+@{
+    var isAdminPage = ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Admin") == true;
+}
+<body class="modern-body@(isAdminPage ? " admin-page admin-sidebar-open" : "")">
     <style>
         /* Chatbot window styling */
         .chatbot-window {
@@ -256,9 +259,6 @@
         <!-- Admin Layout -->
         <div class="admin-layout">
             <aside class="admin-sidebar">
-                <div class="sidebar-header">
-                    <h3><i class="bi bi-gear-fill"></i> Quản trị hệ thống</h3>
-                </div>
                 <nav class="sidebar-nav">
                     <a href="/Admin/Dashboard" class="nav-item">
                         <i class="bi bi-speedometer2"></i>
@@ -510,6 +510,14 @@
                 $('.admin-sidebar').toggleClass('collapsed');
                 $('.admin-main').toggleClass('expanded');
                 const collapsedNow = $('.admin-sidebar').hasClass('collapsed');
+
+                // Update body class so header/footer shift accordingly
+                if (collapsedNow) {
+                    $('body').removeClass('admin-sidebar-open');
+                } else {
+                    $('body').addClass('admin-sidebar-open');
+                }
+
                 // When collapsed, show chevron-right (indicates it will expand)
                 if (collapsedNow) {
                     $icon.removeClass('bi-chevron-left').addClass('bi-chevron-right');
@@ -517,6 +525,31 @@
                     $icon.removeClass('bi-chevron-right').addClass('bi-chevron-left');
                 }
             }
+        });
+
+        // Keep header/footer in sync with sidebar state on load/resize
+        function syncSidebarStateToBody() {
+            if ($(window).width() < 768) {
+                // Mobile: don't shift header/footer
+                $('body').removeClass('admin-sidebar-open');
+                return;
+            }
+
+            // Desktop: if sidebar is not collapsed, ensure body has class
+            if ($('.admin-sidebar').length && !$('.admin-sidebar').hasClass('collapsed')) {
+                $('body').addClass('admin-sidebar-open');
+            } else {
+                $('body').removeClass('admin-sidebar-open');
+            }
+        }
+
+        $(window).on('resize', function() {
+            syncSidebarStateToBody();
+        });
+
+        // Run once on ready to set correct initial state
+        $(document).ready(function() {
+            syncSidebarStateToBody();
         });
 
         // Close sidebar when clicking outside on mobile

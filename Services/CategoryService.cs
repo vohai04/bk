@@ -10,11 +10,13 @@ namespace BookInfoFinder.Services
     {
         private readonly BookContext _context;
         private readonly ILogger<CategoryService> _logger;
+        private readonly IDashboardService _dashboardService;
 
-        public CategoryService(BookContext context, ILogger<CategoryService> logger)
+        public CategoryService(BookContext context, ILogger<CategoryService> logger, IDashboardService dashboardService)
         {
             _context = context;
             _logger = logger;
+            _dashboardService = dashboardService;
         }
 
         public async Task<List<CategoryDto>> GetAllCategoriesAsync()

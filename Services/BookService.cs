@@ -14,12 +14,14 @@ namespace BookInfoFinder.Services
         private readonly BookContext _context;
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<BookService> _logger;
+        private readonly IDashboardService _dashboardService;
 
-        public BookService(BookContext context, IWebHostEnvironment env, ILogger<BookService> logger)
+        public BookService(BookContext context, IWebHostEnvironment env, ILogger<BookService> logger, IDashboardService dashboardService)
         {
             _context = context;
             _env = env;
             _logger = logger;
+            _dashboardService = dashboardService;
         }
 
         public async Task<List<string>> SuggestBookTitlesAsync(string keyword)
@@ -177,6 +179,16 @@ namespace BookInfoFinder.Services
                     await _context.SaveChangesAsync();
                 }
 
+                // Log activity
+                await _dashboardService.LogActivityAsync(
+                    bookCreateDto.UserId.ToString(), // userName - using UserId as string
+                    "Book Created",
+                    $"Created new book: '{book.Title}'",
+                    "Book",
+                    book.BookId,
+                    "" // ipAddress - empty for service layer
+                );
+
                 return await GetBookDtoByIdAsync(book.BookId);
             }
             catch (Exception ex)
@@ -216,6 +228,16 @@ namespace BookInfoFinder.Services
 
                 await _context.SaveChangesAsync();
 
+                // Log activity
+                await _dashboardService.LogActivityAsync(
+                    bookUpdateDto.UserId.ToString(),
+                    "Book Updated",
+                    $"Updated book: '{book.Title}'",
+                    "Book",
+                    book.BookId,
+                    ""
+                );
+
                 return await GetBookDtoByIdAsync(book.BookId);
             }
             catch (Exception ex)
@@ -232,8 +254,22 @@ namespace BookInfoFinder.Services
                 var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
                 if (book == null) return false;
 
+                var bookTitle = book.Title; // Store title before deletion
+                var userId = book.UserId; // Store user ID for logging
+
                 _context.Books.Remove(book);
                 await _context.SaveChangesAsync();
+
+                // Log activity
+                await _dashboardService.LogActivityAsync(
+                    userId.ToString(),
+                    "Book Deleted",
+                    $"Deleted book: '{bookTitle}'",
+                    "Book",
+                    bookId,
+                    ""
+                );
+
                 return true;
             }
             catch (Exception ex)

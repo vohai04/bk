@@ -10,10 +10,12 @@ namespace BookInfoFinder.Services
     public class UserService : IUserService
     {
         private readonly BookContext _context;
+        private readonly IDashboardService _dashboardService;
 
-        public UserService(BookContext context)
+        public UserService(BookContext context, IDashboardService dashboardService)
         {
             _context = context;
+            _dashboardService = dashboardService;
         }
 
         public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
@@ -42,6 +44,16 @@ namespace BookInfoFinder.Services
             
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+
+            // Log activity
+            await _dashboardService.LogActivityAsync(
+                user.UserName,
+                "User Registered",
+                $"New user '{user.UserName}' registered",
+                "User",
+                user.UserId,
+                ""
+            );
             
             return user.ToDto();
         }

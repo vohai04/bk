@@ -368,5 +368,98 @@ namespace BookInfoFinder.Services
             entity.Comment = dto.Comment;
             entity.UpdatedAt = DateTime.UtcNow;
         }
+
+        // Dashboard Mapping
+        public static ActivityLogDto ToDto(this ActivityLog activityLog)
+        {
+            return new ActivityLogDto
+            {
+                ActivityId = activityLog.ActivityId,
+                UserName = activityLog.UserName,
+                Action = activityLog.Action,
+                Description = activityLog.Description,
+                EntityType = activityLog.EntityType,
+                EntityId = activityLog.EntityId,
+                CreatedAt = activityLog.CreatedAt,
+                IpAddress = activityLog.IpAddress
+            };
+        }
+
+        public static NotificationDto ToDto(this Notification notification)
+        {
+            return new NotificationDto
+            {
+                NotificationId = notification.NotificationId,
+                UserId = notification.UserId,
+                UserName = notification.User?.UserName ?? "Unknown",
+                Title = notification.Title,
+                Message = notification.Message,
+                Type = notification.Type,
+                IsRead = notification.IsRead,
+                CreatedAt = notification.CreatedAt,
+                RelatedEntityId = notification.RelatedEntityId,
+                RelatedEntityType = notification.RelatedEntityType
+            };
+        }
+
+        public static RecentActivityDto ToRecentActivityDto(this Book book)
+        {
+            return new RecentActivityDto
+            {
+                Type = "book",
+                Title = $"Sách mới: {book.Title}",
+                Description = $"Được thêm bởi {book.User?.UserName ?? "Hệ thống"}",
+                UserName = book.User?.UserName ?? "Hệ thống",
+                CreatedAt = book.PublicationDate != default ? book.PublicationDate : DateTime.UtcNow,
+                ActionUrl = $"/BookDetail/{book.BookId}",
+                EntityId = book.BookId,
+                EntityType = "Book"
+            };
+        }
+
+        public static RecentActivityDto ToRecentActivityDto(this User user)
+        {
+            return new RecentActivityDto
+            {
+                Type = "user",
+                Title = $"Người dùng mới: {user.UserName}",
+                Description = $"Đã đăng ký tài khoản",
+                UserName = user.UserName,
+                CreatedAt = user.CreatedAt,
+                ActionUrl = "/Admin/Users",
+                EntityId = user.UserId,
+                EntityType = "User"
+            };
+        }
+
+        public static RecentActivityDto ToRecentActivityDto(this Category category)
+        {
+            return new RecentActivityDto
+            {
+                Type = "category",
+                Title = $"Thể loại mới: {category.Name}",
+                Description = $"Được tạo bởi hệ thống",
+                UserName = "Hệ thống",
+                CreatedAt = category.CreatedAt,
+                ActionUrl = "/Admin/Categories",
+                EntityId = category.CategoryId,
+                EntityType = "Category"
+            };
+        }
+
+        public static RecentActivityDto ToRecentActivityDto(this BookComment comment)
+        {
+            return new RecentActivityDto
+            {
+                Type = "comment",
+                Title = $"Bình luận mới",
+                Description = $"\"{comment.Comment?.Substring(0, Math.Min(50, comment.Comment.Length)) ?? "Nội dung bình luận"}\"",
+                UserName = comment.User?.UserName ?? "Unknown",
+                CreatedAt = comment.CreatedAt,
+                ActionUrl = $"/BookDetail/{comment.BookId}#comment-{comment.BookCommentId}",
+                EntityId = comment.BookCommentId,
+                EntityType = "BookComment"
+            };
+        }
     }
 }

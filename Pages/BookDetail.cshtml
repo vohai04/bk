@@ -329,18 +329,32 @@ else
                     if (data.success) {
                         showToast(data.message, "success");
                         $("#commentContent").val("");
+                        // Reset selected star to 5 and highlight all stars with value <= 5
                         $("#selectedStar").val("5");
-                        $(".star-selector").removeClass("selected");
-                        $(".star-selector[data-value='5']").addClass("selected");
-                        
-                        // Update rating display
+                        $(".star-selector").removeClass("selected").each(function () {
+                            if ($(this).data("value") <= 5) {
+                                $(this).addClass("selected");
+                            }
+                        });
+
+                        // Update rating display (number + star icons)
                         if (data.averageRating !== undefined) {
-                            $(".js-average-rating").text(data.averageRating);
+                            const avg = parseFloat(data.averageRating);
+                            $(".js-average-rating").text(Number.isNaN(avg) ? data.averageRating : avg.toFixed(2));
+
+                            // Re-render star icons based on rounded average
+                            const rounded = Math.round(avg || 0);
+                            let starsHtml = '';
+                            for (let i = 1; i <= 5; i++) {
+                                const cls = i <= rounded ? 'text-warning' : 'text-muted';
+                                starsHtml += `<i class="bi bi-star-fill ${cls}"></i>`;
+                            }
+                            $(".rating-stars").html(starsHtml);
                         }
                         if (data.ratingCount !== undefined) {
                             $(".js-rating-count").text("(" + data.ratingCount + " lượt đánh giá)");
                         }
- 
+
                         // Reload comments to show new comment
                         loadComments(1);
                     } else {
@@ -742,10 +756,92 @@ else
             return commentId; // fallback
         }
  
-        // Tải comment trang 1 khi load trang
-        $(document).ready(function () {
-            loadComments(1);
-        });
+        // Tải comment trang phù hợp khi load trang. Nếu URL có fragment tới comment, yêu cầu server trả về trang chứa comment
+                $(document).ready(function () {
+                    const hash = window.location.hash || '';
+                    if (hash && (hash.startsWith('#comment-content-') || hash.startsWith('#comment-'))) {
+                        // Extract comment id and ask server which page contains it
+                        const commentId = parseInt(hash.replace('#comment-content-', '').replace('#comment-', '')) || 0;
+                        if (commentId > 0) {
+                            $.get('?handler=GetCommentPage', { commentId: commentId, pageSize: 10 })
+                                .done(function (res) {
+                                    if (res && res.success && res.page) {
+                                        const targetPage = res.page || 1;
+                                        const rootId = res.rootId || commentId;
+
+                                        loadComments(targetPage).then(function() {
+                                            // After loading the correct page, ensure replies for the root comment are visible
+                                            const $showRepliesBtn = $(`.show-replies-btn[data-cmtid="${rootId}"]`);
+                                            const $replyContainer = $(`#reply-list-${rootId}`);
+
+                                            const scrollTo = function() {
+                                                const $target = $(`#comment-content-${commentId}`);
+                                                if ($target.length) {
+                                                    $('html, body').animate({ scrollTop: $target.offset().top - 100 }, 500);
+                                                    return true;
+                                                }
+                                                const $byData = $(`[data-cmtid="${commentId}"]`);
+                                                if ($byData.length) {
+                                                    $('html, body').animate({ scrollTop: $byData.offset().top - 100 }, 500);
+                                                    return true;
+                                                }
+                                                return false;
+                                            };
+
+                                            if ($showRepliesBtn.length && !$replyContainer.is(':visible')) {
+                                                // Click to load replies via existing handler
+                                                $showRepliesBtn.click();
+
+                                                // Wait for replies to be visible, then scroll to target (try repeatedly for a short time)
+                                                let tries = 0;
+                                                const maxTries = 30;
+                                                const waitForReplies = function() {
+                                                    tries++;
+                                                    if ($replyContainer.is(':visible')) {
+                                                        // A small delay to allow reply rendering
+                                                        setTimeout(function() {
+                                                            if (!scrollTo() && tries < maxTries) {
+                                                                setTimeout(waitForReplies, 100);
+                                                            }
+                                                        }, 50);
+                                                        return;
+                                                    }
+                                                    if (tries < maxTries) {
+                                                        setTimeout(waitForReplies, 100);
+                                                    } else {
+                                                        // fallback: try scrolling to root or page top
+                                                        if (!scrollTo()) window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                    }
+                                                };
+                                                setTimeout(waitForReplies, 150);
+                                            } else {
+                                                // Replies already visible or no replies button - scroll immediately (with a tiny delay)
+                                                setTimeout(function() {
+                                                    if (!scrollTo()) {
+                                                        // try again shortly in case rendering is delayed
+                                                        setTimeout(scrollTo, 150);
+                                                    }
+                                                }, 80);
+                                            }
+                                        }).catch(function() {
+                                            // If loading page failed, fallback to loading page 1
+                                            loadComments(1);
+                                        });
+                                        return;
+                                    }
+                                    // fallback
+                                    loadComments(1);
+                                })
+                                .fail(function() {
+                                    loadComments(1);
+                                });
+                            return;
+                        }
+                    }
+
+                    // Default: load first page
+                    loadComments(1);
+                });
  
         // HIỂN THỊ REPLIES KHI BẤM NÚT (Facebook style - nested)
         $(document).on("click", ".show-replies-btn", function () {

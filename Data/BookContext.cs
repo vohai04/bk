@@ -23,6 +23,8 @@ namespace BookInfoFinder.Data
     public DbSet<Rating> Ratings { get; set; }
     public DbSet<BookComment> BookComments { get; set; }
     public DbSet<Chatbot> Chatbots { get; set; }
+    public DbSet<ActivityLog> ActivityLogs { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -311,6 +313,40 @@ namespace BookInfoFinder.Data
                   .HasForeignKey(static bc => bc.ParentCommentId)
                   .OnDelete(DeleteBehavior.Cascade)
                   .IsRequired(false);
+            });
+
+            // ActivityLog configuration
+            modelBuilder.Entity<ActivityLog>(entity =>
+            {
+                entity.ToTable("ActivityLogs");
+                entity.HasKey(e => e.ActivityId);
+                entity.Property(e => e.ActivityId).ValueGeneratedOnAdd();
+                entity.Property(e => e.UserName).IsRequired().HasMaxLength(256);
+                entity.Property(e => e.Action).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+                entity.Property(e => e.EntityType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.CreatedAt).IsRequired();
+                entity.Property(e => e.IpAddress).HasMaxLength(45);
+            });
+
+            // Notification configuration
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.ToTable("Notifications");
+                entity.HasKey(e => e.NotificationId);
+                entity.Property(e => e.NotificationId).ValueGeneratedOnAdd();
+                entity.Property(e => e.UserId).IsRequired();
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Message).IsRequired().HasMaxLength(1000);
+                entity.Property(e => e.Type).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.IsRead).IsRequired().HasDefaultValue(false);
+                entity.Property(e => e.CreatedAt).IsRequired();
+                entity.Property(e => e.RelatedEntityType).HasMaxLength(50);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Seed Data

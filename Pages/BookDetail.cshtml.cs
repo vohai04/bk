@@ -207,6 +207,46 @@ public class BookDetailModel : PageModel
 
         return new JsonResult(new { success = true, replies = replies });
     }
+
+    // Determine which paged root comments page contains the given comment id.
+    // Useful so client can request the correct page before attempting to scroll to a comment.
+    public async Task<JsonResult> OnGetGetCommentPageAsync(int commentId, int pageSize = 10)
+    {
+        try
+        {
+            var comment = await _bookCommentService.GetCommentByIdAsync(commentId);
+            if (comment == null)
+                return new JsonResult(new { success = false, message = "Comment not found" });
+
+            var bookId = comment.BookId;
+
+            // If this is a reply, target its root parent comment for paging
+            var rootId = comment.ParentCommentId ?? comment.BookCommentId;
+
+            // Total root comments
+            var totalRoots = await _bookCommentService.GetRootCommentsCountByBookAsync(bookId);
+            if (totalRoots <= 0)
+                return new JsonResult(new { success = false, message = "No root comments" });
+
+            var totalPages = (int)Math.Ceiling(totalRoots / (double)pageSize);
+
+            for (int page = 1; page <= totalPages; page++)
+            {
+                var (comments, _) = await _bookCommentService.GetRootCommentsPagedAsync(bookId, page, pageSize);
+                if (comments.Any(c => c.BookCommentId == rootId))
+                {
+                    return new JsonResult(new { success = true, page = page, bookId = bookId, rootId = rootId });
+                }
+            }
+
+            // Not found (shouldn't normally happen)
+            return new JsonResult(new { success = false, message = "Could not determine page" });
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { success = false, message = ex.Message });
+        }
+    }
     public async Task<JsonResult> OnGetCheckFavoriteAsync(int bookId)
     {
         var userIdStr = HttpContext.Session.GetString("UserId");

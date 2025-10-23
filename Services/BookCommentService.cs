@@ -9,11 +9,13 @@ namespace BookInfoFinder.Services
     {
         private readonly BookContext _context;
         private readonly ILogger<BookCommentService> _logger;
+        private readonly IDashboardService _dashboardService;
 
-        public BookCommentService(BookContext context, ILogger<BookCommentService> logger)
+        public BookCommentService(BookContext context, ILogger<BookCommentService> logger, IDashboardService dashboardService)
         {
             _context = context;
             _logger = logger;
+            _dashboardService = dashboardService;
         }
 
         public async Task<List<BookCommentDto>> GetRootCommentsByBookAsync(int bookId)
@@ -217,6 +219,16 @@ namespace BookInfoFinder.Services
                     .Include(c => c.User)
                     .FirstAsync(c => c.BookCommentId == comment.BookCommentId);
 
+                // Log activity
+                await _dashboardService.LogActivityAsync(
+                    commentCreateDto.UserId.ToString(),
+                    "Comment Created",
+                    $"Posted a comment with {commentCreateDto.Star} stars",
+                    "BookComment",
+                    savedComment.BookCommentId,
+                    ""
+                );
+
                 return savedComment.ToDto();
             }
             catch (Exception ex)
@@ -253,6 +265,19 @@ namespace BookInfoFinder.Services
                 var savedComment = await _context.BookComments
                     .Include(c => c.User)
                     .FirstAsync(c => c.BookCommentId == comment.BookCommentId);
+
+                // Log activity
+                await _dashboardService.LogActivityAsync(
+                    commentCreateDto.UserId.ToString(),
+                    "Reply Created",
+                    "Replied to a comment",
+                    "BookComment",
+                    savedComment.BookCommentId,
+                    ""
+                );
+
+                // Create notification for comment reply
+                await _dashboardService.CreateCommentReplyNotificationAsync(savedComment.BookCommentId, commentCreateDto.UserId);
 
                 return savedComment.ToDto();
             }

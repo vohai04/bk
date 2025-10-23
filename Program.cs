@@ -52,6 +52,7 @@ builder.Services.AddScoped<IPublisherService, PublisherService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<IBookCommentService, BookCommentService>();
 builder.Services.AddScoped<IChatbotService, ChatbotService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 // Page routes
 builder.Services.AddRazorPages(options =>
 {
