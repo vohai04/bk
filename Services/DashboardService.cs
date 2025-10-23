@@ -280,14 +280,16 @@ namespace BookInfoFinder.Services
             if (startDate.HasValue)
             {
                 // Use date range based on the provided date values (avoid timezone shifts)
-                var start = startDate.Value.Date;
+                // Ensure the DateTime has Kind=Utc so Npgsql maps to timestamptz correctly
+                var start = DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Utc);
                 query = query.Where(a => a.CreatedAt >= start);
             }
 
             if (endDate.HasValue)
             {
                 // include full day (exclusive upper bound)
-                var end = endDate.Value.Date.AddDays(1);
+                // Ensure the DateTime has Kind=Utc so Npgsql maps to timestamptz correctly
+                var end = DateTime.SpecifyKind(endDate.Value.Date.AddDays(1), DateTimeKind.Utc);
                 query = query.Where(a => a.CreatedAt < end);
             }
 
