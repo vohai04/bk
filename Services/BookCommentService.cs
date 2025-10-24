@@ -276,8 +276,12 @@ namespace BookInfoFinder.Services
                     ""
                 );
 
-                // Create notification for comment reply
-                await _dashboardService.CreateCommentReplyNotificationAsync(savedComment.BookCommentId, commentCreateDto.UserId);
+                    // Create notification for comment reply
+                    // NOTE: pass the parent comment id (the comment being replied to), not the new reply id
+                    if (commentCreateDto.ParentCommentId.HasValue)
+                    {
+                        await _dashboardService.CreateCommentReplyNotificationAsync(commentCreateDto.ParentCommentId.Value, commentCreateDto.UserId);
+                    }
 
                 return savedComment.ToDto();
             }

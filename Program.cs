@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Text;
 using BookInfoFinder.Services.Interface;
-// using BookInfoFinder.Hubs;
+using BookInfoFinder.Hubs;
 using QuestPDF;
 using QuestPDF.Infrastructure;
 
@@ -75,7 +75,7 @@ else
    app.UseDeveloperExceptionPage();
 }
  
-//app.MapHub<CommentHub>("/commentHub");
+app.MapHub<NotificationHub>("/notificationHub");
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();

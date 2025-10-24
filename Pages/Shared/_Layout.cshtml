@@ -208,6 +208,14 @@
                 <div class="navbar-nav nav-end">
                     @if (!string.IsNullOrEmpty(username))
                     {
+                        <div class="nav-item">
+                            <a class="nav-link position-relative me-2" href="/Notifications" id="notificationButton" title="Thông báo">
+                                <i class="bi bi-bell" style="font-size: 1.25rem;"></i>
+                                <!-- badge hidden by default; JS will show when unread > 0 -->
+                                <span id="notificationCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.65rem; display:none;"></span>
+                            </a>
+                        </div>
+
                         <div class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <div class="user-avatar me-2">
@@ -359,7 +367,8 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.11/signalr.min.js"></script>
+
     <script>
         // Coming Soon Function
         function showComingSoon() {
@@ -562,7 +571,71 @@
         });
     </script>
     <!-- Profile modal / ajax removed; profile page will handle view/edit/password -->
-    
+    <script>
+        (function () {
+            // Try to get current user id from server if not emitted into the page
+            var currentUserId = '@(Context.Session.GetString("UserId") ?? Context.Request.Cookies["UserId"] ?? "")';
+                var initializeWithUser = function (userId, unreadCount) {
+                    if (!userId) return;
+                    var countEl = document.getElementById('notificationCount');
+                    if (countEl && typeof unreadCount === 'number') {
+                        if (unreadCount > 0) {
+                            countEl.innerText = unreadCount;
+                            countEl.style.display = '';
+                        } else {
+                            countEl.innerText = '';
+                            countEl.style.display = 'none';
+                        }
+                    }
+
+                    try {
+                        const connection = new signalR.HubConnectionBuilder()
+                            .withUrl('/notificationHub')
+                            .withAutomaticReconnect()
+                            .build();
+
+                        connection.on('ReceiveNotification', function (payload) {
+                            try {
+                                const message = (payload && (payload.message || payload.Message || payload.title || payload.Title)) || 'Bạn có thông báo mới';
+                                if (typeof showToast === 'function') {
+                                    showToast(message, 'info');
+                                }
+                                const countEl2 = document.getElementById('notificationCount');
+                                if (countEl2) {
+                                    let n = parseInt(countEl2.innerText) || 0;
+                                    n = n + 1;
+                                    countEl2.innerText = n;
+                                    countEl2.style.display = '';
+                                }
+                            } catch (e) { console.error(e); }
+                        });
+
+                        connection.start().then(function () {
+                            console.log('SignalR connected');
+                            connection.invoke('Register', parseInt(userId)).catch(function (err) { console.error(err.toString()); });
+                        }).catch(function (err) { console.error(err.toString()); });
+                    } catch (ex) {
+                        console.error('SignalR init error', ex);
+                    }
+                };
+
+            if (currentUserId && currentUserId.length > 0) {
+                initializeWithUser(currentUserId, null);
+            } else {
+                // Use jQuery to fetch user id and unread count (sends cookies/session)
+                $.getJSON('/Notifications?handler=UnreadCount')
+                    .done(function (data) {
+                        console.log('UnreadCount result', data);
+                        if (data && data.userId) {
+                            initializeWithUser(data.userId, data.unread || 0);
+                        }
+                    })
+                    .fail(function (jqxhr, status, err) {
+                        console.warn('Could not fetch unread count/user id', status, err);
+                    });
+            }
+        })();
+    </script>
     <script>
         // Chatbot functions
         function toggleChatbotModal() {

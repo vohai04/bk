@@ -10,13 +10,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BookInfoFinder.Services
 {
+    using Microsoft.Extensions.Logging;
+
     public class DashboardService : IDashboardService
     {
         private readonly BookContext _context;
+        private readonly Microsoft.AspNetCore.SignalR.IHubContext<BookInfoFinder.Hubs.NotificationHub> _hubContext;
+        private readonly ILogger<DashboardService> _logger;
 
-        public DashboardService(BookContext context)
+        public DashboardService(BookContext context, Microsoft.AspNetCore.SignalR.IHubContext<BookInfoFinder.Hubs.NotificationHub> hubContext, ILogger<DashboardService> logger)
         {
             _context = context;
+            _hubContext = hubContext;
+            _logger = logger;
         }
 
         public async Task<DashboardStatsDto> GetDashboardStatsAsync()
@@ -378,6 +384,31 @@ namespace BookInfoFinder.Services
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
+
+            // Push real-time notification via SignalR to the specific user group
+            try
+            {
+                var payload = new
+                {
+                    notificationId = notification.NotificationId,
+                    title = notification.Title,
+                    message = notification.Message,
+                    type = notification.Type,
+                    relatedEntityId = notification.RelatedEntityId,
+                    relatedEntityType = notification.RelatedEntityType,
+                    createdAt = notification.CreatedAt
+                };
+
+                var group = BookInfoFinder.Hubs.NotificationHub.GetUserGroup(userId);
+                _logger?.LogInformation("Sending notification {NotificationId} to group {Group}", notification.NotificationId, group);
+                await _hubContext.Clients.Group(group).SendCoreAsync("ReceiveNotification", new object[] { payload });
+                _logger?.LogInformation("Sent notification {NotificationId} to group {Group}", notification.NotificationId, group);
+            }
+            catch (Exception ex)
+            {
+                // Log and swallow hub errors to avoid breaking the normal flow if SignalR is not available
+                _logger?.LogWarning(ex, "Failed to send notification {NotificationId} to user {UserId}", notification.NotificationId, userId);
+            }
         }
 
         public async Task CreateCommentReplyNotificationAsync(int commentId, int replierUserId)
@@ -402,7 +433,7 @@ namespace BookInfoFinder.Services
                 title,
                 message,
                 "comment_reply",
-                comment.BookId,
+                    comment.BookCommentId,
                 "book"
             );
         }
@@ -434,7 +465,7 @@ namespace BookInfoFinder.Services
                     .FirstOrDefaultAsync(pc => pc.BookCommentId == replyComment.ParentCommentId.Value);
             }
 
-            return new
+                return new
             {
                 notificationId = notification.NotificationId,
                 replyId = replyComment.BookCommentId,
@@ -447,7 +478,7 @@ namespace BookInfoFinder.Services
                 parentCommentUserName = parentComment?.User?.UserName ?? "Ẩn danh",
                 bookId = replyComment.BookId,
                 bookTitle = replyComment.Book?.Title ?? "Unknown Book",
-                bookUrl = $"/BookDetail?id={replyComment.BookId}"
+                bookUrl = $"/BookDetail/{replyComment.BookId}"
             };
         }
     }

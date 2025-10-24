@@ -234,7 +234,7 @@
                                         <div class="notification-title fw-semibold">
                                             @if (notification.RelatedEntityType == "book" && notification.RelatedEntityId.HasValue)
                                             {
-                                                <a href="/BookDetail?id=@notification.RelatedEntityId" class="text-decoration-none text-dark" onclick="event.stopPropagation()">
+                                                <a href="/BookDetail/@notification.RelatedEntityId" class="text-decoration-none text-dark" onclick="event.stopPropagation()">
                                                     @notification.Title
                                                     <i class="bi bi-box-arrow-up-right small ms-1"></i>
                                                 </a>
@@ -530,8 +530,8 @@
                 const active = document.activeElement;
             } catch (e) { }
 
-            if (t === 'book') {
-                url = `/BookDetail?id=${entityId}`;
+                if (t === 'book') {
+                url = `/BookDetail/${entityId}`;
             } else if (t === 'user') {
                 url = '/Admin/Users'; // Could be enhanced to go to specific user
             } else if (t === 'category') {
@@ -541,13 +541,13 @@
                 // We'll optimistically navigate to ManageBook if backend endpoint is not available
                 // Try fetch book id for comment
                 // Call BookDetail page handler to resolve which book/page contains this comment
-                $.get('/BookDetail', { handler: 'GetCommentPage', commentId: entityId, pageSize: 10 })
+                    $.get('/BookDetail', { handler: 'GetCommentPage', commentId: entityId, pageSize: 10 })
                     .done(function (data) {
                         if (data && data.success && data.bookId) {
-                            window.location.href = `/BookDetail?id=${data.bookId}#comment-content-${entityId}`;
+                            window.location.href = `/BookDetail/${data.bookId}#comment-content-${entityId}`;
                         } else if (data && data.bookId) {
                             // older non-standard response
-                            window.location.href = `/BookDetail?id=${data.bookId}#comment-content-${entityId}`;
+                            window.location.href = `/BookDetail/${data.bookId}#comment-content-${entityId}`;
                         } else {
                             window.location.href = '/Admin/ManageBook';
                         }
@@ -702,10 +702,10 @@
             const relType = (relatedEntityType || '').toString().toLowerCase();
             const relId = relatedEntityId || null;
 
-            if (relType === 'book' && relId) {
+                if (relType === 'book' && relId) {
                 // Mark read first, then navigate
                 markNotificationRead(notificationId);
-                window.location.href = `/BookDetail?id=${relId}`;
+                window.location.href = `/BookDetail/${relId}`;
                 return;
             }
 
