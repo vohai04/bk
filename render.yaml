@@ -1,18 +1,4 @@
 services:
-  # PostgreSQL Database
-  - type: pserv
-    name: bookinfo-postgres
-    env: docker
-    plan: free
-    dockerfilePath: ./Dockerfile.postgres
-    envVars:
-      - key: POSTGRES_DB
-        value: BookInfoDB
-      - key: POSTGRES_USER
-        value: postgres
-      - key: POSTGRES_PASSWORD
-        generateValue: true
-
   # BookInfoFinder Web App
   - type: web
     name: bookinfo-app
@@ -22,20 +8,8 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: DB_HOST
-        fromService:
-          type: pserv
-          name: bookinfo-postgres
-          property: host
-      - key: DB_NAME
-        value: BookInfoDB
-      - key: DB_USER
-        value: postgres
-      - key: DB_PASSWORD
-        fromService:
-          type: pserv
-          name: bookinfo-postgres
-          envVarKey: POSTGRES_PASSWORD
+      - key: ConnectionStrings__DefaultConnection
+        value: Host=dpg-example.oregon-postgres.render.com;Database=bookinfodb;Username=bookinfo;Password=example;SslMode=Require
       - key: EMAIL_ADDRESS
         value: haivvde180313@fpt.edu.vn
       - key: EMAIL_PASSWORD
