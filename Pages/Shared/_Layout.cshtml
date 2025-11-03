@@ -130,11 +130,6 @@
 
                 @if (!isAdminPage)
                 {
-                    <!-- Mobile Navigation Toggle -->
-                    <button class="mobile-nav-toggle d-md-none" type="button" id="mobileNavToggle">
-                        <i class="bi bi-list"></i>
-                    </button>
-
                     <div class="navbar-nav nav-center">
                         <a class="nav-link" asp-area="" asp-page="/Index">
                             <i class="bi bi-house"></i>
@@ -196,33 +191,6 @@
                             </ul>
                         </div>
                         
-                        <a class="nav-link" asp-area="" asp-page="/Privacy">
-                            <i class="bi bi-shield-check"></i>
-                            <span>Chính sách</span>
-                        </a>
-                        @if (isAdmin)
-                        {
-                            <a class="nav-link admin-link" asp-area="" asp-page="/Admin/Dashboard">
-                                <i class="bi bi-gear"></i>
-                                <span>Admin</span>
-                            </a>
-                        }
-                    </div>
-
-                    <!-- Mobile Navigation Menu -->
-                    <div class="mobile-nav" id="mobileNav">
-                        <a class="nav-link" asp-area="" asp-page="/Index">
-                            <i class="bi bi-house"></i>
-                            <span>Trang chủ</span>
-                        </a>
-                        <a class="nav-link" asp-area="" asp-page="/Favorites">
-                            <i class="bi bi-heart"></i>
-                            <span>Yêu thích</span>
-                        </a>
-                        <a class="nav-link" asp-area="" asp-page="/SearchHistory">
-                            <i class="bi bi-clock-history"></i>
-                            <span>Lịch sử</span>
-                        </a>
                         <a class="nav-link" asp-area="" asp-page="/Privacy">
                             <i class="bi bi-shield-check"></i>
                             <span>Chính sách</span>
@@ -537,39 +505,7 @@
             console.log('Layout scripts loaded');
             $('[data-bs-toggle="tooltip"]').tooltip();
             initHeaderFilters();
-            initMobileNav();
         });
-
-        // Mobile Navigation
-        function initMobileNav() {
-            $('#mobileNavToggle').on('click', function() {
-                const $mobileNav = $('#mobileNav');
-                const $icon = $(this).find('i');
-                
-                $mobileNav.toggleClass('show');
-                
-                // Toggle icon
-                if ($mobileNav.hasClass('show')) {
-                    $icon.removeClass('bi-list').addClass('bi-x');
-                } else {
-                    $icon.removeClass('bi-x').addClass('bi-list');
-                }
-            });
-            
-            // Close mobile nav when clicking outside
-            $(document).on('click', function(e) {
-                if (!$(e.target).closest('.mobile-nav, #mobileNavToggle').length) {
-                    $('#mobileNav').removeClass('show');
-                    $('#mobileNavToggle i').removeClass('bi-x').addClass('bi-list');
-                }
-            });
-            
-            // Close mobile nav when clicking on a link
-            $('#mobileNav .nav-link').on('click', function() {
-                $('#mobileNav').removeClass('show');
-                $('#mobileNavToggle i').removeClass('bi-x').addClass('bi-list');
-            });
-        }
 
         // Use delegated handlers outside of ready to make this robust if layout is re-rendered
         // Admin sidebar toggle (delegated)
