@@ -239,27 +239,62 @@ BookInfoFinder Team
                 using var client = new SmtpClient();
                 client.ServerCertificateValidationCallback = (s, c, h, e) => true;
                 
-                // Set timeout cho production
-                client.Timeout = 30000; // 30 seconds
+                // Set timeout ngắn hơn cho production
+                client.Timeout = 15000; // 15 seconds
 
                 _logger.LogInformation("Connecting to SMTP server...");
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
                 
-                await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls, cts.Token);
-                
-                _logger.LogInformation("Authenticating with SMTP server...");
-                await client.AuthenticateAsync(_settings.Email, _settings.Password, cts.Token);
-                
-                _logger.LogInformation("Sending email...");
-                await client.SendAsync(message, cts.Token);
-                await client.DisconnectAsync(true, cts.Token);
+                // Thử nhiều SMTP servers khác nhau
+                var smtpConfigs = new[]
+                {
+                    new { Host = "smtp.gmail.com", Port = 587, UseStartTls = true },
+                    new { Host = "smtp.gmail.com", Port = 465, UseStartTls = false },
+                    new { Host = "smtp-mail.outlook.com", Port = 587, UseStartTls = true }
+                };
 
-                _logger.LogInformation("Email sent successfully!");
-                return true;
+                Exception? lastException = null;
+                
+                foreach (var config in smtpConfigs)
+                {
+                    try
+                    {
+                        _logger.LogInformation("Trying SMTP: {Host}:{Port}", config.Host, config.Port);
+                        
+                        var secureOptions = config.UseStartTls 
+                            ? MailKit.Security.SecureSocketOptions.StartTls 
+                            : MailKit.Security.SecureSocketOptions.SslOnConnect;
+                            
+                        await client.ConnectAsync(config.Host, config.Port, secureOptions, cts.Token);
+                        
+                        _logger.LogInformation("Connected! Authenticating...");
+                        await client.AuthenticateAsync(_settings.Email, _settings.Password, cts.Token);
+                        
+                        _logger.LogInformation("Authenticated! Sending email...");
+                        await client.SendAsync(message, cts.Token);
+                        await client.DisconnectAsync(true, cts.Token);
+
+                        _logger.LogInformation("Email sent successfully via {Host}:{Port}!", config.Host, config.Port);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        lastException = ex;
+                        _logger.LogWarning("Failed with {Host}:{Port} - {Error}", config.Host, config.Port, ex.Message);
+                        
+                        if (client.IsConnected)
+                        {
+                            try { await client.DisconnectAsync(true); } catch { }
+                        }
+                        continue;
+                    }
+                }
+
+                throw lastException ?? new Exception("All SMTP servers failed");
             }
             catch (OperationCanceledException)
             {
-                _logger.LogError("Email sending timed out after 30 seconds for: {Email}", toEmail);
+                _logger.LogError("Email sending timed out after 15 seconds for: {Email}", toEmail);
                 return false;
             }
             catch (Exception ex)
