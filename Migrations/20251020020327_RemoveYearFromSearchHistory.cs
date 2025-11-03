@@ -10,9 +10,18 @@ namespace BookInfoFinder.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Year",
-                table: "SearchHistories");
+            // Check if column exists before dropping
+            migrationBuilder.Sql(@"
+                DO $$ 
+                BEGIN 
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name = 'SearchHistories' AND column_name = 'Year'
+                    ) THEN
+                        ALTER TABLE ""SearchHistories"" DROP COLUMN ""Year"";
+                    END IF;
+                END $$;
+            ");
         }
 
         /// <inheritdoc />
