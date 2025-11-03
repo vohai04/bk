@@ -270,6 +270,12 @@ body.admin-page.admin-sidebar-open .modern-brand {
         z-index: 1000; /* Thấp hơn sidebar z-index: 999999 */
     }
     
+    /* Desktop: đảm bảo admin-layout kế thừa grid từ body */
+    body.admin-page .admin-layout {
+        display: block; /* Override flex để kế thừa grid */
+        min-height: auto; /* Bỏ min-height để grid hoạt động */
+    }
+    
     /* Desktop: chỉ shift main content, không shift header/footer */
     body.admin-page.admin-sidebar-open .admin-main {
         margin-left: var(--admin-sidebar-width);
