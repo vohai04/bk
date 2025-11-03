@@ -245,11 +245,18 @@ BookInfoFinder Team
                 _logger.LogInformation("Connecting to SMTP server...");
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
                 
-                // Thử nhiều SMTP servers khác nhau
+                // Thử ports theo thứ tự ưu tiên cho hosting providers
+                // Port 2525: Alternative submission port, ít bị hosting chặn nhất
+                // Port 587: Standard SMTP port với STARTTLS 
+                // Port 1025: Alternative port khi 587 bị chặn
+                // Port 465: Legacy SSL port
                 var smtpConfigs = new[]
                 {
-                    new { Host = "smtp.gmail.com", Port = 587, UseStartTls = true },
-                    new { Host = "smtp.gmail.com", Port = 465, UseStartTls = false },
+                    new { Host = "smtp.gmail.com", Port = 2525, UseStartTls = true },  // Ưu tiên cao nhất
+                    new { Host = "smtp.gmail.com", Port = 587, UseStartTls = true },   // Standard port
+                    new { Host = "smtp.gmail.com", Port = 1025, UseStartTls = true },  // Alternative
+                    new { Host = "smtp.gmail.com", Port = 465, UseStartTls = false },  // Legacy SSL
+                    new { Host = "smtp-mail.outlook.com", Port = 2525, UseStartTls = true }, // Backup
                     new { Host = "smtp-mail.outlook.com", Port = 587, UseStartTls = true }
                 };
 
@@ -259,7 +266,9 @@ BookInfoFinder Team
                 {
                     try
                     {
-                        _logger.LogInformation("Trying SMTP: {Host}:{Port}", config.Host, config.Port);
+                        _logger.LogInformation("=== TESTING PORT {Port} ===", config.Port);
+                        _logger.LogInformation("Trying SMTP: {Host}:{Port} (StartTLS: {StartTls})", 
+                            config.Host, config.Port, config.UseStartTls);
                         
                         var secureOptions = config.UseStartTls 
                             ? MailKit.Security.SecureSocketOptions.StartTls 
@@ -267,20 +276,29 @@ BookInfoFinder Team
                             
                         await client.ConnectAsync(config.Host, config.Port, secureOptions, cts.Token);
                         
-                        _logger.LogInformation("Connected! Authenticating...");
+                        _logger.LogInformation("✅ Connected! Authenticating...");
                         await client.AuthenticateAsync(_settings.Email, _settings.Password, cts.Token);
                         
-                        _logger.LogInformation("Authenticated! Sending email...");
+                        _logger.LogInformation("✅ Authenticated! Sending email...");
                         await client.SendAsync(message, cts.Token);
                         await client.DisconnectAsync(true, cts.Token);
 
-                        _logger.LogInformation("Email sent successfully via {Host}:{Port}!", config.Host, config.Port);
+                        _logger.LogInformation("🎉 EMAIL SENT SUCCESSFULLY via {Host}:{Port}!", config.Host, config.Port);
                         return true;
                     }
                     catch (Exception ex)
                     {
                         lastException = ex;
-                        _logger.LogWarning("Failed with {Host}:{Port} - {Error}", config.Host, config.Port, ex.Message);
+                        var errorType = ex switch
+                        {
+                            TaskCanceledException => "TIMEOUT - Port có thể bị hosting chặn",
+                            System.Net.Sockets.SocketException => "SOCKET ERROR - Hosting chặn port này",
+                            MailKit.Security.AuthenticationException => "AUTH FAILED - Kiểm tra email/password",
+                            _ => ex.GetType().Name
+                        };
+                        
+                        _logger.LogWarning("❌ Failed {Host}:{Port} - {ErrorType}: {Error}", 
+                            config.Host, config.Port, errorType, ex.Message);
                         
                         if (client.IsConnected)
                         {
