@@ -15,7 +15,7 @@
 @{
     var isAdminPage = ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Admin") == true;
 }
-<body class="modern-body@(isAdminPage ? " admin-page admin-sidebar-open" : "")" style="display: flex; flex-direction: column; min-height: 100vh;">
+<body class="modern-body@(isAdminPage ? " admin-page admin-sidebar-open" : "")">
     <style>
         /* Chatbot window styling */
         .chatbot-window {
@@ -265,7 +265,7 @@
     @if (isAdminPage)
     {
         <!-- Admin Layout -->
-        <div class="admin-layout" style="flex: 1;">
+        <div class="admin-layout">
             <aside class="admin-sidebar">
                 <nav class="sidebar-nav">
                     <a href="/Admin/Dashboard" class="nav-item">
@@ -310,7 +310,7 @@
     else
     {
         <!-- Main Content Layout -->
-        <main class="main-content" style="flex: 1;">
+        <main class="main-content">
             @RenderBody()
         </main>
     }

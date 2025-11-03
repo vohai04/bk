@@ -79,15 +79,14 @@
     box-sizing: border-box;
 }
 
-/* Body với sticky footer layout */
+/* Body bình thường không dùng flexbox */
 .modern-body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
     color: var(--gray-800);
     background: linear-gradient(135deg, var(--gray-50) 0%, var(--primary-50) 100%);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    margin: 0;
+    padding: 0;
 }
 
 .modern-header .navbar {
@@ -272,7 +271,6 @@
 
 /* ===== MAIN CONTENT ===== */
 .main-content {
-    flex: 1 0 auto; /* Cho phép main content mở rộng và đẩy footer xuống */
     padding: var(--space-2xl) 0;
 }
 
@@ -391,7 +389,6 @@
     position: relative;
     overflow: hidden;
     z-index: 900; /* Lower than admin sidebar z-index: 1000 */
-    flex-shrink: 0; /* Ngăn footer bị co lại */
 }
 
 .modern-footer::before {
@@ -1359,10 +1356,9 @@
 /* ===== SIDEBAR LAYOUT STYLES ===== */
 .index-layout {
     display: flex;
-    min-height: 100%; /* Tương thích với flexbox layout của body */
+    min-height: 100vh;
     background: linear-gradient(135deg, var(--gray-50) 0%, var(--primary-50) 100%);
     position: relative;
-    flex: 1 0 auto; /* Cho phép layout mở rộng để đẩy footer xuống */
 }
 
 .sidebar-left {
@@ -1589,8 +1585,6 @@
     flex: 1;
     padding: var(--space-xl);
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
 }
 
 /* Updated Main Search Bar */

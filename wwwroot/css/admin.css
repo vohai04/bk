@@ -55,9 +55,8 @@
 
 /* Dashboard Cards */
 .dashboard-wrapper {
-    min-height: 100%; /* Tương thích với flexbox */
+    min-height: calc(100vh - 160px);
     padding: 2rem 0;
-    flex: 1; /* Cho phép mở rộng */
 }
 
 .dashboard-cards-wrapper {
