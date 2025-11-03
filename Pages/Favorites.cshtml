@@ -208,11 +208,14 @@ function renderFavoriteBooks(books, totalPages, currentPage) {
         const bookId = $(this).data('bookid');
         const $btn = $(this);
         const $card = $btn.closest('.card');
+        const cardContainer = $card.closest('.col-xl-3, .col-lg-4, .col-md-6, .col-sm-12');
         
         showConfirmModal(
             'Xác nhận xóa',
             'Bạn có chắc muốn xóa sách này khỏi danh sách yêu thích không?',
             function() {
+                // Add removing class for visual feedback
+                $card.addClass('removing');
                 $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split"></i>');
                 
                 fetch('/Favorites?handler=RemoveFavorite', {
@@ -227,33 +230,77 @@ function renderFavoriteBooks(books, totalPages, currentPage) {
                 .then(data => {
                     if (data.success) {
                         showToast("Đã xóa khỏi danh sách yêu thích", "success");
-                        // Remove card immediately
-                        $card.fadeOut(300, function() {
+                        
+                        // Smooth card removal animation
+                        cardContainer.animate({
+                            opacity: 0,
+                            height: 0,
+                            marginBottom: 0,
+                            paddingBottom: 0
+                        }, 400, function() {
                             $(this).remove();
-                            // Check if page is now empty and reload if needed
-                            const remainingCards = $('#favoriteBooksContainer .card').length - 1; // -1 because this card is being removed
-                            if (remainingCards === 0 && currentGlobalPage > 1) {
-                                // If page becomes empty and not first page, go to previous page
-                                loadFavoriteBooks(currentGlobalPage - 1);
-                            } else if (remainingCards === 0) {
-                                // If first page becomes empty, show empty state
-                                $('#favoriteBooksContainer').hide();
-                                $('#emptyState').show();
-                                $('#paginationNav').hide();
+                            
+                            // Check remaining cards and handle pagination
+                            const remainingCards = $('#favoriteBooksContainer .card').length;
+                            
+                            if (remainingCards === 0) {
+                                if (currentGlobalPage > 1) {
+                                    // Go to previous page if current page becomes empty
+                                    const newPage = currentGlobalPage - 1;
+                                    updateUrlPage(newPage);
+                                    loadFavoriteBooks(newPage);
+                                } else {
+                                    // Show empty state if first page becomes empty
+                                    $('#favoriteBooksContainer').hide();
+                                    $('#emptyState').show();
+                                    $('#paginationNav').hide();
+                                }
+                            } else {
+                                // Reorganize remaining cards in grid
+                                reorganizeCards();
                             }
                         });
+                        
                     } else {
                         showToast(data.message || "Có lỗi khi xóa", "error");
+                        $card.removeClass('removing');
                         $btn.prop('disabled', false).html('<i class="bi bi-heart-fill"></i>');
                     }
                 })
                 .catch(() => {
                     showToast("Lỗi khi xóa khỏi danh sách yêu thích", "error");
+                    $card.removeClass('removing');
                     $btn.prop('disabled', false).html('<i class="bi bi-heart-fill"></i>');
                 });
+            },
+            function() {
+                // User cancelled, restore button state
+                $card.removeClass('removing');
             }
         );
     });
+}
+
+// Function to reorganize cards after removal
+function reorganizeCards() {
+    const $container = $('#favoriteBooksContainer .row');
+    const $cards = $container.find('.col-xl-3, .col-lg-4, .col-md-6, .col-sm-12');
+    
+    // Add smooth transition for reorganization
+    $cards.each(function(index) {
+        $(this).css({
+            'transition': 'all 0.3s ease',
+            'animation': `slideUp 0.3s ease ${index * 0.05}s both`
+        });
+    });
+    
+    // Remove the transition and animation after completion
+    setTimeout(() => {
+        $cards.css({
+            'transition': '',
+            'animation': ''
+        });
+    }, 500);
 }
 
 // Refresh button
@@ -303,12 +350,114 @@ window.addEventListener('popstate', () => {
     100% { transform: rotate(360deg); }
 }
 
+@@keyframes slideUp {
+    0% {
+        opacity: 0.7;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .book-info {
     font-size: 0.9rem;
 }
 
 .card-img-top {
     border-radius: 0.375rem 0.375rem 0 0;
+}
+
+/* Enhanced Button Styles */
+.btn-outline-primary {
+    border: 2px solid var(--bs-primary);
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-outline-danger {
+    border: 2px solid var(--bs-danger);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    min-width: 45px;
+}
+
+.btn-outline-danger:hover {
+    background: var(--bs-danger);
+    border-color: var(--bs-danger);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-outline-danger i {
+    color: var(--bs-danger);
+    transition: color 0.3s ease;
+}
+
+.btn-outline-danger:hover i {
+    color: white;
+}
+
+/* Loading state for remove button */
+.btn-outline-danger:disabled {
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Card fade animation */
+.card.removing {
+    opacity: 0.5;
+    transform: scale(0.95);
+    transition: all 0.3s ease;
+}
+
+/* Empty state enhancement */
+#emptyState {
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #f8f9ff 0%, #fff5f5 100%);
+    border-radius: 1rem;
+    margin: 2rem 0;
+}
+
+#emptyState i {
+    background: linear-gradient(135deg, #e11d48, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Responsive button adjustments */
+@@media (max-width: 576px) {
+    .mt-auto.d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .btn-outline-primary,
+    .btn-outline-danger {
+        width: 100%;
+        justify-content: center;
+    }
 }
 </style>
 }

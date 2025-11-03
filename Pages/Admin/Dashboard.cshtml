@@ -117,18 +117,6 @@
             Hôm nay
         </div>
     </div>
-
-    <div class="admin-stat-card">
-        <div class="admin-stat-icon">
-            <i class="bi bi-bell-fill"></i>
-        </div>
-        <div class="admin-stat-value">@Model.UnreadNotificationCount</div>
-        <div class="admin-stat-label">Thông báo chưa đọc</div>
-        <button class="btn btn-admin-warning btn-admin-sm mt-3" onclick="markAllNotificationsRead()">
-            <i class="bi bi-check-all"></i>
-            Đánh dấu đã đọc
-        </button>
-    </div>
 </div>
 
 <div class="row mt-4">
@@ -393,8 +381,7 @@
                 stats && stats.totalUsers ? stats.totalUsers : 0,
                 stats && stats.totalCategories ? stats.totalCategories : 0,
                 stats && stats.totalComments ? stats.totalComments : 0,
-                stats && stats.activeUsersToday ? stats.activeUsersToday : 0,
-                stats && stats.unreadNotificationCount ? stats.unreadNotificationCount : 0
+                stats && stats.activeUsersToday ? stats.activeUsersToday : 0
             ];
 
             statCards.forEach((card, index) => {
@@ -598,15 +585,6 @@
 
         function updateNotificationsDisplay(data) {
             const notificationsContainer = document.querySelector('.notifications-section');
-            const unreadCountElement = document.querySelector('.admin-stat-card:nth-child(6) .admin-stat-value');
-
-            // Update unread count
-            if (unreadCountElement) {
-                const currentCount = parseInt(unreadCountElement.textContent) || 0;
-                if (currentCount !== data.unreadCount) {
-                    animateValue(unreadCountElement, currentCount, data.unreadCount);
-                }
-            }
 
             // Update notifications header
             const headerElement = notificationsContainer.querySelector('h5');
