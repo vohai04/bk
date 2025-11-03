@@ -8,11 +8,10 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: ConnectionStrings__DefaultConnection
-        value: Host=dpg-example.oregon-postgres.render.com;Database=bookinfodb;Username=bookinfo;Password=example;SslMode=Require
       - key: EMAIL_ADDRESS
         value: haivvde180313@fpt.edu.vn
       - key: EMAIL_PASSWORD
         sync: false # Will be set manually in Render dashboard
       - key: GEMINI_API_KEY
         sync: false # Will be set manually in Render dashboard
+    # Note: Database connection will be added after PostgreSQL service is created
