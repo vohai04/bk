@@ -9,14 +9,57 @@ using BookInfoFinder.Services.Interface;
 using BookInfoFinder.Hubs;
 using QuestPDF;
 using QuestPDF.Infrastructure;
+using DotNetEnv; // Thêm để đọc file .env
+
+// Đọc file .env nếu tồn tại
+if (File.Exists(".env"))
+{
+    Env.Load();
+}
 
 var builder = WebApplication.CreateBuilder(args);
-// Cấu hình license cho QuestPDF
+
+// Cấu hình để thay thế ${VARIABLE} trong appsettings bằng environment variables
+builder.Configuration.AddEnvironmentVariables();
+
+// Đảm bảo environment variables từ .env được áp dụng
+foreach (System.Collections.DictionaryEntry envVar in Environment.GetEnvironmentVariables())
+{
+    var key = envVar.Key?.ToString();
+    var value = envVar.Value?.ToString();
+    if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
+    {
+        builder.Configuration[key] = value;
+    }
+}
+
+// Override appsettings với environment variables nếu có
+var dbHost = Environment.GetEnvironmentVariable("DB_HOST");
+var dbName = Environment.GetEnvironmentVariable("DB_NAME");
+var dbUser = Environment.GetEnvironmentVariable("DB_USER");
+var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
+
+if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbName) && 
+    !string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPassword))
+{
+    builder.Configuration["ConnectionStrings:DefaultConnection"] = 
+        $"Host={dbHost};Database={dbName};Username={dbUser};Password={dbPassword}";
+}
+
+var emailAddress = Environment.GetEnvironmentVariable("EMAIL_ADDRESS");
+var emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
+if (!string.IsNullOrEmpty(emailAddress))
+    builder.Configuration["EmailSettings:Email"] = emailAddress;
+if (!string.IsNullOrEmpty(emailPassword))
+    builder.Configuration["EmailSettings:Password"] = emailPassword;
+
+var geminiApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+if (!string.IsNullOrEmpty(geminiApiKey))
+    builder.Configuration["GEMINI:ApiKey"] = geminiApiKey;
 QuestPDF.Settings.License = LicenseType.Community;
  
 builder.Services.AddRazorPages()
     .AddRazorRuntimeCompilation();
-// Add services to the container
 builder.Services.AddRazorPages(options =>
 {
    options.Conventions.ConfigureFilter(new Microsoft.AspNetCore.Mvc.IgnoreAntiforgeryTokenAttribute());
@@ -31,14 +74,11 @@ builder.Services.AddSession(options =>
    options.Cookie.Name = "BookInfoFinder.Session";
 });
 builder.Services.AddDistributedMemoryCache();
-
-// Add DbContext
 builder.Services.AddDbContext<BookContext>(options =>
    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSignalR();
-// Add custom services
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IUserService, UserService>();

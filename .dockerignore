@@ -1,0 +1,73 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+*.userprefs
+
+# Rider
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables và sensitive data
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.Local.json
+.env
+.env.local
+.env.production
+.env.staging
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# User uploads
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+
+# Reports và exports
+wwwroot/exports/*
+!wwwroot/exports/.gitkeep
+
+# Temporary files
+temp/
+tmp/
+
+# Docker
+docker-compose.override.yml
+
+# Secrets
+secrets/
+certificates/
+*.pfx
+*.p12
+
+# Node modules (nếu có frontend build)
+node_modules/
+npm-debug.log*
+
+# Editor directories and files
+.vscode/
+*.swp
+*.swo

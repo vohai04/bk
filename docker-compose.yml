@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: bookfinder-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-BookInfoDB}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - bookfinder-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-BookInfoDB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # BookInfoFinder Application
+  bookfinder-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bookfinder-app
+    environment:
+      # Database Configuration
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=${DB_NAME:-BookInfoDB};Username=${DB_USER:-postgres};Password=${DB_PASSWORD}"
+      
+      # Email Configuration
+      EmailSettings__Email: ${EMAIL_ADDRESS}
+      EmailSettings__Password: ${EMAIL_PASSWORD}
+      
+      # Gemini AI Configuration
+      GEMINI__ApiKey: ${GEMINI_API_KEY}
+      GEMINI__Model: ${GEMINI_MODEL:-gemini-2.5-flash}
+      
+      # ASP.NET Core Configuration
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - bookfinder-network
+    restart: unless-stopped
+    volumes:
+      - app_uploads:/app/wwwroot/uploads
+      - app_exports:/app/wwwroot/exports
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: bookfinder-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - bookfinder-app
+    networks:
+      - bookfinder-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  app_uploads:
+    driver: local
+  app_exports:
+    driver: local
+
+networks:
+  bookfinder-network:
+    driver: bridge

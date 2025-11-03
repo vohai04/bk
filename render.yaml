@@ -1,0 +1,44 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: bookinfo-postgres
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.postgres
+    envVars:
+      - key: POSTGRES_DB
+        value: BookInfoDB
+      - key: POSTGRES_USER
+        value: postgres
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+
+  # BookInfoFinder Web App
+  - type: web
+    name: bookinfo-app
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: bookinfo-postgres
+          property: host
+      - key: DB_NAME
+        value: BookInfoDB
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: bookinfo-postgres
+          envVarKey: POSTGRES_PASSWORD
+      - key: EMAIL_ADDRESS
+        value: haivvde180313@fpt.edu.vn
+      - key: EMAIL_PASSWORD
+        sync: false # Will be set manually in Render dashboard
+      - key: GEMINI_API_KEY
+        sync: false # Will be set manually in Render dashboard

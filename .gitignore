@@ -219,12 +219,12 @@ FodyWeavers.xsd
 .idea/
 *.sln.iml
 
-# Environment variables
+# Environment variables (keep secret)
 .env
 .env.local
 .env.development
 .env.test
 .env.production
 
-# Application specific files
-appsettings.json
+# Application specific files - Remove this line to allow appsettings.json
+# appsettings.json

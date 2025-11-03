@@ -1,0 +1,10 @@
+FROM postgres:16-alpine
+
+# Create init script for database
+COPY <<EOF /docker-entrypoint-initdb.d/init.sql
+-- Database will be created automatically by environment variables
+-- This script ensures database is ready
+SELECT 'Database initialized successfully';
+EOF
+
+EXPOSE 5432
