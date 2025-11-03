@@ -264,8 +264,16 @@ body.admin-page.admin-sidebar-open .modern-brand {
 
 /* Header/Footer shifts when sidebar is open */
 @media (min-width: 769px) {
-    /* Desktop: header và footer nằm dưới sidebar */
-    body.admin-page .modern-header,
+    /* Desktop: header thu width khi sidebar mở */
+    body.admin-page.admin-sidebar-open .modern-header {
+        margin-left: var(--admin-sidebar-width);
+        width: calc(100% - var(--admin-sidebar-width));
+        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                    width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000; /* Thấp hơn sidebar z-index: 999999 */
+    }
+    
+    /* Desktop: footer không shift để kế thừa grid layout */
     body.admin-page .modern-footer {
         z-index: 1000; /* Thấp hơn sidebar z-index: 999999 */
     }
