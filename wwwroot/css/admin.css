@@ -256,7 +256,8 @@
 .admin-layout {
     margin-top: 0; /* body/page-level padding provides top offset */
     display: flex;
-    min-height: calc(100vh - (var(--admin-header-height) + var(--admin-footer-height)));
+    min-height: 100%; /* Sử dụng 100% thay vì calc để tương thích với flexbox */
+    flex: 1; /* Cho phép admin layout mở rộng để đẩy footer xuống */
 }
 
 .admin-main {
@@ -264,6 +265,8 @@
     margin-left: 220px; /* reserve space for fixed sidebar */
     padding: 0;
     background: var(--admin-secondary);
+    display: flex;
+    flex-direction: column;
 }
 
 /* When sidebar is open on admin pages, shift header/footer/main to the right
@@ -416,8 +419,9 @@
 
 /* Dashboard Cards */
 .dashboard-wrapper {
-    min-height: calc(100vh - 160px);
+    min-height: 100%; /* Thay đổi để tương thích với flexbox */
     padding: 2rem 0;
+    flex: 1; /* Cho phép mở rộng để đẩy footer xuống */
 }
 
 .dashboard-cards-wrapper {
