@@ -87,7 +87,7 @@
     box-sizing: border-box;
 }
 
-/* Body với CSS Grid sticky footer - 1 thanh scroll, footer ở dưới cùng */
+/* Body với sticky footer - 2 điều kiện: nội dung ít thì footer dưới cùng, nội dung nhiều thì scroll đến footer */
 .modern-body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
@@ -96,12 +96,9 @@
     margin: 0;
     padding: 0;
     padding-top: var(--header-height);
-    min-height: 100vh;
-    display: grid;
-    grid-template-rows: 1fr auto;
-    grid-template-areas: 
-        "main"
-        "footer";
+    min-height: calc(100vh - var(--header-height));
+    display: flex;
+    flex-direction: column;
 }
 
 /* ===== HEADER STYLES ===== */
@@ -300,16 +297,14 @@
 /* ===== MAIN CONTENT ===== */
 .main-content {
     padding: var(--space-2xl) 0;
-    grid-area: main;
-    overflow: auto;
+    flex: 1;
 }
 
 /* ===== ADMIN LAYOUT ===== */
 .admin-layout {
     display: flex;
     min-height: 100%;
-    grid-area: main;
-    overflow: auto;
+    flex: 1;
 }
 
 .admin-sidebar {
@@ -363,7 +358,6 @@
     position: relative;
     overflow: hidden;
     z-index: 900;
-    grid-area: footer;
 }
 
 .modern-footer::before {
