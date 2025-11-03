@@ -104,6 +104,23 @@ builder.Services.AddRazorPages(options =>
 });
 builder.Services.AddMemoryCache();
 var app = builder.Build();
+
+// Auto-migrate database on startup (for production)
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<BookContext>();
+    try
+    {
+        context.Database.Migrate();
+        Console.WriteLine("✅ Database migration completed successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Database migration failed: {ex.Message}");
+        // Don't stop the app, just log the error
+    }
+}
+
 // Configure pipeline
 if (!app.Environment.IsDevelopment())
 {
