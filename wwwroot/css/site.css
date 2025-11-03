@@ -79,15 +79,15 @@
     box-sizing: border-box;
 }
 
-/* Body với flexbox layout để footer luôn ở dưới cùng */
+/* Body với sticky footer layout */
 .modern-body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
     color: var(--gray-800);
     background: linear-gradient(135deg, var(--gray-50) 0%, var(--primary-50) 100%);
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
 }
 
 .modern-header .navbar {
@@ -272,7 +272,7 @@
 
 /* ===== MAIN CONTENT ===== */
 .main-content {
-    flex: 1; /* Cho phép main content mở rộng để đẩy footer xuống */
+    flex: 1 0 auto; /* Cho phép main content mở rộng và đẩy footer xuống */
     padding: var(--space-2xl) 0;
 }
 
@@ -391,7 +391,7 @@
     position: relative;
     overflow: hidden;
     z-index: 900; /* Lower than admin sidebar z-index: 1000 */
-    margin-top: auto; /* Đẩy footer xuống cuối khi sử dụng flexbox */
+    flex-shrink: 0; /* Ngăn footer bị co lại */
 }
 
 .modern-footer::before {
@@ -1362,7 +1362,7 @@
     min-height: 100%; /* Tương thích với flexbox layout của body */
     background: linear-gradient(135deg, var(--gray-50) 0%, var(--primary-50) 100%);
     position: relative;
-    flex: 1; /* Cho phép layout mở rộng để đẩy footer xuống */
+    flex: 1 0 auto; /* Cho phép layout mở rộng để đẩy footer xuống */
 }
 
 .sidebar-left {
