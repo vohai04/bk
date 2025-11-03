@@ -266,32 +266,30 @@ body.admin-page.admin-sidebar-open .modern-brand {
 /* Header/Footer shifts when sidebar is open */
 @media (min-width: 769px) {
     /* Desktop: shift header and footer when sidebar is open */
-    body.admin-page.admin-sidebar-open .modern-header,
-    body.admin-page.admin-sidebar-open .modern-footer {
+    body.admin-page.admin-sidebar-open .modern-header {
         margin-left: var(--admin-sidebar-width);
         width: calc(100% - var(--admin-sidebar-width));
         transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
                     width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* Ensure footer stays at bottom */
+    /* Footer handled by CSS above */
+    
+    /* Ensure footer stays at bottom and uses same layout as regular pages */
     body.admin-page .modern-footer {
         position: relative;
         z-index: 10;
-        margin-top: auto;
+        margin-top: 0;
+        grid-area: footer;
     }
     
-    /* Fix admin page layout to prevent footer overlap */
-    body.admin-page {
-        display: grid;
-        grid-template-rows: 1fr auto;
-        min-height: 100vh;
-    }
-    
+    /* Admin main content fits in grid properly */
     body.admin-page main,
     body.admin-page .admin-main {
         grid-area: main;
         overflow-x: hidden;
+        padding-bottom: var(--space-xl);
+        min-height: 0;
     }
 
     /* Main content also shifts */
@@ -301,8 +299,7 @@ body.admin-page.admin-sidebar-open .modern-brand {
     }
 
     /* When sidebar is closed, reset positions */
-    body.admin-page:not(.admin-sidebar-open) .modern-header,
-    body.admin-page:not(.admin-sidebar-open) .modern-footer {
+    body.admin-page:not(.admin-sidebar-open) .modern-header {
         margin-left: 0;
         width: 100%;
         transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -314,30 +311,19 @@ body.admin-page.admin-sidebar-open .modern-brand {
         transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* Force footer to stay at bottom and not float */
+    /* Admin footer should use natural flow - remove all force overrides */
     body.admin-page .modern-footer {
-        position: static !important;
-        bottom: auto !important;
-        left: auto !important;
-        right: auto !important;
-        transform: none !important;
-        display: block !important;
-        visibility: visible !important;
+        position: relative;
+        margin-left: 0;
+        width: 100%;
+        padding: 60px 0 30px 0; /* Same as site.css */
+        transform: none;
     }
     
-    /* Ensure footer content is visible on desktop */
-    body.admin-page .footer-content {
-        display: grid !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    body.admin-page .footer-brand,
-    body.admin-page .footer-links,
-    body.admin-page .footer-copyright {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+    /* When sidebar is open, only shift footer margin and width */
+    body.admin-page.admin-sidebar-open .modern-footer {
+        margin-left: var(--admin-sidebar-width);
+        width: calc(100% - var(--admin-sidebar-width));
     }
 
     /* Brand positioning is handled globally above */
