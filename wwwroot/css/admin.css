@@ -136,7 +136,6 @@ body.admin-page.admin-sidebar-open .modern-brand {
 .sidebar-nav {
     flex: 1;
     padding: 1rem 0;
-    overflow-y: auto;
 }
 
 .sidebar-nav .nav-item {
@@ -277,7 +276,6 @@ body.admin-page.admin-sidebar-open .modern-brand {
     /* Admin main content flows naturally */
     body.admin-page main,
     body.admin-page .admin-main {
-        overflow-x: hidden;
         padding-bottom: var(--space-xl);
         min-height: 0;
     }
