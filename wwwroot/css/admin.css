@@ -277,19 +277,19 @@ body.admin-page.admin-sidebar-open .modern-brand {
     
     /* Ensure footer stays at bottom and uses same layout as regular pages */
     body.admin-page .modern-footer {
+        grid-area: footer;
         position: relative;
         z-index: 10;
         margin-top: 0;
-        grid-area: footer;
     }
     
-    /* Admin main content fits in grid properly */
+    /* Admin main content fits in grid properly - remove duplicated grid-area */
     body.admin-page main,
-    body.admin-page .admin-main {
-        grid-area: main;
-        overflow-x: hidden;
-        padding-bottom: var(--space-xl);
+    body.admin-page .admin-main,
+    body.admin-page .admin-layout {
         min-height: 0;
+        overflow-x: hidden;
+        padding-bottom: var(--space-lg);
     }
 
     /* Main content also shifts */
@@ -311,19 +311,12 @@ body.admin-page.admin-sidebar-open .modern-brand {
         transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* Admin footer should use natural flow - remove all force overrides */
-    body.admin-page .modern-footer {
-        position: relative;
-        margin-left: 0;
-        width: 100%;
-        padding: 60px 0 30px 0; /* Same as site.css */
-        transform: none;
-    }
-    
-    /* When sidebar is open, only shift footer margin and width */
+    /* Admin footer positioning */
     body.admin-page.admin-sidebar-open .modern-footer {
         margin-left: var(--admin-sidebar-width);
         width: calc(100% - var(--admin-sidebar-width));
+        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                    width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Brand positioning is handled globally above */

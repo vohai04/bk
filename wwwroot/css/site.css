@@ -88,20 +88,28 @@
 }
 
 /* Body với grid layout cho sticky footer */
-.modern-body {
-    font-family: 'Inter', sans-serif;
-    line-height: 1.6;
-    color: var(--gray-800);
+/* ===== BODY BASE STYLES ===== */
+body.modern-body {
+    font-family: var(--font-family);
+    line-height: var(--line-height);
+    font-size: var(--font-size);
+    color: var(--text-color);
     background: linear-gradient(135deg, var(--gray-50) 0%, var(--primary-50) 100%);
     margin: 0;
     padding: 0;
     padding-top: var(--header-height);
     min-height: 100vh;
+    height: 100%;
     display: grid;
     grid-template-rows: 1fr auto;
     grid-template-areas: 
         "main"
         "footer";
+}
+
+/* Ensure proper height calculation */
+html {
+    height: 100%;
 }
 
 /* ===== HEADER STYLES ===== */
@@ -298,16 +306,25 @@
 }
 
 /* ===== MAIN CONTENT ===== */
+.main-content, 
+main, 
+.admin-layout,
+.admin-main {
+    grid-area: main;
+    min-height: 0;
+    padding: var(--space-lg) 0;
+    width: 100%;
+    overflow-x: hidden;
+}
+
 .main-content {
     padding: var(--space-2xl) 0;
-    grid-area: main;
 }
 
 /* ===== ADMIN LAYOUT ===== */
 .admin-layout {
     display: flex;
     min-height: 100%;
-    grid-area: main;
 }
 
 .admin-sidebar {
