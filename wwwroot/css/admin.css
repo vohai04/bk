@@ -274,13 +274,6 @@ body.admin-page.admin-sidebar-open .modern-brand {
                     width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* Ensure footer flows naturally after content */
-    body.admin-page .modern-footer {
-        position: relative;
-        z-index: 10;
-        margin-top: 0;
-    }
-    
     /* Admin main content flows naturally */
     body.admin-page main,
     body.admin-page .admin-main {
@@ -309,30 +302,12 @@ body.admin-page.admin-sidebar-open .modern-brand {
         transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* Force footer to stay at bottom and not float */
-    body.admin-page .modern-footer {
-        position: static !important;
-        bottom: auto !important;
-        left: auto !important;
-        right: auto !important;
-        transform: none !important;
-        display: block !important;
-        visibility: visible !important;
-    }
-    
-    /* Ensure footer content is visible on desktop */
-    body.admin-page .footer-content {
-        display: grid !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    body.admin-page .footer-brand,
-    body.admin-page .footer-links,
-    body.admin-page .footer-copyright {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+    /* Admin footer positioning - chỉ shift khi sidebar mở */
+    body.admin-page.admin-sidebar-open .modern-footer {
+        margin-left: var(--admin-sidebar-width);
+        width: calc(100% - var(--admin-sidebar-width));
+        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                    width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Brand positioning is handled globally above */

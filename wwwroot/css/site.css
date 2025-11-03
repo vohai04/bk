@@ -87,7 +87,7 @@
     box-sizing: border-box;
 }
 
-/* Body với natural flow - footer xuất hiện sau nội dung */
+/* Body với flexbox sticky footer - footer luôn ở dưới cùng */
 .modern-body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
@@ -97,6 +97,15 @@
     padding: 0;
     padding-top: var(--header-height);
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Content wrapper để flexbox sticky footer hoạt động */
+.content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ===== HEADER STYLES ===== */
@@ -295,12 +304,14 @@
 /* ===== MAIN CONTENT ===== */
 .main-content {
     padding: var(--space-2xl) 0;
+    flex: 1;
 }
 
 /* ===== ADMIN LAYOUT ===== */
 .admin-layout {
     display: flex;
     min-height: 100%;
+    flex: 1;
 }
 
 .admin-sidebar {
