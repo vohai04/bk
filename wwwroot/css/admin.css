@@ -365,27 +365,65 @@ body.admin-page.admin-sidebar-open .modern-brand {
 
 .admin-table {
     margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .admin-table thead {
-    background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-light) 100%);
-    color: white;
+    background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%);
+    color: #334155;
+    border-bottom: 2px solid #cbd5e1;
 }
 
 .admin-table thead th {
-    border: none;
+    border-bottom: 2px solid #cbd5e1;
+    border-right: 1px solid #cbd5e1;
     padding: 1.25rem 1rem;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.875rem;
     letter-spacing: 0.05em;
-    color: white;
+    color: #334155 !important;
+}
+
+.admin-table thead th:last-child {
+    border-right: none;
+}
+
+/* Text trong header màu đậm trên nền sáng */
+.admin-table thead th * {
+    color: #334155 !important;
+}
+
+/* Nếu có buttons trong header */
+.admin-table thead .btn {
+    color: #334155 !important;
+    border-color: #94a3b8 !important;
+    background: rgba(255,255,255,0.7) !important;
+}
+
+.admin-table thead .btn:hover {
+    background: rgba(255,255,255,0.9) !important;
+    transform: translateY(-1px);
 }
 
 .admin-table tbody td {
     padding: 1rem;
-    border-color: var(--admin-border);
+    border-color: #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
     vertical-align: middle;
+}
+
+.admin-table tbody td:last-child {
+    border-right: none;
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
 .admin-table tbody tr:hover {
