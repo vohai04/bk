@@ -273,6 +273,26 @@ body.admin-page.admin-sidebar-open .modern-brand {
         transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
                     width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    
+    /* Ensure footer stays at bottom */
+    body.admin-page .modern-footer {
+        position: relative;
+        z-index: 10;
+        margin-top: auto;
+    }
+    
+    /* Fix admin page layout to prevent footer overlap */
+    body.admin-page {
+        display: grid;
+        grid-template-rows: 1fr auto;
+        min-height: 100vh;
+    }
+    
+    body.admin-page main,
+    body.admin-page .admin-main {
+        grid-area: main;
+        overflow-x: hidden;
+    }
 
     /* Main content also shifts */
     body.admin-page.admin-sidebar-open .admin-main {
@@ -292,6 +312,32 @@ body.admin-page.admin-sidebar-open .modern-brand {
     body.admin-page:not(.admin-sidebar-open) .admin-main {
         margin-left: 0;
         transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Force footer to stay at bottom and not float */
+    body.admin-page .modern-footer {
+        position: static !important;
+        bottom: auto !important;
+        left: auto !important;
+        right: auto !important;
+        transform: none !important;
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    /* Ensure footer content is visible on desktop */
+    body.admin-page .footer-content {
+        display: grid !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    body.admin-page .footer-brand,
+    body.admin-page .footer-links,
+    body.admin-page .footer-copyright {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 
     /* Brand positioning is handled globally above */
