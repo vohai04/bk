@@ -628,6 +628,8 @@
     }
 }
 
+/* Admin report layout should be controlled by admin.css. */
+
 /* ===== TOAST NOTIFICATIONS ===== */
 .modern-toast {
     background: white;
@@ -643,9 +645,30 @@
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
-/* Ensure toast container sits above sticky header (z-index:1100) and sidebar toggle (z-index:1200) */
+/* Toast container and toasts should appear above header so showToast is visible */
 .toast-container.position-fixed {
-    z-index: 1201 !important;
+    z-index: var(--app-toast-zindex) !important;
+}
+.toast, .modern-toast {
+    z-index: calc(var(--app-toast-zindex) + 1) !important;
+}
+
+:root {
+    /* The header uses a very large z-index; raise overlays so toasts/modals appear above it.
+       Values chosen to be safely higher than .modern-header (which uses a very large z-index).
+       Adjust these if header z-index changes. */
+    --app-header-zindex: 100000;
+    --app-overlay-zindex: calc(var(--app-header-zindex) + 10);
+    --app-modal-zindex: calc(var(--app-header-zindex) + 20);
+    --app-toast-zindex: calc(var(--app-header-zindex) + 30);
+}
+
+/* Backup explicit overrides in case CSS variables aren't applied in some environments */
+.modal {
+    z-index: var(--app-modal-zindex) !important;
+}
+.modal-backdrop {
+    z-index: calc(var(--app-modal-zindex) - 5) !important; /* backdrop under modal */
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
@@ -730,7 +753,17 @@
 
     /* Ensure modals remain above header and sidebar */
     .modal {
-        z-index: 1500 !important;
+        z-index: var(--app-modal-zindex) !important;
+    }
+    .modal-backdrop {
+        z-index: calc(var(--app-modal-zindex) - 5) !important; /* backdrop under modal */
+    }
+}
+
+/* Tablet and mobile: prevent header from overlapping admin content */
+@media (max-width: 992px) {
+    .admin-layout {
+        padding-top: var(--header-height);
     }
 }
 
@@ -1876,48 +1909,6 @@
     transform: translateY(-50%) scale(1.02);
 }
 
-/* Desktop adjustments: push content and fixed sidebars below the header so the
-   header is never scrolled under other elements. Use !important only where
-   necessary to override existing inline / library rules. */
-@media (min-width: 993px) {
-    .modern-body, .index-layout, .admin-layout {
-        padding-top: var(--header-height) !important;
-    }
-
-    /* Sidebar should start at the top; header overlays it via higher z-index */
-    .sidebar-left {
-        top: 0 !important;
-        height: 100vh !important;
-        z-index: 900 !important; /* intentionally lower so header overlays */
-    }
-
-    .admin-sidebar {
-        top: 0 !important;
-        height: 100vh !important;
-        z-index: 905 !important; /* intentionally lower so header overlays */
-    }
-
-    /* Ensure modals remain above header */
-    .modal {
-        z-index: 1400 !important;
-    }
-
-    /* Desktop-only: make page wrapper a column flex container so footer
-       sticks to bottom when content is short, but keep header offset
-       via existing padding-top to avoid overlap. This targets desktop
-       only to avoid changing mobile behavior. */
-    .modern-body {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh; /* full viewport — header padding prevents overlap */
-    }
-
-    /* Ensure main content area grows to push footer down when needed */
-    .modern-body > main, .admin-layout > .admin-main, .index-layout > .main-content {
-        flex: 1 0 auto;
-    }
-}
-
 @media (max-width: 992px) {
     .modern-header .sidebar-toggle {
         left: 8px;
@@ -1988,32 +1979,4 @@
         opacity: 1;
         transform: scale(1);
     }
-}
-
-/* ===== MODAL Z-INDEX FIX FOR ADMIN (header was overlapping modals) ===== */
-/* The header uses z-index:1100 and some toggles use 1200; ensure modals are above them */
-:root {
-    /* The header uses a very large z-index; raise overlays so toasts/modals appear above it.
-       Values chosen to be safely higher than .modern-header (which uses a very large z-index).
-       Adjust these if header z-index changes. */
-    --app-header-zindex: 100000;
-    --app-overlay-zindex: calc(var(--app-header-zindex) + 10);
-    --app-modal-zindex: calc(var(--app-header-zindex) + 20);
-    --app-toast-zindex: calc(var(--app-header-zindex) + 30);
-}
-
-/* Backup explicit overrides in case CSS variables aren't applied in some environments */
-.modal {
-    z-index: var(--app-modal-zindex) !important;
-}
-.modal-backdrop {
-    z-index: calc(var(--app-modal-zindex) - 5) !important; /* backdrop under modal */
-}
-
-/* Toast container and toasts should appear above header so showToast is visible */
-.toast-container.position-fixed {
-    z-index: var(--app-toast-zindex) !important;
-}
-.toast, .modern-toast {
-    z-index: calc(var(--app-toast-zindex) + 1) !important;
 }

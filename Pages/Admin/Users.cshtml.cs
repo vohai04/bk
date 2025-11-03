@@ -232,40 +232,6 @@ namespace BookInfoFinder.Pages.Admin
             }
         }
 
-        public async Task<JsonResult> OnPostAjaxDeleteAsync([FromForm] int userId)
-        {
-            try
-            {
-                var success = await _userService.DeleteUserAsync(userId);
-                return new JsonResult(new { success });
-            }
-            catch (Exception ex)
-            {
-                return new JsonResult(new { success = false, message = ex.Message });
-            }
-        }
-
-        public async Task<JsonResult> OnGetTestUserStatusAsync()
-        {
-            try
-            {
-                var allUsers = await _userService.GetAllUsersAsync();
-                var result = allUsers.Take(5).Select(u => new
-                {
-                    u.UserId,
-                    u.UserName,
-                    u.Status,
-                    StatusText = u.Status == 1 ? "Active" : "Inactive"
-                });
-                
-                return new JsonResult(new { users = result });
-            }
-            catch (Exception ex)
-            {
-                return new JsonResult(new { success = false, message = ex.Message });
-            }
-        }
-
         public async Task<JsonResult> OnPostAjaxSetUserStatusAsync([FromForm] int userId, [FromForm] int status)
         {
             try

@@ -138,15 +138,14 @@
     border-radius: 0 12px 12px 0; /* smoother right edge */
     position: fixed; /* fixed full-height column */
     left: 0;
-    top: var(--admin-header-height); /* start below the admin header */
-    bottom: var(--admin-footer-height);
-    height: calc(100vh - (var(--admin-header-height) + var(--admin-footer-height)));
+    top: 0; /* start from top to overlay header */
+    bottom: 0; /* extend to bottom to overlay footer completely */
     overflow-y: auto; /* allow scrolling only if content truly overflows */
     -webkit-overflow-scrolling: touch;
     /* Use flex column so header / nav / footer can be positioned vertically */
     display: flex;
     flex-direction: column;
-    z-index: 1335; /* sit above main content but below header */
+    z-index: 100050; /* Above header (100000) and other content */
 }
 
 /* Collapsed sidebar (desktop) */
@@ -789,6 +788,7 @@
     .admin-sidebar {
         transform: translateX(-100%);
         transition: transform 0.3s ease;
+        bottom: 0; /* extend to bottom to overlay footer on mobile */
     }
     
     .admin-sidebar.show {
@@ -893,3 +893,24 @@
     color: var(--admin-warning);
     border-left: 4px solid var(--admin-warning);
 }
+
+/* ===== Admin: Chart container sizing and visibility ===== */
+/* Keep chart sizing rules scoped to admin.css so global site rules
+   (like .card { overflow: hidden }) don't collapse canvases. */
+.card .chart-container,
+.admin-form-wrapper .chart-container,
+.admin-form-wrapper canvas,
+.card .chart-container canvas {
+    position: relative;
+    height: 300px;
+    min-height: 200px;
+    display: block;
+    visibility: visible;
+    width: 100%;
+}
+
+/* Ensure card-wrapped chart containers are not clipped by .card overflow */
+.card .chart-container { overflow: visible; }
+
+/* Force canvas to fill the chart-container (Chart.js will work with these sizes) */
+.card .chart-container canvas { width: 100% !important; height: 100% !important; display: block; }

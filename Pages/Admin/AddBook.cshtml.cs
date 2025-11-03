@@ -57,6 +57,16 @@ namespace BookInfoFinder.Pages.Admin
                 if (!ModelState.IsValid)
                 {
                     await LoadDataAsync();
+                    // Check if request is AJAX
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return new JsonResult(new
+                        {
+                            success = false,
+                            message = "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.",
+                            errors = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage))
+                        });
+                    }
                     return Page();
                 }
 
@@ -64,6 +74,10 @@ namespace BookInfoFinder.Pages.Admin
                 var userIdStr = HttpContext.Session.GetString("UserId");
                 if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
                 {
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return new JsonResult(new { success = false, message = "Bạn cần đăng nhập để thêm sách." });
+                    }
                     TempData["ErrorMessage"] = "Bạn cần đăng nhập để thêm sách.";
                     return RedirectToPage("/Account/Login");
                 }
@@ -75,7 +89,12 @@ namespace BookInfoFinder.Pages.Admin
                     if (imagePath == null)
                     {
                         await LoadDataAsync();
-                        ModelState.AddModelError("ImageFile", "Lỗi khi upload ảnh. Vui lòng thử lại.");
+                        var errorMessage = "Lỗi khi upload ảnh. Vui lòng thử lại.";
+                        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                        {
+                            return new JsonResult(new { success = false, message = errorMessage });
+                        }
+                        ModelState.AddModelError("ImageFile", errorMessage);
                         return Page();
                     }
                     Book.ImageBase64 = imagePath; // Save relative path instead of base64
@@ -96,7 +115,12 @@ namespace BookInfoFinder.Pages.Admin
                 if (createdBook == null)
                 {
                     await LoadDataAsync();
-                    TempData["ErrorMessage"] = "Có lỗi xảy ra khi thêm sách.";
+                    var errorMessage = "Có lỗi xảy ra khi thêm sách.";
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return new JsonResult(new { success = false, message = errorMessage });
+                    }
+                    TempData["ErrorMessage"] = errorMessage;
                     return Page();
                 }
 
@@ -109,13 +133,30 @@ namespace BookInfoFinder.Pages.Admin
                     }
                 }
 
+                // Return JSON for AJAX request
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return new JsonResult(new
+                    {
+                        success = true,
+                        message = "Thêm sách thành công!",
+                        bookId = createdBook.BookId,
+                        redirectUrl = Url.Page("/Admin/ManageBook")
+                    });
+                }
+
                 TempData["SuccessMessage"] = "Thêm sách thành công!";
                 return RedirectToPage("/Admin/ManageBook");
             }
             catch (Exception ex)
             {
                 await LoadDataAsync();
-                TempData["ErrorMessage"] = $"Có lỗi xảy ra: {ex.Message}";
+                var errorMessage = $"Có lỗi xảy ra: {ex.Message}";
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return new JsonResult(new { success = false, message = errorMessage });
+                }
+                TempData["ErrorMessage"] = errorMessage;
                 return Page();
             }
         }

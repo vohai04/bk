@@ -3,11 +3,9 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
 using System.Text;
-using GrapeCity.ActiveReports.Rendering.IO;
-using GrapeCity.ActiveReports.Export.Pdf.Page;
-using GrapeCity.ActiveReports.PageReportModel;
-using GrapeCity.ActiveReports;
-using GrapeCity.ActiveReports.Document;
+using Microsoft.Extensions.Logging;
+using System.Linq;
+using System.Threading.Tasks;
  
  
  
@@ -16,13 +14,14 @@ namespace BookInfoFinder.Pages.Admin
 {
     public class ReportModel : PageModel
     {
-        private readonly IBookService _bookService;
-        private readonly ICategoryService _categoryService;
-        private readonly ITagService _tagService;
-        private readonly IAuthorService _authorService;
-        private readonly IPublisherService _publisherService;
-        private readonly IUserService _userService;
-        private readonly IReportService _reportService;
+    private readonly IBookService _bookService;
+    private readonly ICategoryService _categoryService;
+    private readonly ITagService _tagService;
+    private readonly IAuthorService _authorService;
+    private readonly IPublisherService _publisherService;
+    private readonly IUserService _userService;
+    private readonly IReportService _reportService;
+    private readonly ILogger<ReportModel> _logger;
  
         public ReportModel(
             IBookService bookService,
@@ -31,7 +30,8 @@ namespace BookInfoFinder.Pages.Admin
             IAuthorService authorService,
             IPublisherService publisherService,
             IUserService userService,
-            IReportService reportService)
+            IReportService reportService,
+            ILogger<ReportModel> logger)
         {
             _bookService = bookService;
             _categoryService = categoryService;
@@ -40,9 +40,10 @@ namespace BookInfoFinder.Pages.Admin
             _publisherService = publisherService;
             _userService = userService;
             _reportService = reportService;
+            _logger = logger;
         }
  
-        public void OnGet() { }
+    public void OnGet() { }
 
         public async Task<IActionResult> OnPostExportTodayPdfAsync()
         {
@@ -53,7 +54,8 @@ namespace BookInfoFinder.Pages.Admin
             }
             catch (Exception ex)
             {
-                return BadRequest($"Lỗi xuất PDF: {ex.Message}");
+                _logger?.LogError(ex, "ExportTodayPdf failed");
+                return BadRequest(new { success = false, message = "Lỗi xuất PDF: " + ex.Message });
             }
         }
 
@@ -66,7 +68,8 @@ namespace BookInfoFinder.Pages.Admin
             }
             catch (Exception ex)
             {
-                return BadRequest($"Lỗi xuất PDF: {ex.Message}");
+                _logger?.LogError(ex, "ExportWeekPdf failed");
+                return BadRequest(new { success = false, message = "Lỗi xuất PDF: " + ex.Message });
             }
         }
 
@@ -79,7 +82,8 @@ namespace BookInfoFinder.Pages.Admin
             }
             catch (Exception ex)
             {
-                return BadRequest($"Lỗi xuất PDF: {ex.Message}");
+                _logger?.LogError(ex, "ExportMonthPdf failed");
+                return BadRequest(new { success = false, message = "Lỗi xuất PDF: " + ex.Message });
             }
         }
 
@@ -92,7 +96,8 @@ namespace BookInfoFinder.Pages.Admin
             }
             catch (Exception ex)
             {
-                return BadRequest($"Lỗi xuất PDF: {ex.Message}");
+                _logger?.LogError(ex, "ExportYearPdf failed");
+                return BadRequest(new { success = false, message = "Lỗi xuất PDF: " + ex.Message });
             }
         }
 
@@ -110,42 +115,39 @@ namespace BookInfoFinder.Pages.Admin
 
                 var statistics = new
                 {
-                    totalBooks = books.Count(),
-                    totalUsers = users.Count(),
-                    totalCategories = categories.Count(),
-                    totalAuthors = authors.Count(),
-                    totalPublishers = publishers.Count(),
-                    totalTags = tags.Count()
+                    totalBooks = books?.Count() ?? 0,
+                    totalUsers = users?.Count() ?? 0,
+                    totalCategories = categories?.Count() ?? 0,
+                    totalAuthors = authors?.Count() ?? 0,
+                    totalPublishers = publishers?.Count() ?? 0,
+                    totalTags = tags?.Count() ?? 0
                 };
 
-                // Dữ liệu cho biểu đồ
+                // Basic chart data safe construction
+                var yearGroups = (books ?? Enumerable.Empty<BookListDto>())
+                    .Where(b => b.PublicationDate != default(DateTime))
+                    .GroupBy(b => b.PublicationDate.Year)
+                    .OrderBy(g => g.Key)
+                    .Select(g => new { Label = g.Key.ToString(), Count = g.Count() })
+                    .ToList();
+
                 var chartData = new
                 {
                     yearData = new
                     {
-                        labels = books
-                            .Where(b => b.PublicationDate != default)
-                            .GroupBy(b => b.PublicationDate.Year)
-                            .OrderBy(g => g.Key)
-                            .Select(g => g.Key.ToString())
-                            .ToArray(),
-                        data = books
-                            .Where(b => b.PublicationDate != default)
-                            .GroupBy(b => b.PublicationDate.Year)
-                            .OrderBy(g => g.Key)
-                            .Select(g => g.Count())
-                            .ToArray()
+                        labels = yearGroups.Select(g => g.Label).ToArray(),
+                        data = yearGroups.Select(g => g.Count).ToArray()
                     },
                     authorData = new
                     {
-                        labels = books
+                        labels = (books ?? Enumerable.Empty<BookListDto>())
                             .Where(b => !string.IsNullOrEmpty(b.AuthorName))
                             .GroupBy(b => b.AuthorName)
                             .OrderByDescending(g => g.Count())
                             .Take(10)
                             .Select(g => g.Key)
                             .ToArray(),
-                        data = books
+                        data = (books ?? Enumerable.Empty<BookListDto>())
                             .Where(b => !string.IsNullOrEmpty(b.AuthorName))
                             .GroupBy(b => b.AuthorName)
                             .OrderByDescending(g => g.Count())
@@ -155,19 +157,19 @@ namespace BookInfoFinder.Pages.Admin
                     },
                     publisherData = new
                     {
-                        labels = publishers.Take(10).Select(p => p.Name).ToArray(),
-                        data = publishers.Take(10).Select(p => new Random().Next(5, 25)).ToArray() // Dữ liệu ngẫu nhiên vì BookListDto không có PublisherId
+                        labels = (publishers ?? Enumerable.Empty<dynamic>()).Take(10).Select(p => p.Name).ToArray(),
+                        data = (publishers ?? Enumerable.Empty<dynamic>()).Take(10).Select(p => 1).ToArray()
                     },
                     categoryData = new
                     {
-                        labels = books
+                        labels = (books ?? Enumerable.Empty<BookListDto>())
                             .Where(b => !string.IsNullOrEmpty(b.CategoryName))
                             .GroupBy(b => b.CategoryName)
                             .OrderByDescending(g => g.Count())
                             .Take(10)
                             .Select(g => g.Key)
                             .ToArray(),
-                        data = books
+                        data = (books ?? Enumerable.Empty<BookListDto>())
                             .Where(b => !string.IsNullOrEmpty(b.CategoryName))
                             .GroupBy(b => b.CategoryName)
                             .OrderByDescending(g => g.Count())
@@ -177,41 +179,16 @@ namespace BookInfoFinder.Pages.Admin
                     }
                 };
 
-                return new JsonResult(new 
-                { 
-                    success = true, 
-                    statistics = statistics,
-                    chartData = chartData 
-                });
+                return new JsonResult(new { success = true, statistics, chartData });
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex, "GetStatistics failed");
                 return new JsonResult(new { success = false, message = ex.Message });
             }
         }
 
-        public async Task<IActionResult> OnGetDownloadTempAsync(string file)
-        {
-            try
-            {
-                var tempPath = Path.Combine(Path.GetTempPath(), file);
-                if (!System.IO.File.Exists(tempPath))
-                {
-                    return NotFound("File not found");
-                }
-
-                var bytes = await System.IO.File.ReadAllBytesAsync(tempPath);
-                
-                // Clean up temp file
-                try { System.IO.File.Delete(tempPath); } catch { }
-
-                return File(bytes, "application/pdf", file);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Error downloading file: {ex.Message}");
-            }
-        }
+        // Note: Temporary file download helper removed - exports stream PDF directly to client via POST handlers
  
     }
 }

@@ -6,6 +6,12 @@ function showToast(message, type = "success", duration = 3000) {
         warning: "bi-exclamation-triangle-fill text-warning",
         info: "bi-info-circle-fill text-info"
     };
+    // Debug: log when toast is shown and stack trace to help track unexpected DOM changes
+    try {
+        console.log('[showToast]', type, message);
+        console.trace('[showToast] stacktrace');
+    } catch (e) { }
+
     $("#toastMessage").html(`<i class="${iconMap[type]} me-2"></i>${message}`);
     const toast = new bootstrap.Toast(document.getElementById("sharedToast"), { delay: duration });
     toast.show();

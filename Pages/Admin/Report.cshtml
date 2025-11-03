@@ -4,35 +4,38 @@
     ViewData["Title"] = "Báo cáo thống kê";
     ViewData["Icon"] = "bi bi-graph-up";
     ViewData["Description"] = "Báo cáo và thống kê hệ thống";
+
 }
 
 @Html.AntiForgeryToken()
 
-<div class="admin-form-wrapper mb-4">
-    <div class="row align-items-center">
-        <div class="col-md-8">
-            <h3 class="mb-0">
-                <i class="bi bi-bar-chart"></i>
-                Tổng quan hệ thống
-            </h3>
-            <p class="text-muted mb-0">Thống kê và báo cáo chi tiết về dữ liệu hệ thống</p>
-        </div>
-        <div class="col-md-4 text-end">
-            <div class="input-group">
-                <select id="reportTypeSelect" class="form-select" style="max-width: 150px;">
-                    <option value="Today">Hôm nay</option>
-                    <option value="Week">Tuần</option>
-                    <option value="Month">Tháng</option>
-                    <option value="Year">Năm</option>
-                </select>
-                <button id="exportPdfDropdownBtn" class="btn btn-admin-danger" type="button">
-                    <i class="bi bi-file-pdf"></i> Xuất PDF
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h3 class="mb-0">
+                    <i class="bi bi-bar-chart"></i>
+                    Tổng quan hệ thống
+                </h3>
+                <p class="text-muted mb-0">Thống kê và báo cáo chi tiết về dữ liệu hệ thống</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="input-group">
+                    <select id="reportTypeSelect" class="form-select" style="max-width: 150px;">
+                        <option value="Today">Hôm nay</option>
+                        <option value="Week">Tuần</option>
+                        <option value="Month">Tháng</option>
+                        <option value="Year">Năm</option>
+                    </select>
+                    <button id="exportPdfDropdownBtn" class="btn btn-admin-danger" type="button">
+                        <i class="bi bi-file-pdf"></i> Xuất PDF
+                    </button>
+                </div>
+                <button id="refreshDataBtn" class="btn btn-admin-primary ms-2">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    Làm mới
                 </button>
             </div>
-            <button id="refreshDataBtn" class="btn btn-admin-primary ms-2">
-                <i class="bi bi-arrow-clockwise"></i>
-                Làm mới
-            </button>
         </div>
     </div>
 </div>
@@ -92,7 +95,7 @@
 <div class="row">
     <div class="col-lg-6 mb-4">
         <div class="admin-form-wrapper">
-            <h4 class="mb-4">
+            <h4 class="mb-3">
                 <i class="bi bi-bar-chart"></i>
                 Sách theo năm xuất bản
             </h4>
@@ -104,7 +107,7 @@
     
     <div class="col-lg-6 mb-4">
         <div class="admin-form-wrapper">
-            <h4 class="mb-4">
+            <h4 class="mb-3">
                 <i class="bi bi-person"></i>
                 Top tác giả có nhiều sách nhất
             </h4>
@@ -116,7 +119,7 @@
     
     <div class="col-lg-6 mb-4">
         <div class="admin-form-wrapper">
-            <h4 class="mb-4">
+            <h4 class="mb-3">
                 <i class="bi bi-building"></i>
                 Phân bố sách theo nhà xuất bản
             </h4>
@@ -128,7 +131,7 @@
     
     <div class="col-lg-6 mb-4">
         <div class="admin-form-wrapper">
-            <h4 class="mb-4">
+            <h4 class="mb-3">
                 <i class="bi bi-pie-chart"></i>
                 Phân bố sách theo thể loại
             </h4>
@@ -140,243 +143,340 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/site.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         $(document).ready(function() {
-            // Đợi Chart.js load
-            setTimeout(function() {
-                initializeReport();
-            }, 500);
+            // Đợi Chart.js load với retry logic
+            let retryCount = 0;
+            const maxRetries = 5;
+            
+            function waitForChartJs() {
+                if (typeof Chart !== 'undefined') {
+                    initializeReport();
+                } else if (retryCount < maxRetries) {
+                    retryCount++;
+                    console.log(`Waiting for Chart.js... attempt ${retryCount}`);
+                    setTimeout(waitForChartJs, 500);
+                } else {
+                    console.error('Chart.js failed to load after multiple attempts');
+                    showToast('Lỗi: Không thể tải thư viện biểu đồ!', 'error');
+                }
+            }
+            
+            waitForChartJs();
         });
         
         function initializeReport() {
             console.log('Initializing report...');
-            
-            // Set current date and time
-            const now = new Date();
-            
-            // Kiểm tra Chart.js
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js not loaded');
-                showToast('Lỗi: Chart.js không tải được!', 'error');
-                return;
-            }
-            
-            console.log('Chart.js loaded successfully');
+            console.log('Chart.js version:', Chart.version);
+            // Debug: observe DOM mutations on the stats grid to catch unexpected modifications
+            try {
+                (function() {
+                    let mutationCount = 0;
+                    const target = document.querySelector('.admin-stats-grid') || document.body;
+                    const observer = new MutationObserver(function(mutations) {
+                        mutationCount++;
+                        if (mutationCount > 500) return; // avoid spam
+                        console.warn('[Report] DOM mutation observed', mutations);
+                    });
+                    observer.observe(target, { attributes: true, childList: true, subtree: true });
+                    // expose for debugging
+                    window.__reportMutationObserver = observer;
+                })();
+            } catch (e) { console.warn('Could not install MutationObserver for report', e); }
+
             loadReportData();
         }
         
         function loadReportData() {
-            // Show loading
-            $('.admin-stat-value').html('<i class="bi bi-arrow-clockwise"></i>');
-            
             console.log('Loading report data...');
-            
+
+            // Show loading state (only affect stats inside this report grid)
+            $('.admin-stats-grid .admin-stat-value').each(function() {
+                const $el = $(this);
+                if (!$el.data('orig-text')) {
+                    $el.data('orig-text', $el.text());
+                }
+                $el.html('<i class="bi bi-arrow-clockwise"></i>');
+            });
+
             // Load statistics from server
             $.get('/Admin/Report?handler=GetStatistics')
                 .done(function(data) {
                     console.log('Raw API Response:', data);
-                    
+
                     if (data && data.success) {
-                        console.log('Statistics:', data.statistics);
-                        console.log('Chart Data:', data.chartData);
-                        
-                        updateStatistics(data.statistics);
-                        createCharts(data.chartData);
+                        const stats = data.statistics || data;
+                        const chartData = data.chartData || {};
+                        console.log('Statistics:', stats);
+                        console.log('Chart Data:', chartData);
+
+                        updateStatistics(stats);
+                        createCharts(chartData);
                         showToast('Dữ liệu đã được tải thành công!', 'success');
                     } else {
                         console.error('API returned error:', data);
                         showToast('Không thể tải dữ liệu từ database!', 'error');
+                        restoreOriginalValues();
                     }
                 })
                 .fail(function(xhr, status, error) {
                     console.error('AJAX Error:', error);
+                    console.error('Status:', status);
                     console.error('Response:', xhr.responseText);
                     showToast('Lỗi kết nối đến server: ' + error, 'error');
+                    restoreOriginalValues();
                 });
         }
-        
-        function updateStatistics(stats) {
-            console.log('Updating statistics:', stats);
-            $('#totalBooks').text(stats.totalBooks || 0);
-            $('#totalAuthors').text(stats.totalAuthors || 0);
-            $('#totalCategories').text(stats.totalCategories || 0);
-            $('#totalPublishers').text(stats.totalPublishers || 0);
-            $('#totalUsers').text(stats.totalUsers || 0);
-            $('#totalTags').text(stats.totalTags || 0);
+
+        function restoreOriginalValues() {
+            // Restore only the values inside this report's stats grid
+            $('.admin-stats-grid .admin-stat-value').each(function() {
+                const $el = $(this);
+                $el.text($el.data('orig-text') || '0');
+            });
         }
-        
-        function createCharts(chartData) {
-            console.log('Creating charts with data:', chartData);
-            
-            if (typeof Chart === 'undefined') {
-                console.error('Chart.js is not available');
+
+        function updateStatistics(stats) {
+            if (!stats) {
+                console.error('No statistics data provided');
                 return;
             }
-            
+            console.log('Updating statistics:', stats);
+
+            // Helper to handle both camelCase and PascalCase
+            const get = (key) => {
+                if (stats[key] !== undefined) return stats[key];
+                const pascalKey = key.charAt(0).toUpperCase() + key.slice(1);
+                return stats[pascalKey] !== undefined ? stats[pascalKey] : 0;
+            };
+
+            $('#totalBooks').text(get('totalBooks'));
+            $('#totalAuthors').text(get('totalAuthors'));
+            $('#totalCategories').text(get('totalCategories'));
+            $('#totalPublishers').text(get('totalPublishers'));
+            $('#totalUsers').text(get('totalUsers'));
+            $('#totalTags').text(get('totalTags'));
+        }
+
+        function createCharts(chartData) {
+            console.log('Creating charts with data:', chartData);
+
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not available');
+                showToast('Lỗi: Chart.js không khả dụng!', 'error');
+                return;
+            }
+
+            // Initialize chart storage
+            window.reportCharts = window.reportCharts || {};
+
             // Chart color palette
             const chartColors = [
                 '#4f46e5', '#06b6d4', '#10b981', '#f59e0b', 
                 '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'
             ];
-            
+
             try {
-                // Year Bar Chart
-                const yearCtx = document.getElementById('yearBarChart').getContext('2d');
-                new Chart(yearCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: chartData.yearData?.labels || [],
-                        datasets: [{
-                            label: 'Số lượng sách',
-                            data: chartData.yearData?.data || [],
-                            backgroundColor: chartColors[0],
-                            borderColor: chartColors[0],
-                            borderWidth: 1,
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: { color: '#e2e8f0' }
-                            },
-                            x: {
-                                grid: { display: false }
-                            }
+                // Destroy existing charts
+                Object.keys(window.reportCharts).forEach(key => {
+                    try {
+                        if (window.reportCharts[key]) {
+                            window.reportCharts[key].destroy();
                         }
+                    } catch(e) {
+                        console.warn(`Failed to destroy ${key} chart:`, e);
                     }
                 });
-                
-                // Author Chart
-                const authorCtx = document.getElementById('authorChart').getContext('2d');
-                new Chart(authorCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: chartData.authorData?.labels || [],
-                        datasets: [{
-                            label: 'Số sách',
-                            data: chartData.authorData?.data || [],
-                            backgroundColor: chartColors[1],
-                            borderColor: chartColors[1],
-                            borderWidth: 1,
-                            borderRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        indexAxis: 'y',
-                        plugins: {
-                            legend: { display: false }
+
+                // 1. Year Bar Chart
+                const yearEl = document.getElementById('yearBarChart');
+                if (yearEl) {
+                    const ctx = yearEl.getContext('2d');
+                    window.reportCharts.year = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: chartData.yearData?.labels || [],
+                            datasets: [{
+                                label: 'Số lượng sách',
+                                data: chartData.yearData?.data || [],
+                                backgroundColor: chartColors[0],
+                                borderColor: chartColors[0],
+                                borderWidth: 1,
+                                borderRadius: 8
+                            }]
                         },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                grid: { color: '#e2e8f0' }
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
                             },
-                            y: {
-                                grid: { display: false }
-                            }
-                        }
-                    }
-                });
-                
-                // Publisher Doughnut Chart
-                const publisherCtx = document.getElementById('publisherChart').getContext('2d');
-                new Chart(publisherCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: chartData.publisherData?.labels || [],
-                        datasets: [{
-                            data: chartData.publisherData?.data || [],
-                            backgroundColor: chartColors.slice(0, 5),
-                            borderWidth: 2,
-                            borderColor: '#ffffff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 20,
-                                    usePointStyle: true
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: '#e2e8f0' }
+                                },
+                                x: {
+                                    grid: { display: false }
                                 }
                             }
                         }
-                    }
-                });
-                
-                // Category Pie Chart
-                const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-                new Chart(categoryCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: chartData.categoryData?.labels || [],
-                        datasets: [{
-                            data: chartData.categoryData?.data || [],
-                            backgroundColor: chartColors.slice(0, 6),
-                            borderWidth: 2,
-                            borderColor: '#ffffff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 20,
-                                    usePointStyle: true
+                    });
+                    console.log('Year chart created');
+                }
+
+                // 2. Author Chart (Horizontal Bar)
+                const authorEl = document.getElementById('authorChart');
+                if (authorEl) {
+                    const ctx = authorEl.getContext('2d');
+                    window.reportCharts.author = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: chartData.authorData?.labels || [],
+                            datasets: [{
+                                label: 'Số sách',
+                                data: chartData.authorData?.data || [],
+                                backgroundColor: chartColors[1],
+                                borderColor: chartColors[1],
+                                borderWidth: 1,
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    grid: { color: '#e2e8f0' }
+                                },
+                                y: {
+                                    grid: { display: false }
                                 }
                             }
                         }
-                    }
-                });
-                
+                    });
+                    console.log('Author chart created');
+                }
+
+                // 3. Publisher Doughnut Chart
+                const publisherEl = document.getElementById('publisherChart');
+                if (publisherEl) {
+                    const ctx = publisherEl.getContext('2d');
+                    window.reportCharts.publisher = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: chartData.publisherData?.labels || [],
+                            datasets: [{
+                                data: chartData.publisherData?.data || [],
+                                backgroundColor: chartColors.slice(0, 8),
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        usePointStyle: true
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    console.log('Publisher chart created');
+                }
+
+                // 4. Category Pie Chart
+                const categoryEl = document.getElementById('categoryChart');
+                if (categoryEl) {
+                    const ctx = categoryEl.getContext('2d');
+                    window.reportCharts.category = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: chartData.categoryData?.labels || [],
+                            datasets: [{
+                                data: chartData.categoryData?.data || [],
+                                backgroundColor: chartColors.slice(0, 8),
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        usePointStyle: true
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    console.log('Category chart created');
+                }
+
                 console.log('All charts created successfully');
-                
+
             } catch (error) {
                 console.error('Error creating charts:', error);
-                showToast('Lỗi tạo biểu đồ: ' + error.message, 'error');
+                showToast('Lỗi tạo biểu đồ: ' + (error.message || error), 'error');
             }
         }
         
         // Export PDF functionality
         $('#exportPdfDropdownBtn').on('click', function() {
-            var type = $('#reportTypeSelect').val();
-            var btn = $(this);
-            var originalHtml = btn.html();
+            const type = $('#reportTypeSelect').val();
+            const btn = $(this);
+            const originalHtml = btn.html();
+            
             btn.prop('disabled', true).html('<i class="bi bi-arrow-clockwise"></i> Đang xuất...');
+            
             $.ajax({
                 url: `/Admin/Report?handler=Export${type}Pdf`,
                 type: 'POST',
                 xhrFields: { responseType: 'blob' },
-                headers: { 'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val() },
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
                 success: function(data, status, xhr) {
-                    var filename = xhr.getResponseHeader('Content-Disposition')?.split('filename=')[1] || `BaoCao_${type}_${Date.now()}.pdf`;
-                    var blob = new Blob([data], { type: 'application/pdf' });
-                    var link = document.createElement('a');
+                    const contentDisposition = xhr.getResponseHeader('Content-Disposition');
+                    let filename = `BaoCao_${type}_${Date.now()}.pdf`;
+                    
+                    if (contentDisposition) {
+                        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                        if (filenameMatch && filenameMatch[1]) {
+                            filename = filenameMatch[1].replace(/['"]/g, '');
+                        }
+                    }
+                    
+                    const blob = new Blob([data], { type: 'application/pdf' });
+                    const link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
-                    link.download = filename.replace(/"/g, '');
+                    link.download = filename;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
+                    window.URL.revokeObjectURL(link.href);
+                    
                     showToast('Xuất PDF thành công!', 'success');
                 },
-                error: function(xhr) {
-                    showToast('Lỗi xuất PDF!', 'error');
+                error: function(xhr, status, error) {
+                    console.error('Export PDF error:', error);
+                    console.error('Response:', xhr.responseText);
+                    showToast('Lỗi xuất PDF: ' + (error || 'Unknown error'), 'error');
                 },
                 complete: function() {
                     btn.prop('disabled', false).html(originalHtml);
@@ -388,13 +488,13 @@
         $('#refreshDataBtn').on('click', function() {
             const btn = $(this);
             const originalHtml = btn.html();
+            
             btn.prop('disabled', true).html('<i class="bi bi-arrow-clockwise"></i> Đang làm mới...');
             
             loadReportData();
             
             setTimeout(() => {
                 btn.prop('disabled', false).html(originalHtml);
-                showToast('Dữ liệu đã được cập nhật!', 'success');
             }, 1500);
         });
     </script>
