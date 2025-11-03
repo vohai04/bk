@@ -33,6 +33,11 @@ namespace BookInfoFinder.Services
         {
             try
             {
+                _logger.LogInformation("=== EMAIL SERVICE DEBUG ===");
+                _logger.LogInformation("Email Settings - Email: {Email}, Password configured: {HasPassword}", 
+                    _settings.Email, !string.IsNullOrEmpty(_settings.Password));
+                _logger.LogInformation("Environment: {Environment}", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"));
+
                 if (!IsValidEmail(otpRequest.Email))
                 {
                     _logger.LogWarning("Invalid email format: {Email}", otpRequest.Email);
@@ -214,6 +219,17 @@ BookInfoFinder Team
         {
             try
             {
+                _logger.LogInformation("=== SENDING EMAIL ===");
+                _logger.LogInformation("To: {ToEmail}, Subject: {Subject}", toEmail, subject);
+                _logger.LogInformation("SMTP Config - Email: {Email}, Password configured: {HasPassword}", 
+                    _settings.Email, !string.IsNullOrEmpty(_settings.Password));
+
+                if (string.IsNullOrEmpty(_settings.Email) || string.IsNullOrEmpty(_settings.Password))
+                {
+                    _logger.LogError("Email settings not configured properly");
+                    return false;
+                }
+
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress("BookInfoFinder", _settings.Email));
                 message.To.Add(new MailboxAddress("", toEmail));
@@ -221,18 +237,34 @@ BookInfoFinder Team
                 message.Body = new TextPart("plain") { Text = body };
 
                 using var client = new SmtpClient();
-                client.ServerCertificateValidationCallback = (s, c, h, e) => true; // For development only
+                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                
+                // Set timeout cho production
+                client.Timeout = 30000; // 30 seconds
 
-                await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-                await client.AuthenticateAsync(_settings.Email, _settings.Password);
-                await client.SendAsync(message);
-                await client.DisconnectAsync(true);
+                _logger.LogInformation("Connecting to SMTP server...");
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                
+                await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls, cts.Token);
+                
+                _logger.LogInformation("Authenticating with SMTP server...");
+                await client.AuthenticateAsync(_settings.Email, _settings.Password, cts.Token);
+                
+                _logger.LogInformation("Sending email...");
+                await client.SendAsync(message, cts.Token);
+                await client.DisconnectAsync(true, cts.Token);
 
+                _logger.LogInformation("Email sent successfully!");
                 return true;
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogError("Email sending timed out after 30 seconds for: {Email}", toEmail);
+                return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send email to: {Email}", toEmail);
+                _logger.LogError(ex, "Failed to send email to: {Email}. Error: {ErrorMessage}", toEmail, ex.Message);
                 return false;
             }
         }
