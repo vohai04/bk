@@ -194,59 +194,59 @@
                                     <i class="bi bi-funnel"></i>
                                     <span>Bộ lọc</span>
                                 </a>
-                            <ul class="dropdown-menu dropdown-menu-end filter-menu" aria-labelledby="filterDropdown">
-                                <li><h6 class="dropdown-header"><i class="bi bi-star-fill text-warning"></i> Sách nổi bật</h6></li>
-                                <li><a class="dropdown-item filter-item" href="/?filter=top-rated" data-filter="top-rated">
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <span>Đánh giá cao nhất</span>
-                                </a></li>
-                                <li><a class="dropdown-item filter-item" href="/?filter=trending" data-filter="trending">
-                                    <i class="bi bi-heart-fill text-danger"></i>
-                                    <span>Yêu thích nhất</span>
-                                </a></li>
-                                <li><a class="dropdown-item filter-item" href="/?filter=most-searched" data-filter="most-searched">
-                                    <i class="bi bi-fire text-info"></i>
-                                    <span>Xu hướng tìm kiếm</span>
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header"><i class="bi bi-tags-fill text-primary"></i> Lọc theo thẻ</h6></li>
-                                <li>
-                                    <div class="dropdown-item-text">
-                                        <div class="tags-filter-container">
-                                            <div class="selected-tags" id="selectedTags"></div>
-                                            <div class="tag-search-container">
-                                                <input type="text" class="form-control form-control-sm tag-search-input" 
-                                                       placeholder="Tìm thẻ..." id="tagSearchInput">
-                                            </div>
-                                            <div class="available-tags" id="availableTags">
-                                                <!-- Tags will be loaded here -->
-                                            </div>
-                                            <div class="filter-actions mt-2">
-                                                <button class="btn btn-primary btn-sm" id="applyTagFilter">
-                                                    <i class="bi bi-check"></i> Áp dụng
-                                                </button>
-                                                <button class="btn btn-outline-secondary btn-sm" id="clearTagFilter">
-                                                    <i class="bi bi-x"></i> Xóa
-                                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end filter-menu" aria-labelledby="filterDropdown">
+                                    <li><h6 class="dropdown-header"><i class="bi bi-star-fill text-warning"></i> Sách nổi bật</h6></li>
+                                    <li><a class="dropdown-item filter-item" href="/?filter=top-rated" data-filter="top-rated">
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <span>Đánh giá cao nhất</span>
+                                    </a></li>
+                                    <li><a class="dropdown-item filter-item" href="/?filter=trending" data-filter="trending">
+                                        <i class="bi bi-heart-fill text-danger"></i>
+                                        <span>Yêu thích nhất</span>
+                                    </a></li>
+                                    <li><a class="dropdown-item filter-item" href="/?filter=most-searched" data-filter="most-searched">
+                                        <i class="bi bi-fire text-info"></i>
+                                        <span>Xu hướng tìm kiếm</span>
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header"><i class="bi bi-tags-fill text-primary"></i> Lọc theo thẻ</h6></li>
+                                    <li>
+                                        <div class="dropdown-item-text">
+                                            <div class="tags-filter-container">
+                                                <div class="selected-tags" id="selectedTags"></div>
+                                                <div class="tag-search-container">
+                                                    <input type="text" class="form-control form-control-sm tag-search-input" 
+                                                           placeholder="Tìm thẻ..." id="tagSearchInput">
+                                                </div>
+                                                <div class="available-tags" id="availableTags">
+                                                    <!-- Tags will be loaded here -->
+                                                </div>
+                                                <div class="filter-actions mt-2">
+                                                    <button class="btn btn-primary btn-sm" id="applyTagFilter">
+                                                        <i class="bi bi-check"></i> Áp dụng
+                                                    </button>
+                                                    <button class="btn btn-outline-secondary btn-sm" id="clearTagFilter">
+                                                        <i class="bi bi-x"></i> Xóa
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
+                                    </li>
+                                </ul>
+                            </div>
                         
-                        <a class="nav-link" asp-area="" asp-page="/Privacy">
-                            <i class="bi bi-shield-check"></i>
-                            <span>Chính sách</span>
-                        </a>
-                        @if (isAdmin)
-                        {
-                            <a class="nav-link admin-link" asp-area="" asp-page="/Admin/Dashboard">
-                                <i class="bi bi-gear"></i>
-                                <span>Admin</span>
+                            <a class="nav-link" asp-area="" asp-page="/Privacy">
+                                <i class="bi bi-shield-check"></i>
+                                <span>Chính sách</span>
                             </a>
-                        }
-                    </div>
+                            @if (isAdmin)
+                            {
+                                <a class="nav-link admin-link" asp-area="" asp-page="/Admin/Dashboard">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Admin</span>
+                                </a>
+                            }
+                        </div>
                     </div> <!-- Close navbar-collapse -->
                 }
 
@@ -562,30 +562,50 @@
                 
                 // Reset any previous positioning
                 menu.removeClass('dropdown-menu-right').removeClass('dropdown-menu-left');
+                menu.css({
+                    'left': '',
+                    'right': '',
+                    'max-width': '',
+                    'min-width': '',
+                    'position': '',
+                    'top': '',
+                    'transform': ''
+                });
                 
                 setTimeout(function() {
-                    const menuOffset = menu.offset();
-                    const menuWidth = menu.outerWidth();
-                    const viewportWidth = viewport.width();
-                    
-                    // Check if dropdown goes off the right edge
-                    if (menuOffset && (menuOffset.left + menuWidth > viewportWidth - 20)) {
-                        menu.addClass('dropdown-menu-right');
+                    if (viewport.width() <= 991) {
+                        // Mobile: Static dropdown within the collapsed nav
                         menu.css({
-                            'right': '0',
-                            'left': 'auto'
+                            'position': 'static',
+                            'width': '100%',
+                            'transform': 'none',
+                            'margin-top': '0.5rem',
+                            'margin-bottom': '0.5rem',
+                            'float': 'none',
+                            'left': 'auto',
+                            'right': 'auto'
                         });
-                    }
-                    
-                    // On mobile, ensure dropdown doesn't go off screen
-                    if (viewport.width() < 576) {
-                        menu.css({
-                            'max-width': 'calc(100vw - 2rem)',
-                            'right': '1rem',
-                            'left': 'auto'
-                        });
+                        menu.removeClass('dropdown-menu-end');
+                    } else {
+                        // Desktop: Normal dropdown behavior
+                        const menuOffset = menu.offset();
+                        const menuWidth = menu.outerWidth();
+                        const viewportWidth = viewport.width();
+                        
+                        if (menuOffset && (menuOffset.left + menuWidth > viewportWidth - 20)) {
+                            menu.addClass('dropdown-menu-end');
+                        }
                     }
                 }, 10);
+            });
+            
+            // Handle window resize
+            $(window).on('resize', function() {
+                $('.dropdown-menu.show').each(function() {
+                    const menu = $(this);
+                    const dropdown = menu.closest('.dropdown');
+                    dropdown.find('[data-bs-toggle="dropdown"]').dropdown('hide');
+                });
             });
         }
 
