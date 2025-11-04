@@ -66,6 +66,14 @@ namespace BookInfoFinder.Services
                 // Debug: log userId being searched
                 _logger.LogInformation($"Searching for search histories with UserId: {userId}");
                 
+                // Test database connection first
+                var canConnect = await _context.Database.CanConnectAsync();
+                if (!canConnect)
+                {
+                    _logger.LogError("Cannot connect to database");
+                    return (new List<SearchHistoryDto>(), 0);
+                }
+                
                 // Đơn giản hóa query - lấy tất cả records trước, rồi group sau
                 var allRecords = await _context.SearchHistories
                     .Where(sh => sh.UserId == userId)
@@ -77,12 +85,13 @@ namespace BookInfoFinder.Services
 
                 // Group by SearchQuery in memory để tránh duplicate
                 var groupedRecords = allRecords
+                    .Where(sh => !string.IsNullOrEmpty(sh.SearchQuery)) // Filter out empty queries
                     .GroupBy(sh => (sh.SearchQuery ?? "").ToLower())
                     .Select(g => g.First()) // Lấy record đầu tiên (mới nhất do đã order)
                     .OrderByDescending(sh => sh.SearchedAt)
                     .ToList();
 
-                _logger.LogInformation($"After grouping: {groupedRecords.Count} unique search queries");
+                _logger.LogInformation($"After grouping and filtering: {groupedRecords.Count} unique search queries");
 
                 var totalCount = groupedRecords.Count;
                 var pagedRecords = groupedRecords

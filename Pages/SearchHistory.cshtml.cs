@@ -1,7 +1,9 @@
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
+using BookInfoFinder.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
  
 namespace BookInfoFinder.Pages
 {
@@ -144,6 +146,61 @@ namespace BookInfoFinder.Pages
  
             await _historyService.DeleteAllHistoriesOfUserAsync(userId);
             return new JsonResult(new { success = true });
+        }
+
+        // Test endpoint to check database and session
+        public async Task<JsonResult> OnGetTestConnectionAsync()
+        {
+            try
+            {
+                var userIdStr = HttpContext.Session.GetString("UserId");
+                var cookieUserId = HttpContext.Request.Cookies["UserId"];
+                
+                // Test database connection
+                var context = HttpContext.RequestServices.GetRequiredService<BookContext>();
+                var canConnect = await context.Database.CanConnectAsync();
+                
+                // Count total search histories
+                var totalHistories = canConnect ? await context.SearchHistories.CountAsync() : -1;
+                
+                // Count users
+                var totalUsers = canConnect ? await context.Users.CountAsync() : -1;
+                
+                return new JsonResult(new
+                {
+                    success = true,
+                    session = new
+                    {
+                        userId = userIdStr,
+                        sessionId = HttpContext.Session.Id,
+                        isAvailable = HttpContext.Session.IsAvailable
+                    },
+                    cookies = new
+                    {
+                        userId = cookieUserId
+                    },
+                    database = new
+                    {
+                        canConnect = canConnect,
+                        totalHistories = totalHistories,
+                        totalUsers = totalUsers
+                    },
+                    environment = new
+                    {
+                        isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development",
+                        hostName = Environment.MachineName
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new
+                {
+                    success = false,
+                    error = ex.Message,
+                    stackTrace = ex.StackTrace
+                });
+            }
         }
     }
 }
