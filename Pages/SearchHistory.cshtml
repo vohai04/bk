@@ -53,26 +53,6 @@ $(function () {
     let currentPage = 1;
     const pageSize = 10;
 
-    // Toast notification function
-    function showToast(message, type = 'info') {
-        const toast = `
-            <div class="toast align-items-center text-white bg-${type === 'error' ? 'danger' : 'success'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body">${message}</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            </div>`;
-        
-        if (!$('#toastContainer').length) {
-            $('body').append('<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3"></div>');
-        }
-        
-        const $toast = $(toast);
-        $('#toastContainer').append($toast);
-        const bsToast = new bootstrap.Toast($toast[0]);
-        bsToast.show();
-    }
-
     // Load search history from server
     function loadHistory(page = 1) {
         currentPage = page;
@@ -83,7 +63,7 @@ $(function () {
         })
         .done(function (data) {
             if (data.showToast) {
-                showToast(data.toastMessage, 'warning');
+                showToast(data.toastMessage, 'info');
                 $('#historyContainer').html(`
                     <div class="text-center text-warning py-4">
                         <i class="bi bi-exclamation-triangle me-2"></i>${data.toastMessage}

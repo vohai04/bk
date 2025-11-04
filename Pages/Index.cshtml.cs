@@ -351,11 +351,7 @@
                             var (tagBooks, tagTotalCount) = await _bookTagService.GetBooksByTagPagedAsync(tag.TagId, page, pageSize);
                             totalCount = tagTotalCount;
                             
-                            // Lưu lịch sử tìm kiếm tag (chỉ page 1)
-                            if (page == 1)
-                            {
-                                await SaveSearchHistory(firstTag, null, null, 0, totalCount);
-                            }
+                            // Tags search không lưu vào SearchHistory
                             
                             var items = tagBooks.Select(b => new
                             {
@@ -437,6 +433,19 @@
                     if (year > 0) searchParts.Add($"năm: {year}");
 
                     var searchQuery = string.Join(", ", searchParts);
+
+                    // Check duplicate: không lưu nếu cùng searchQuery trong vòng 2 phút
+                    var recentHistories = await _searchHistoryService.GetHistoriesByUserAsync(userId);
+                    var cutoffTime = DateTime.UtcNow.AddMinutes(-2);
+                    var isDuplicate = recentHistories.Any(h => 
+                        h.SearchQuery.Equals(searchQuery, StringComparison.OrdinalIgnoreCase) && 
+                        h.SearchedAt > cutoffTime);
+                    
+                    if (isDuplicate)
+                    {
+                        Console.WriteLine($"Duplicate search detected: {searchQuery}");
+                        return;
+                    }
 
                     // Luôn tìm BookId nếu có title
                     int? bookId = null;
