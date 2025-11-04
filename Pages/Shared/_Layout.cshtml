@@ -32,6 +32,42 @@
             display: flex;
             flex-direction: column;
         }
+
+        /* Mobile responsive chatbot */
+        @@media (max-width: 768px) {
+            .chatbot-window {
+                right: 10px;
+                top: 70px;
+                width: calc(100vw - 20px);
+                max-width: 320px;
+                height: 350px;
+            }
+        }
+
+        /* Additional mobile responsive styles */
+        @@media (max-width: 576px) {
+            .modern-header {
+                padding: 0.5rem 0;
+            }
+            
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .brand-name {
+                font-size: 1.2rem;
+            }
+            
+            .brand-subtitle {
+                font-size: 0.7rem;
+            }
+            
+            .navbar-collapse {
+                margin-top: 0.5rem;
+                padding: 0.75rem;
+            }
+        }
         .chatbot-header {
             padding: 10px;
             background: #f8f9fa;
@@ -105,7 +141,6 @@
         var isAdmin = userRole == "Admin";
     }
 
-    <!-- Modern Header -->
     <header class="modern-header">
         <nav class="navbar navbar-expand-lg">
             <div class="container">
@@ -130,26 +165,35 @@
 
                 @if (!isAdminPage)
                 {
-                    <div class="navbar-nav nav-center">
-                        <a class="nav-link" asp-area="" asp-page="/Index">
-                            <i class="bi bi-house"></i>
-                            <span>Trang chủ</span>
-                        </a>
-                        <a class="nav-link" asp-area="" asp-page="/Favorites">
-                            <i class="bi bi-heart"></i>
-                            <span>Yêu thích</span>
-                        </a>
-                        <a class="nav-link" asp-area="" asp-page="/SearchHistory">
-                            <i class="bi bi-clock-history"></i>
-                            <span>Lịch sử</span>
-                        </a>
-                        
-                        <!-- Filter Dropdown -->
-                        <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle filter-dropdown" href="#" id="filterDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-funnel"></i>
-                                <span>Bộ lọc</span>
+                    <!-- Mobile hamburger button -->
+                    <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon">
+                            <i class="bi bi-list"></i>
+                        </span>
+                    </button>
+
+                    <!-- Navigation menu -->
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <div class="navbar-nav nav-center mx-auto">
+                            <a class="nav-link" asp-area="" asp-page="/Index">
+                                <i class="bi bi-house"></i>
+                                <span>Trang chủ</span>
                             </a>
+                            <a class="nav-link" asp-area="" asp-page="/Favorites">
+                                <i class="bi bi-heart"></i>
+                                <span>Yêu thích</span>
+                            </a>
+                            <a class="nav-link" asp-area="" asp-page="/SearchHistory">
+                                <i class="bi bi-clock-history"></i>
+                                <span>Lịch sử</span>
+                            </a>
+                            
+                            <!-- Filter Dropdown -->
+                            <div class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle filter-dropdown" href="#" id="filterDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-funnel"></i>
+                                    <span>Bộ lọc</span>
+                                </a>
                             <ul class="dropdown-menu dropdown-menu-end filter-menu" aria-labelledby="filterDropdown">
                                 <li><h6 class="dropdown-header"><i class="bi bi-star-fill text-warning"></i> Sách nổi bật</h6></li>
                                 <li><a class="dropdown-item filter-item" href="/?filter=top-rated" data-filter="top-rated">
@@ -203,6 +247,7 @@
                             </a>
                         }
                     </div>
+                    </div> <!-- Close navbar-collapse -->
                 }
 
                 <div class="navbar-nav nav-end">
