@@ -59,7 +59,8 @@ namespace BookInfoFinder.Pages
                         histories = new List<object>(), 
                         totalCount = 0,
                         totalPages = 0,
-                        error = "User not logged in"
+                        showToast = true,
+                        toastMessage = "Bạn cần đăng nhập để xem lịch sử tìm kiếm"
                     });
                 }
 

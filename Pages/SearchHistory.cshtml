@@ -82,6 +82,16 @@ $(function () {
             pageSize: pageSize
         })
         .done(function (data) {
+            if (data.showToast) {
+                showToast(data.toastMessage, 'warning');
+                $('#historyContainer').html(`
+                    <div class="text-center text-warning py-4">
+                        <i class="bi bi-exclamation-triangle me-2"></i>${data.toastMessage}
+                    </div>
+                `);
+                return;
+            }
+            
             if (data.error) {
                 showToast(data.error, 'error');
                 $('#historyContainer').html(`
