@@ -191,44 +191,8 @@
     
                 if (hasCriteria)
                 {
-                    try
-                    {
-                        var userIdStr = HttpContext.Session.GetString("UserId");
-                        var cookieUserId = HttpContext.Request.Cookies["UserId"];
-                        
-                        Console.WriteLine($"[DEBUG Search] Session UserId: {userIdStr}");
-                        Console.WriteLine($"[DEBUG Search] Cookie UserId: {cookieUserId}");
-                        
-                        // Fallback to cookie if session is empty
-                        if (string.IsNullOrEmpty(userIdStr) && !string.IsNullOrEmpty(cookieUserId))
-                        {
-                            userIdStr = cookieUserId;
-                        }
-                        
-                        if (int.TryParse(userIdStr, out int userId))
-                        {
-                            var historyDto = new SearchHistoryCreateDto
-                            {
-                                Title = string.IsNullOrWhiteSpace(title) ? null : title,
-                                Author = string.IsNullOrWhiteSpace(author) ? null : author,
-                                CategoryName = !string.IsNullOrWhiteSpace(category) ? category : null,
-                                UserId = userId,
-                                SearchQuery = $"{title} {author} {category}".Trim(),
-                                ResultCount = 0 // Will be updated after search
-                            };
-
-                            Console.WriteLine($"[DEBUG Search] Adding search history for user {userId}: {historyDto.SearchQuery}");
-                            await _searchHistoryService.AddHistoryAsync(historyDto);
-                        }
-                        else
-                        {
-                            Console.WriteLine($"[DEBUG Search] No valid UserId found - session: {userIdStr}, cookie: {cookieUserId}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[ERROR Search] Failed to add search history: {ex.Message}");
-                    }
+                    // SearchHistory sẽ được lưu trong SaveSearchHistory method
+                    // Không cần lưu ở đây để tránh duplicate
                 }
     
                 // KHÔNG lấy tag dropdown ở đây, chỉ search theo input
@@ -258,38 +222,6 @@
                 });
             }
 
-            // Test endpoint to check database connection
-            public async Task<JsonResult> OnGetTestAsync()
-            {
-                try
-                {
-                    var (books, bookCount) = await _bookService.SearchBooksAdminPagedAsync(null, null, null, null, 1, 5, null);
-                    var authors = await _authorService.GetAllAuthorsAsync();
-                    var categories = await _categoryService.GetAllCategoriesAsync();
-                    
-                    return new JsonResult(new 
-                    { 
-                        success = true,
-                        message = "Database connection successful",
-                        data = new 
-                        {
-                            books = bookCount,
-                            authors = authors.Count(),
-                            categories = categories.Count(),
-                            
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    return new JsonResult(new 
-                    { 
-                        success = false,
-                        message = ex.Message,
-                        error = ex.ToString()
-                    });
-                }
-            }
 
             // New unified search handler for Index AJAX
             public async Task<JsonResult> OnGetSearchAsync()
@@ -413,6 +345,9 @@
                     || !string.IsNullOrWhiteSpace(category)
                     || year > 0;
 
+                // Debug: thêm timestamp để track calls
+                Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] SaveSearchHistory called: title={title}, author={author}, category={category}");
+
                 // Debug logging sẽ xóa sau khi deploy
                 if (!hasCriteria) return;
 
@@ -438,9 +373,12 @@
                         h.SearchQuery.Equals(searchQuery, StringComparison.OrdinalIgnoreCase) && 
                         h.SearchedAt > cutoffTime);
                     
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] Check duplicate: searchQuery='{searchQuery}', recentCount={recentHistories.Count}, isDuplicate={isDuplicate}");
+                    
                 // Debug logging sẽ xóa sau khi deploy
                 if (isDuplicate)
                 {
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] Duplicate detected, skipping save");
                     return;
                 }                    // Luôn tìm BookId nếu có title
                     int? bookId = null;
@@ -468,6 +406,7 @@
                     };
 
                     await _searchHistoryService.AddHistoryAsync(historyDto);
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] Successfully saved SearchHistory: {searchQuery}");
                 }
                 catch
                 {

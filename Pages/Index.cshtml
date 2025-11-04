@@ -130,7 +130,9 @@
                     }, 200);
                 });
                 
-                $(document).on('click', '.suggestion-item', function() {
+                $(document).on('click', '.suggestion-item', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     const index = $(this).data('index');
                     selectSuggestion(index);
                 });
@@ -259,6 +261,7 @@
                             break;
                     }
                     $('#mainSearchInput').val(suggestion.text);
+                    $('#mainSearchInput').blur(); // Remove focus after selection
                     hideSuggestions();
                     loadBooks();
                     showToast(`Tìm kiếm ${suggestion.searchType.toLowerCase()}: "${suggestion.text}"`, 'info');
@@ -465,12 +468,6 @@
                     showToast(`Đang tìm kiếm ${searchType}: "${searchText}"`, 'info');
                 }
             }
-
-            // Initialize on page load
-            $(document).ready(function() {
-                initSearchSuggestions();
-                checkUrlParamsAndSearch(); // Auto-search based on URL params
-            });
         })();
     </script>
 }
