@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BookInfoFinder.Migrations
 {
     [DbContext(typeof(BookContext))]
-    [Migration("20251021044253_AddDashboardEntities")]
-    partial class AddDashboardEntities
+    [Migration("20251104054748_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

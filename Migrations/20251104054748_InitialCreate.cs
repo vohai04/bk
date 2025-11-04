@@ -15,6 +15,25 @@ namespace BookInfoFinder.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "ActivityLogs",
+                columns: table => new
+                {
+                    ActivityId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    Action = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    EntityType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    EntityId = table.Column<int>(type: "integer", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    IpAddress = table.Column<string>(type: "character varying(45)", maxLength: 45, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ActivityLogs", x => x.ActivityId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Authors",
                 columns: table => new
                 {
@@ -46,6 +65,22 @@ namespace BookInfoFinder.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Categories", x => x.CategoryId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Chatbots",
+                columns: table => new
+                {
+                    ChatbotId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    SessionId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Role = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Message = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Chatbots", x => x.ChatbotId);
                 });
 
             migrationBuilder.CreateTable(
@@ -91,7 +126,6 @@ namespace BookInfoFinder.Migrations
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
                     Password = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    DateOfBirth = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Role = table.Column<int>(type: "integer", nullable: false),
@@ -144,6 +178,32 @@ namespace BookInfoFinder.Migrations
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    NotificationId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Message = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    Type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    IsRead = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    RelatedEntityId = table.Column<int>(type: "integer", nullable: true),
+                    RelatedEntityType = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.NotificationId);
+                    table.ForeignKey(
+                        name: "FK_Notifications_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -274,13 +334,13 @@ namespace BookInfoFinder.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Title = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     Author = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
-                    CategoryId = table.Column<int>(type: "integer", nullable: true),
-                    Date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CategoryName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     SearchQuery = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     SearchedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     ResultCount = table.Column<int>(type: "integer", nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: false),
-                    BookId = table.Column<int>(type: "integer", nullable: true)
+                    BookId = table.Column<int>(type: "integer", nullable: true),
+                    CategoryId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -351,11 +411,11 @@ namespace BookInfoFinder.Migrations
 
             migrationBuilder.InsertData(
                 table: "Users",
-                columns: new[] { "UserId", "CreatedAt", "DateOfBirth", "Email", "FullName", "Password", "Role", "Status", "UpdatedAt", "UserName" },
+                columns: new[] { "UserId", "CreatedAt", "Email", "FullName", "Password", "Role", "Status", "UpdatedAt", "UserName" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new DateTime(1990, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "haivo3225@gmail.com", "Admin User", "admin123", 0, 1, null, "admin" },
-                    { 2, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new DateTime(1995, 5, 15, 0, 0, 0, 0, DateTimeKind.Utc), "john@example.com", "John Doe", "user123", 1, 1, null, "johndoe" }
+                    { 1, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "haivo3225@gmail.com", "Admin User", "admin123", 0, 1, null, "admin" },
+                    { 2, new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "john@example.com", "John Doe", "user123", 1, 1, null, "johndoe" }
                 });
 
             migrationBuilder.InsertData(
@@ -414,11 +474,11 @@ namespace BookInfoFinder.Migrations
 
             migrationBuilder.InsertData(
                 table: "SearchHistories",
-                columns: new[] { "SearchHistoryId", "Author", "BookId", "CategoryId", "Date", "ResultCount", "SearchQuery", "SearchedAt", "Title", "UserId" },
+                columns: new[] { "SearchHistoryId", "Author", "BookId", "CategoryId", "CategoryName", "ResultCount", "SearchQuery", "SearchedAt", "Title", "UserId" },
                 values: new object[,]
                 {
-                    { 1, "J.K. Rowling", 1, 1, null, 1, "Harry Potter fantasy", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Harry Potter", 2 },
-                    { 2, "George Orwell", 2, 4, null, 1, "1984 dystopian", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "1984", 2 }
+                    { 1, "J.K. Rowling", 1, null, "Fantasy", 1, "Harry Potter fantasy", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Harry Potter", 2 },
+                    { 2, "George Orwell", 2, null, "Dystopian", 1, "1984 dystopian", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "1984", 2 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -477,6 +537,11 @@ namespace BookInfoFinder.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Notifications_UserId",
+                table: "Notifications",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Ratings_BookId",
                 table: "Ratings",
                 column: "BookId");
@@ -518,13 +583,22 @@ namespace BookInfoFinder.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "ActivityLogs");
+
+            migrationBuilder.DropTable(
                 name: "BookComments");
 
             migrationBuilder.DropTable(
                 name: "BookTags");
 
             migrationBuilder.DropTable(
+                name: "Chatbots");
+
+            migrationBuilder.DropTable(
                 name: "Favorites");
+
+            migrationBuilder.DropTable(
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "Ratings");
