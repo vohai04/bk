@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BookInfoFinder.Migrations
 {
     [DbContext(typeof(BookContext))]
-    [Migration("20251104054748_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251104063140_AddCategoryNameToSearchHistory")]
+    partial class AddCategoryNameToSearchHistory
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

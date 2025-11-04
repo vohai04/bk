@@ -148,6 +148,48 @@ namespace BookInfoFinder.Pages
             return new JsonResult(new { success = true });
         }
 
+        // Test endpoint to check SearchHistories table schema
+        public async Task<JsonResult> OnGetCheckSchemaAsync()
+        {
+            try
+            {
+                var context = HttpContext.RequestServices.GetRequiredService<BookContext>();
+                
+                // Query để check column names trong SearchHistories table
+                var sql = @"
+                    SELECT column_name, data_type, is_nullable
+                    FROM information_schema.columns 
+                    WHERE table_name = 'SearchHistories' 
+                    ORDER BY ordinal_position";
+                    
+                var columns = await context.Database.SqlQueryRaw<dynamic>(sql).ToListAsync();
+                
+                // Also get sample data to see what's actually stored
+                var sampleRecords = await context.SearchHistories
+                    .Take(3)
+                    .ToListAsync();
+                
+                return new JsonResult(new 
+                {
+                    success = true,
+                    schema = columns,
+                    sampleData = sampleRecords.Select(r => new {
+                        SearchHistoryId = r.SearchHistoryId,
+                        UserId = r.UserId,
+                        Title = r.Title,
+                        Author = r.Author,
+                        CategoryName = r.CategoryName,
+                        SearchQuery = r.SearchQuery,
+                        SearchedAt = r.SearchedAt
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, error = ex.Message });
+            }
+        }
+
         // Test endpoint to check database and session
         public async Task<JsonResult> OnGetTestConnectionAsync()
         {
