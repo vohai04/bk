@@ -413,15 +413,12 @@
                     || !string.IsNullOrWhiteSpace(category)
                     || year > 0;
 
-                // Debug logging - xóa sau khi fix
-                Console.WriteLine($"SaveSearchHistory called: hasCriteria={hasCriteria}, title={title}, author={author}, category={category}");
-
+                // Debug logging sẽ xóa sau khi deploy
                 if (!hasCriteria) return;
 
                 try
                 {
                     var userIdStr = HttpContext.Session.GetString("UserId");
-                    Console.WriteLine($"UserId from session: {userIdStr}");
                     
                     if (!int.TryParse(userIdStr, out int userId)) return;
 
@@ -441,13 +438,11 @@
                         h.SearchQuery.Equals(searchQuery, StringComparison.OrdinalIgnoreCase) && 
                         h.SearchedAt > cutoffTime);
                     
-                    if (isDuplicate)
-                    {
-                        Console.WriteLine($"Duplicate search detected: {searchQuery}");
-                        return;
-                    }
-
-                    // Luôn tìm BookId nếu có title
+                // Debug logging sẽ xóa sau khi deploy
+                if (isDuplicate)
+                {
+                    return;
+                }                    // Luôn tìm BookId nếu có title
                     int? bookId = null;
                     if (!string.IsNullOrWhiteSpace(title))
                     {
@@ -458,7 +453,6 @@
                         if (exactMatch != null)
                         {
                             bookId = exactMatch.BookId;
-                            Console.WriteLine($"Found BookId: {bookId} for title: {title}");
                         }
                     }
 
