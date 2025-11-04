@@ -5,12 +5,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BookInfoFinder.Migrations
 {
     /// <inheritdoc />
-    public partial class AddCategoryNameToSearchHistory : Migration
+    public partial class AddCategoryNameColumn : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Chỉ thêm cột CategoryName, không thay đổi gì khác
+            // Chỉ thêm cột CategoryName vào table SearchHistories hiện có
             migrationBuilder.AddColumn<string>(
                 name: "CategoryName",
                 table: "SearchHistories",
@@ -18,7 +18,7 @@ namespace BookInfoFinder.Migrations
                 maxLength: 50,
                 nullable: true);
 
-            // Populate CategoryName từ Categories table nếu có data
+            // Populate CategoryName từ Categories table
             migrationBuilder.Sql(@"
                 UPDATE ""SearchHistories"" 
                 SET ""CategoryName"" = (
@@ -33,7 +33,6 @@ namespace BookInfoFinder.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // Xóa cột CategoryName
             migrationBuilder.DropColumn(
                 name: "CategoryName",
                 table: "SearchHistories");
