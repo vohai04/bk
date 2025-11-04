@@ -194,6 +194,17 @@
                     try
                     {
                         var userIdStr = HttpContext.Session.GetString("UserId");
+                        var cookieUserId = HttpContext.Request.Cookies["UserId"];
+                        
+                        Console.WriteLine($"[DEBUG Search] Session UserId: {userIdStr}");
+                        Console.WriteLine($"[DEBUG Search] Cookie UserId: {cookieUserId}");
+                        
+                        // Fallback to cookie if session is empty
+                        if (string.IsNullOrEmpty(userIdStr) && !string.IsNullOrEmpty(cookieUserId))
+                        {
+                            userIdStr = cookieUserId;
+                        }
+                        
                         if (int.TryParse(userIdStr, out int userId))
                         {
                             var historyDto = new SearchHistoryCreateDto
@@ -201,15 +212,22 @@
                                 Title = string.IsNullOrWhiteSpace(title) ? null : title,
                                 Author = string.IsNullOrWhiteSpace(author) ? null : author,
                                 CategoryName = !string.IsNullOrWhiteSpace(category) ? category : null,
-                                UserId = userId
+                                UserId = userId,
+                                SearchQuery = $"{title} {author} {category}".Trim(),
+                                ResultCount = 0 // Will be updated after search
                             };
 
+                            Console.WriteLine($"[DEBUG Search] Adding search history for user {userId}: {historyDto.SearchQuery}");
                             await _searchHistoryService.AddHistoryAsync(historyDto);
                         }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG Search] No valid UserId found - session: {userIdStr}, cookie: {cookieUserId}");
+                        }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Ignore log lỗi
+                        Console.WriteLine($"[ERROR Search] Failed to add search history: {ex.Message}");
                     }
                 }
     

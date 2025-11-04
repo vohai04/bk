@@ -70,8 +70,12 @@ builder.Services.AddSession(options =>
    options.Cookie.HttpOnly = true;
    options.Cookie.IsEssential = true;
    options.Cookie.SameSite = SameSiteMode.Lax;
-   options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+   // Improved for production
+   options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
    options.Cookie.Name = "BookInfoFinder.Session";
+   // Add more robust settings for production
+   options.Cookie.MaxAge = TimeSpan.FromHours(2);
+   options.IOTimeout = TimeSpan.FromSeconds(30);
 });
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddDbContext<BookContext>(options =>

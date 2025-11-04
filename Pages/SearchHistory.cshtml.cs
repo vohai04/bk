@@ -42,17 +42,38 @@ namespace BookInfoFinder.Pages
                 page = page <= 0 ? 1 : page;
                 pageSize = pageSize <= 0 ? 10 : pageSize;
 
+                // Debug: Thêm logging để debug session issue trên production
                 var userIdStr = HttpContext.Session.GetString("UserId");
+                var cookieUserId = HttpContext.Request.Cookies["UserId"];
+                
+                Console.WriteLine($"[DEBUG] Session UserId: {userIdStr}");
+                Console.WriteLine($"[DEBUG] Cookie UserId: {cookieUserId}");
+                Console.WriteLine($"[DEBUG] SessionId: {HttpContext.Session.Id}");
+                
+                // Fallback to cookie if session is empty
+                if (string.IsNullOrEmpty(userIdStr) && !string.IsNullOrEmpty(cookieUserId))
+                {
+                    userIdStr = cookieUserId;
+                    Console.WriteLine($"[DEBUG] Using cookie UserId as fallback: {userIdStr}");
+                }
+                
                 if (!int.TryParse(userIdStr, out int userId))
                 {
+                    Console.WriteLine($"[DEBUG] Failed to parse UserId: {userIdStr}");
                     return new JsonResult(new { 
                         histories = new List<object>(), 
                         totalCount = 0,
                         totalPages = 0,
-                        error = "User not logged in"
+                        error = "User not logged in",
+                        debug = new {
+                            sessionUserId = userIdStr,
+                            cookieUserId = cookieUserId,
+                            sessionId = HttpContext.Session.Id
+                        }
                     });
                 }
 
+                Console.WriteLine($"[DEBUG] Searching for search histories with UserId: {userId}");
                 var (histories, totalCount) = await _historyService.GetSearchHistoriesByUserPagedAsync(userId, page, pageSize);
                 
                 var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
@@ -66,6 +87,7 @@ namespace BookInfoFinder.Pages
                     date = h.SearchedAt.ToString("dd/MM/yyyy HH:mm")
                 }).ToList();
 
+                Console.WriteLine($"[DEBUG] Found {totalCount} search histories for user {userId}");
                 return new JsonResult(new { 
                     histories = historiesVm,
                     totalCount = totalCount,
@@ -74,11 +96,13 @@ namespace BookInfoFinder.Pages
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[ERROR] Exception in OnGetAjaxGetAsync: {ex.Message}");
+                Console.WriteLine($"[ERROR] StackTrace: {ex.StackTrace}");
                 return new JsonResult(new { 
                     histories = new List<object>(), 
                     totalCount = 0,
                     totalPages = 0,
-                    error = "Có lỗi khi tải lịch sử tìm kiếm" 
+                    error = $"Có lỗi khi tải lịch sử tìm kiếm: {ex.Message}" 
                 });
             }
         }
