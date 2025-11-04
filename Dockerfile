@@ -1,42 +1,53 @@
-# Sử dụng .NET 9.0 SDK để build app
+# ===== OPTIMIZED DOCKERFILE =====
+# Multi-stage build để giảm image size
+
+# Stage 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy csproj và restore dependencies
-COPY ["BookInfoFinder.csproj", "."]
-RUN dotnet restore "BookInfoFinder.csproj"
+# Copy chỉ project file trước để cache dependencies tốt hơn
+COPY ["BookInfoFinder.csproj", "./"]
+RUN dotnet restore "BookInfoFinder.csproj" --verbosity minimal
 
-# Copy toàn bộ source code và build
+# Copy source code
 COPY . .
-WORKDIR "/src"
-RUN dotnet build "BookInfoFinder.csproj" -c Release -o /app/build
 
-# Publish app
+# Build với optimization
+RUN dotnet build "BookInfoFinder.csproj" -c Release -o /app/build --no-restore
+
+# Stage 2: Publish  
 FROM build AS publish
-RUN dotnet publish "BookInfoFinder.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "BookInfoFinder.csproj" -c Release -o /app/publish \
+    --no-restore --no-build \
+    /p:UseAppHost=false \
+    /p:PublishTrimmed=false
 
-# Sử dụng runtime image để chạy app
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+# Stage 3: Final runtime (chỉ runtime, không có SDK)
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-slim AS final
 WORKDIR /app
 
-# Cài đặt packages cần thiết cho PostgreSQL và các dependencies
-RUN apt-get update && apt-get install -y \
+# Cài packages cần thiết trong 1 RUN command để giảm layers
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libgdiplus \
     libc6-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* \
+    && rm -rf /var/tmp/*
 
-# Copy published app
+# Copy chỉ published files, không copy build artifacts
 COPY --from=publish /app/publish .
 
-# Expose port 10000 (Render's default port)
-EXPOSE 10000
+# Security: tạo non-root user
+RUN adduser --disabled-password --gecos '' --shell /bin/false appuser \
+    && chown -R appuser:appuser /app
+USER appuser
 
-# Set environment variables for production
+# Environment
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:10000
+ENV DOTNET_EnableDiagnostics=0
 
-# Create non-root user for security
-RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
-USER appuser
+EXPOSE 10000
 
 ENTRYPOINT ["dotnet", "BookInfoFinder.dll"]
