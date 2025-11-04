@@ -150,6 +150,17 @@
                         <i class="bi bi-chevron-left"></i>
                     </button>
                 }
+                
+                @if (!isAdminPage)
+                {
+                    <!-- Mobile hamburger button - moved next to logo -->
+                    <button class="navbar-toggler d-lg-none me-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon">
+                            <i class="bi bi-list"></i>
+                        </span>
+                    </button>
+                }
+                
                 <a class="navbar-brand modern-brand" asp-area="" asp-page="@(isAdminPage ? "/Admin/Dashboard" : "/Index")">
                     <div class="brand-icon">
                         <i class="bi bi-book"></i>
@@ -165,12 +176,6 @@
 
                 @if (!isAdminPage)
                 {
-                    <!-- Mobile hamburger button -->
-                    <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon">
-                            <i class="bi bi-list"></i>
-                        </span>
-                    </button>
 
                     <!-- Navigation menu -->
                     <div class="collapse navbar-collapse" id="navbarNav">
@@ -561,7 +566,7 @@
                 const viewport = $(window);
                 
                 // Reset any previous positioning
-                menu.removeClass('dropdown-menu-right').removeClass('dropdown-menu-left');
+                menu.removeClass('dropdown-menu-right').removeClass('dropdown-menu-left').removeClass('dropdown-menu-end');
                 menu.css({
                     'left': '',
                     'right': '',
@@ -574,7 +579,7 @@
                 
                 setTimeout(function() {
                     if (viewport.width() <= 991) {
-                        // Mobile: Static dropdown within the collapsed nav
+                        // Mobile: Static dropdown within the collapsed nav - always align left
                         menu.css({
                             'position': 'static',
                             'width': '100%',
@@ -582,12 +587,12 @@
                             'margin-top': '0.5rem',
                             'margin-bottom': '0.5rem',
                             'float': 'none',
-                            'left': 'auto',
+                            'left': '0',
                             'right': 'auto'
                         });
                         menu.removeClass('dropdown-menu-end');
                     } else {
-                        // Desktop: Normal dropdown behavior
+                        // Desktop: Normal dropdown behavior (can be left or right)
                         const menuOffset = menu.offset();
                         const menuWidth = menu.outerWidth();
                         const viewportWidth = viewport.width();
@@ -597,6 +602,16 @@
                         }
                     }
                 }, 10);
+            });
+            
+            // Override navbar collapse positioning to always be left-aligned
+            $('.navbar-collapse').on('show.bs.collapse', function() {
+                if ($(window).width() <= 991) {
+                    $(this).css({
+                        'left': '1rem',
+                        'right': 'auto'
+                    });
+                }
             });
             
             // Handle window resize

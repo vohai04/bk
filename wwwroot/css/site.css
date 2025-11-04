@@ -1131,17 +1131,18 @@
 @media (max-width: 991.98px) {
     .navbar-toggler {
         display: block !important;
-        order: 2;
-        margin-left: auto;
+        order: 1;
+        margin-right: 1rem;
     }
     
     .navbar-brand {
-        order: 1;
+        order: 2;
+        flex: 1;
     }
     
     .nav-end {
         order: 3;
-        margin-left: 0.5rem;
+        margin-left: auto;
     }
     
     .navbar > .container {
@@ -1176,11 +1177,10 @@
         border: 1px solid var(--gray-200);
         position: absolute;
         top: 100%;
-        left: 0;
-        right: 0;
+        left: 1rem;
+        right: auto;
         width: calc(100% - 2rem);
-        margin-left: 1rem;
-        margin-right: 1rem;
+        max-width: 320px;
         z-index: 1020;
     }
     
@@ -1267,13 +1267,13 @@
 /* Smaller mobile devices */
 @media (max-width: 576px) {
     .navbar-collapse {
-        margin-left: 0.5rem;
-        margin-right: 0.5rem;
-        width: calc(100% - 1rem);
+        left: 1rem;
+        right: auto;
+        width: calc(100% - 2rem);
+        max-width: 280px;
         padding: 1rem;
         border-radius: 8px;
-        border-left: 1px solid var(--gray-200);
-        border-right: 1px solid var(--gray-200);
+        border: 1px solid var(--gray-200);
     }
     
     .dropdown-menu {
