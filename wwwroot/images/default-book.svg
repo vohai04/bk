@@ -1,0 +1,9 @@
+<!-- SVG placeholder for default book image -->
+<svg width="300" height="400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="400" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+  <rect x="20" y="30" width="260" height="340" fill="#ffffff" stroke="#e9ecef"/>
+  <circle cx="150" cy="160" r="40" fill="#6c757d"/>
+  <path d="M130 140 L170 140 L170 160 L160 170 L140 170 Z" fill="#ffffff"/>
+  <text x="150" y="220" text-anchor="middle" font-family="Arial" font-size="14" fill="#6c757d">No Image</text>
+  <text x="150" y="240" text-anchor="middle" font-family="Arial" font-size="12" fill="#adb5bd">Available</text>
+</svg>

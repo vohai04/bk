@@ -48,7 +48,7 @@ function renderBooks(books, currentPage = 1) {
  
   books.forEach((book, index) => {
     const displayIndex = startIndex + index + 1;
-    const imageSrc = book.imageBase64 || "/images/default-book.jpg";
+    const imageSrc = book.imageBase64 || "/images/default-book.svg";
     const tags = Array.isArray(book.tags) && book.tags.length ? book.tags.join(", ") : "Không có";
     const rating = typeof book.averageRating === "number" ? book.averageRating : 0;
     const ratingCount = typeof book.ratingCount === "number" ? book.ratingCount : 0;

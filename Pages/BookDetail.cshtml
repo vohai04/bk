@@ -30,7 +30,7 @@ else
                     <div class="col-lg-4 col-md-5">
                         <div class="book-cover-container">
                             <div class="book-cover-wrapper">
-                                <img src="@(string.IsNullOrEmpty(book.ImageBase64) ? "/images/default-book.jpg" : book.ImageBase64)" 
+                                <img src="@(string.IsNullOrEmpty(book.ImageBase64) ? "/images/default-book.svg" : book.ImageBase64)" 
                                      alt="@book.Title"
                                      class="book-cover-image" />
                                 <div class="book-cover-overlay">
@@ -227,7 +227,7 @@ else
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <img src="@(string.IsNullOrEmpty(book.ImageBase64) ? "/images/default-book.jpg" : book.ImageBase64)" 
+                    <img src="@(string.IsNullOrEmpty(book.ImageBase64) ? "/images/default-book.svg" : book.ImageBase64)" 
                          alt="@book.Title" class="img-fluid" />
                 </div>
             </div>

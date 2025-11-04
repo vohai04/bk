@@ -139,7 +139,7 @@ function renderFavoriteBooks(books, totalPages, currentPage) {
 
     let html = '<div class="row g-4">';
     books.forEach((book, index) => {
-        const imageSrc = book.imageBase64 && book.imageBase64 !== "" ? book.imageBase64 : "/images/default-book.jpg";
+        const imageSrc = book.imageBase64 && book.imageBase64 !== "" ? book.imageBase64 : "/images/default-book.svg";
         const tags = book.tags?.length ? book.tags.join(", ") : "Không rõ"; // Ensure tags are joined as a string
         const category = book.category || "Không rõ"; // Ensure category has a fallback
 
@@ -149,7 +149,7 @@ function renderFavoriteBooks(books, totalPages, currentPage) {
                     <div class="position-relative">
                         <img src="${imageSrc}" class="card-img-top" alt="${book.title}" 
                              style="height: 250px; object-fit: cover;" 
-                             onerror="this.src='/images/default-book.jpg'" />
+                             onerror="this.src='/images/default-book.svg'" />
                         <div class="position-absolute top-0 end-0 p-2">
                             <span class="badge bg-danger">
                                 <i class="bi bi-heart-fill"></i>

@@ -550,7 +550,44 @@
             console.log('Layout scripts loaded');
             $('[data-bs-toggle="tooltip"]').tooltip();
             initHeaderFilters();
+            initDropdownPositioning();
         });
+        
+        // Ensure dropdowns are positioned correctly on all screen sizes
+        function initDropdownPositioning() {
+            $('.dropdown').on('show.bs.dropdown', function () {
+                const dropdown = $(this);
+                const menu = dropdown.find('.dropdown-menu');
+                const viewport = $(window);
+                
+                // Reset any previous positioning
+                menu.removeClass('dropdown-menu-right').removeClass('dropdown-menu-left');
+                
+                setTimeout(function() {
+                    const menuOffset = menu.offset();
+                    const menuWidth = menu.outerWidth();
+                    const viewportWidth = viewport.width();
+                    
+                    // Check if dropdown goes off the right edge
+                    if (menuOffset && (menuOffset.left + menuWidth > viewportWidth - 20)) {
+                        menu.addClass('dropdown-menu-right');
+                        menu.css({
+                            'right': '0',
+                            'left': 'auto'
+                        });
+                    }
+                    
+                    // On mobile, ensure dropdown doesn't go off screen
+                    if (viewport.width() < 576) {
+                        menu.css({
+                            'max-width': 'calc(100vw - 2rem)',
+                            'right': '1rem',
+                            'left': 'auto'
+                        });
+                    }
+                }, 10);
+            });
+        }
 
         // Use delegated handlers outside of ready to make this robust if layout is re-rendered
         // Admin sidebar toggle (delegated)
