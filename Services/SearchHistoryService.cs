@@ -39,10 +39,8 @@ namespace BookInfoFinder.Services
         {
             try
             {
-                // Debug: tạm thời bỏ filter để xem tất cả data
                 var searchHistories = await _context.SearchHistories
-                    .Where(sh => sh.UserId == userId)
-                    //.Where(sh => sh.UserId == userId && !string.IsNullOrEmpty(sh.SearchQuery))
+                    .Where(sh => sh.UserId == userId && !string.IsNullOrEmpty(sh.SearchQuery))
                     .GroupBy(sh => (sh.SearchQuery ?? "").ToLower())
                     .Select(g => g.OrderByDescending(sh => sh.SearchedAt).First())
                     .Include(sh => sh.User)
@@ -63,35 +61,20 @@ namespace BookInfoFinder.Services
         {
             try
             {
-                // Debug: log userId being searched
-                _logger.LogInformation($"Searching for search histories with UserId: {userId}");
-                
-                // Test database connection first
-                var canConnect = await _context.Database.CanConnectAsync();
-                if (!canConnect)
-                {
-                    _logger.LogError("Cannot connect to database");
-                    return (new List<SearchHistoryDto>(), 0);
-                }
-                
-                // Đơn giản hóa query - lấy tất cả records trước, rồi group sau
+                // Get all search histories for user
                 var allRecords = await _context.SearchHistories
                     .Where(sh => sh.UserId == userId)
                     .Include(sh => sh.User)
                     .OrderByDescending(sh => sh.SearchedAt)
                     .ToListAsync();
-                
-                _logger.LogInformation($"Found {allRecords.Count} total records for UserId: {userId}");
 
-                // Group by SearchQuery in memory để tránh duplicate
+                // Group by SearchQuery to avoid duplicates
                 var groupedRecords = allRecords
-                    .Where(sh => !string.IsNullOrEmpty(sh.SearchQuery)) // Filter out empty queries
+                    .Where(sh => !string.IsNullOrEmpty(sh.SearchQuery))
                     .GroupBy(sh => (sh.SearchQuery ?? "").ToLower())
-                    .Select(g => g.First()) // Lấy record đầu tiên (mới nhất do đã order)
+                    .Select(g => g.First()) // Take most recent
                     .OrderByDescending(sh => sh.SearchedAt)
                     .ToList();
-
-                _logger.LogInformation($"After grouping and filtering: {groupedRecords.Count} unique search queries");
 
                 var totalCount = groupedRecords.Count;
                 var pagedRecords = groupedRecords
@@ -100,8 +83,6 @@ namespace BookInfoFinder.Services
                     .ToList();
 
                 var searchHistoryDtos = pagedRecords.Select(sh => sh.ToDto(sh.User?.UserName ?? "")).ToList();
-                
-                _logger.LogInformation($"Returning {searchHistoryDtos.Count} DTOs for page {page}");
                 
                 return (searchHistoryDtos, totalCount);
             }

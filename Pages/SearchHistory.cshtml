@@ -13,9 +13,6 @@
                         <i class="bi bi-clock-history me-2"></i>Lịch sử tìm kiếm
                     </h2>
                     <div>
-                        <button id="btnTest" class="btn btn-outline-info btn-sm me-2">
-                            <i class="bi bi-bug me-1"></i>Test
-                        </button>
                         <button id="btnDeleteAll" class="btn btn-outline-danger">
                             <i class="bi bi-trash me-1"></i>Xóa tất cả
                         </button>
@@ -80,27 +77,16 @@ $(function () {
     function loadHistory(page = 1) {
         currentPage = page;
         
-        console.log('[DEBUG] Loading search history, page:', page);
-        
         $.get('/SearchHistory?handler=AjaxGet', {
             page: page,
             pageSize: pageSize
         })
         .done(function (data) {
-            console.log('[DEBUG] Search history response:', data);
-            
-            // Check if there's debug info in response
-            if (data.debug) {
-                console.log('[DEBUG] Session info:', data.debug);
-            }
-            
             if (data.error) {
-                console.error('[ERROR] Server error:', data.error);
                 showToast(data.error, 'error');
                 $('#historyContainer').html(`
                     <div class="text-center text-warning py-4">
                         <i class="bi bi-exclamation-triangle me-2"></i>${data.error}
-                        <br><small class="text-muted">Debug: Session=${data.debug?.sessionUserId}, Cookie=${data.debug?.cookieUserId}</small>
                     </div>
                 `);
                 return;
@@ -109,13 +95,10 @@ $(function () {
             renderHistory(data);
         })
         .fail(function(xhr, status, error) {
-            console.error('SearchHistory error:', xhr.responseText);
-            console.error('Status:', status, 'Error:', error);
             showToast('Không thể tải lịch sử tìm kiếm', 'error');
             $('#historyContainer').html(`
                 <div class="text-center text-danger py-4">
                     <i class="bi bi-exclamation-triangle me-2"></i>Lỗi khi tải dữ liệu
-                    <br><small class="text-muted">${error}</small>
                 </div>
             `);
         });
@@ -206,7 +189,6 @@ $(function () {
     // Search again functionality
     $(document).on('click', '.btn-search-again', function() {
         const query = $(this).data('query');
-        console.log('Search again clicked:', query);
         
         // Build search URL based on query content
         if (query) {
@@ -219,10 +201,6 @@ $(function () {
                 // Category search  
                 const category = query.replace('thể loại:', '').trim();
                 window.location.href = `/?category=${encodeURIComponent(category)}`;
-            } else if (query.includes('năm:')) {
-                // Year search
-                const year = query.replace('năm:', '').trim();
-                window.location.href = `/?year=${encodeURIComponent(year)}`;
             } else {
                 // General title search
                 window.location.href = `/?title=${encodeURIComponent(query)}`;
@@ -272,30 +250,6 @@ $(function () {
             .fail(() => showToast('Lỗi khi xóa lịch sử', 'error'))
             .always(() => {
                 $btn.prop('disabled', false).html('<i class="bi bi-trash me-1"></i>Xóa tất cả');
-            });
-    });
-
-    // Test connection
-    $('#btnTest').on('click', function () {
-        console.log('[DEBUG] Testing connection...');
-        
-        $.get('/SearchHistory?handler=TestConnection')
-            .done(function (data) {
-                console.log('[DEBUG] Test result:', data);
-                
-                let message = 'Test Results:\n';
-                message += `Session UserId: ${data.session?.userId || 'null'}\n`;
-                message += `Cookie UserId: ${data.cookies?.userId || 'null'}\n`;
-                message += `Database: ${data.database?.canConnect ? 'Connected' : 'Failed'}\n`;
-                message += `Total Histories: ${data.database?.totalHistories}\n`;
-                message += `Total Users: ${data.database?.totalUsers}\n`;
-                message += `Environment: ${data.environment?.isDevelopment ? 'Development' : 'Production'}`;
-                
-                alert(message);
-            })
-            .fail(function(xhr, status, error) {
-                console.error('[ERROR] Test failed:', xhr.responseText);
-                alert(`Test failed: ${error}\n${xhr.responseText}`);
             });
     });
 
