@@ -39,15 +39,14 @@ Trang liên quan: `Pages/Account/Register.cshtml`, `Pages/Account/Login.cshtml`.
 1. Đăng ký (Register):
 
    - Mở trang `Register`.
-   - Điền `email`, `username`, `password` và xác nhận password.
-   - Hệ thống kiểm tra và tạo tài khoản (mật khẩu được mã hoá).
-   - Nếu bật xác nhận email, kiểm tra hộp thư để kích hoạt tài khoản.
+   - Điền tên người dùng, `email`, `username`, `password` và xác nhận password.
+   - Hệ thống kiểm tra và tạo tài khoản .
 2. Đăng nhập (Login):
 
    - Mở trang `Login`.
    - Nhập `username` hoặc `email` và `password`, nhấn `Đăng nhập`.
    - (Tùy chọn) `Remember Me`: lưu token an toàn để đăng nhập tự động.
-   - Sau đăng nhập thành công, người dùng được chuyển hướng tới trang chính hoặc dashboard.
+   - Sau đăng nhập thành công, người dùng được chuyển hướng tới trang chính Index cho người dùng hoặc  dashboard cho admin.
 
 Lưu ý: Nếu quên mật khẩu, dùng trang `ForgotPassword` hoặc `ResetPassword`.
 
