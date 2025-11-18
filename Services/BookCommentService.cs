@@ -306,7 +306,7 @@ namespace BookInfoFinder.Services
                 commentUpdateDto.UpdateEntity(comment);
                 await _context.SaveChangesAsync();
                 
-                return comment.ToDto();
+                return comment.ToDto(); 
             }
             catch (Exception ex)
             {

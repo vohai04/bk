@@ -26,10 +26,10 @@ namespace BookInfoFinder.Pages
 
         public List<NotificationItem> Items { get; set; } = new List<NotificationItem>();
         public int Page { get; set; } = 1;
-        public int PageSize { get; set; } = 20;
+        public int PageSize { get; set; } = 10;
         public int TotalCount { get; set; }
 
-        public async Task OnGetAsync(int page = 1, int pageSize = 20)
+        public async Task OnGetAsync(int page = 1, int pageSize = 10)
         {
             Page = Math.Max(1, page);
             PageSize = Math.Max(1, pageSize);
