@@ -247,37 +247,52 @@ namespace BookInfoFinder.Services
             }
         }
 
-        public async Task<bool> DeleteBookAsync(int bookId)
-        {
-            try
-            {
-                var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
-                if (book == null) return false;
+       public async Task<bool> DeleteBookAsync(int bookId)
+{
+    try
+    {
+        var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
+        if (book == null) return false;
 
-                var bookTitle = book.Title; // Store title before deletion
-                var userId = book.UserId; // Store user ID for logging
+        // Xóa các bản ghi liên quan
+        var comments = _context.BookComments.Where(c => c.BookId == bookId);
+        _context.BookComments.RemoveRange(comments);
 
-                _context.Books.Remove(book);
-                await _context.SaveChangesAsync();
+        var ratings = _context.Ratings.Where(r => r.BookId == bookId);
+        _context.Ratings.RemoveRange(ratings);
 
-                // Log activity
-                await _dashboardService.LogActivityAsync(
-                    userId.ToString(),
-                    "Book Deleted",
-                    $"Deleted book: '{bookTitle}'",
-                    "Book",
-                    bookId,
-                    ""
-                );
+        var favorites = _context.Favorites.Where(f => f.BookId == bookId);
+        _context.Favorites.RemoveRange(favorites);
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting book: {BookId}", bookId);
-                return false;
-            }
-        }
+        var tags = _context.BookTags.Where(bt => bt.BookId == bookId);
+        _context.BookTags.RemoveRange(tags);
+
+        var histories = _context.SearchHistories.Where(h => h.BookId == bookId);
+        _context.SearchHistories.RemoveRange(histories);
+
+        // Xóa sách
+        _context.Books.Remove(book);
+
+        await _context.SaveChangesAsync();
+
+        // Log activity (giữ nguyên)
+        await _dashboardService.LogActivityAsync(
+            book.UserId.ToString(),
+            "Book Deleted",
+            $"Deleted book: '{book.Title}'",
+            "Book",
+            bookId,
+            ""
+        );
+
+        return true;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error deleting book: {BookId}", bookId);
+        return false;
+    }
+}
 
         public async Task<BookDetailDto?> GetBookDetailWithStatsAndCommentsAsync(int bookId, int page, int pageSize)
         {

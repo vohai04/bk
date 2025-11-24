@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
 using System.Text;
- 
+
 namespace BookInfoFinder.Pages.Admin
 {
     public class ManageBookModel : PageModel
@@ -48,14 +48,14 @@ namespace BookInfoFinder.Pages.Admin
 
                 page = page <= 0 ? 1 : page;
                 pageSize = pageSize <= 0 ? 6 : pageSize;
-                
+
                 string? categoryName = null;
                 if (categoryId > 0)
                 {
                     var selectedCategory = await _categoryService.GetCategoryByIdAsync(categoryId);
                     categoryName = selectedCategory?.Name;
                 }
-                
+
                 var (books, totalCount) = await _bookService.SearchBooksAdminPagedAsync(
                     search, null, categoryName, null, page, pageSize, null);
 
@@ -91,30 +91,30 @@ namespace BookInfoFinder.Pages.Admin
                 string? search = Request.Form["Search"];
                 string? categoryStr = Request.Form["Category"];
                 int.TryParse(categoryStr, out int categoryId);
-                
+
                 string? categoryName = null;
                 if (categoryId > 0)
                 {
                     var selectedCategory = await _categoryService.GetCategoryByIdAsync(categoryId);
                     categoryName = selectedCategory?.Name;
                 }
-                
+
                 var (books, _) = await _bookService.SearchBooksAdminPagedAsync(
                     search, null, categoryName, null, 1, int.MaxValue, null);
 
                 var csv = new StringBuilder();
                 csv.AppendLine("Tiêu đề,ISBN,Tác giả,Thể loại,NXB,Năm XB,Mô tả,Tóm tắt,Tag");
-                
+
                 foreach (var book in books)
                 {
                     var tags = string.Join(";", book.Tags?.Select(t => t.Name) ?? new List<string>());
                     string CleanCsv(string input) => (input ?? "").Replace("\"", "\"\"").Replace("\n", " ").Replace("\r", " ");
-                    
+
                     csv.AppendLine(
                         $"\"{CleanCsv(book.Title)}\",\"{CleanCsv(book.ISBN)}\",\"{CleanCsv(book.AuthorName)}\",\"{CleanCsv(book.CategoryName)}\",\"{CleanCsv(book.PublisherName)}\",\"{book.PublicationDate.Year}\",\"{CleanCsv(book.Description)}\",\"{CleanCsv(book.Abstract)}\",\"{CleanCsv(tags)}\""
                     );
                 }
-                
+
                 var bytes = Encoding.UTF8.GetBytes(csv.ToString());
                 var fileName = $"DanhSachSach_{DateTime.Now:yyyyMMdd}.csv";
                 return File(bytes, "text/csv", fileName);
@@ -124,6 +124,23 @@ namespace BookInfoFinder.Pages.Admin
                 TempData["ErrorMessage"] = $"Có lỗi khi xuất file: {ex.Message}";
                 return RedirectToPage();
             }
+        }
+
+        public async Task<JsonResult> OnPostDeleteAsync(int id)
+        {
+            try
+            {
+                var result = await _bookService.DeleteBookAsync(id);
+                if (result)
+                    return new JsonResult(new { success = true });
+                else
+                    return new JsonResult(new { success = false, message = "Không thể xóa sách. Có thể sách không tồn tại hoặc đang được liên kết với dữ liệu khác." });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+
         }
     }
 }
