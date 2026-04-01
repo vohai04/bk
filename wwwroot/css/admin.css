@@ -1,113 +1,16 @@
-/* ===== ADMIN PANEL STYLES (MINIMAL) ===== */
+/* =====================================================
+   ADMIN.CSS - Admin-specific overrides
+   BookInfoFinder
 
-/* Admin Variables */
-:root {
-    --admin-primary: #2563eb;
-    --admin-primary-light: #3b82f6;
-    --admin-primary-dark: #1d4ed8;
-    --admin-secondary: #f8fafc;
-    --admin-success: #10b981;
-    --admin-warning: #f59e0b;
-    --admin-danger: #ef4444;
-    --admin-info: #3b82f6;
-    --admin-dark: #1e293b;
-    --admin-light: #f1f5f9;
-    --admin-border: #e2e8f0;
-    --admin-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --admin-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --admin-sidebar-width: 280px;
-    --admin-sidebar-bg: #1e293b;
-    --admin-sidebar-accent: #334155;
-    --admin-sidebar-hover: #475569;
-    --admin-sidebar-active: #2563eb;
-}
+   NOTE: All CSS variables have been moved to variables.css.
+   NOTE: Sidebar layout styles are now in layout.css.
+   This file only contains admin page-specific overrides.
+   ===================================================== */
 
 /* ===== ADMIN LAYOUT ===== */
+/* NOTE: Core admin sidebar & layout styles are in layout.css */
 .admin-layout {
     position: relative;
-}
-
-/* ===== ADMIN SIDEBAR ===== */
-.admin-sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    bottom: 0 !important;
-    height: 100vh !important;
-    width: var(--admin-sidebar-width) !important;
-    background: var(--admin-sidebar-bg) !important;
-    color: white !important;
-    transform: translateX(0) !important; /* Show by default on desktop */
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    z-index: 999999 !important; /* Above everything including footer */
-    display: flex !important;
-    flex-direction: column !important;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25) !important;
-    border-radius: 0 !important; /* No border radius to match header/footer */
-    border: none !important;
-    border-right: 1px solid var(--admin-sidebar-accent) !important;
-}
-
-/* Desktop: hide when collapsed */
-.admin-sidebar.collapsed {
-    transform: translateX(-100%) !important;
-}
-
-/* Mobile: hidden by default, show when .show class */
-@media (max-width: 767px) {
-    .admin-sidebar {
-        transform: translateX(-100%) !important; /* Hidden by default on mobile */
-    }
-    
-    .admin-sidebar.show {
-        transform: translateX(0) !important;
-    }
-    
-    /* Override collapsed state on mobile - use show/hide instead */
-    .admin-sidebar.collapsed {
-        transform: translateX(-100%) !important;
-    }
-}
-
-/* Sidebar Toggle Button */
-.sidebar-toggle {
-    background: none !important;
-    border: none !important;
-    color: white !important;
-    font-size: 1.25rem !important;
-    padding: 0.5rem !important;
-    margin-right: 1rem !important;
-    transition: color 0.2s ease !important;
-    flex-shrink: 0 !important; /* Don't shrink */
-    order: -1 !important; /* Always first */
-}
-
-.sidebar-toggle:hover {
-    color: rgba(255, 255, 255, 0.8) !important;
-    background: none !important;
-}
-
-.sidebar-toggle:focus {
-    box-shadow: none !important;
-    outline: none !important;
-}
-
-/* Admin header container adjustments */
-body.admin-page .navbar .container {
-    display: flex !important;
-    align-items: center !important;
-    gap: 1rem !important;
-}
-
-body.admin-page .modern-brand {
-    margin-left: 0 !important;
-    flex-shrink: 0 !important;
-    transition: margin-left 0.3s ease !important;
-}
-
-/* When sidebar is open, push brand to the right */
-body.admin-page.admin-sidebar-open .modern-brand {
-    margin-left: 2rem !important;
 }
 
 /* Sidebar Header */
@@ -341,24 +244,9 @@ body.admin-page.admin-sidebar-open .modern-brand {
     }
 }
 
-/* Sidebar toggle button styling (already in layout) */
-.sidebar-toggle {
-    color: white !important;
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    transition: all 0.2s ease !important;
-}
-
-.sidebar-toggle:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-    transform: scale(1.05) !important;
-}
-
-/* Admin main content */
+/* Admin main content padding override */
 .admin-main {
-    margin-left: 0;
     padding: 2rem;
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ===== ADMIN COMPONENTS ONLY - NO LAYOUT OVERRIDE ===== */

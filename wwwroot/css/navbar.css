@@ -1,0 +1,193 @@
+/* =====================================================
+   NAVBAR.CSS - Navigation, Mobile Menu, Dropdowns
+   BookInfoFinder
+   ===================================================== */
+
+/* ==============================
+   DESKTOP NAVIGATION
+   ============================== */
+.nav-center {
+    display: flex;
+    gap: var(--space-lg);
+    margin: 0 auto;
+}
+
+.nav-center .nav-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.nav-center .nav-link:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-center .nav-link i {
+    font-size: 1.25rem;
+}
+
+.nav-center .nav-link.admin-link {
+    background: linear-gradient(135deg, var(--secondary-500), var(--secondary-600));
+    color: white;
+}
+
+.nav-center .nav-link.admin-link:hover {
+    background: linear-gradient(135deg, var(--secondary-600), var(--secondary-700));
+    transform: translateY(-2px);
+}
+
+/* ── Right side nav (user menu) ── */
+.nav-end {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--secondary-400), var(--secondary-600));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.user-name {
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1;
+}
+
+.user-role {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+/* ── Login / Register buttons ── */
+.btn-login,
+.btn-register {
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    color: var(--primary-600);
+    background: white;
+    border: 1px solid white;
+}
+
+.btn-register:hover,
+.btn-login:hover {
+    background: var(--gray-50);
+    color: var(--primary-700);
+}
+
+/* ==============================
+   HAMBURGER TOGGLER
+   ============================== */
+.navbar-toggler {
+    border: none;
+    padding: 0.375rem 0.5rem;
+    background: transparent;
+    color: white;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+.navbar-toggler-icon {
+    font-size: 1.5rem;
+    color: white;
+}
+
+/* ==============================
+   DROPDOWNS
+   ============================== */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: white;
+    padding: 0.5rem 0;
+    z-index: var(--z-dropdown);
+    max-width: calc(100vw - 2rem);
+}
+
+.dropdown-menu.dropdown-menu-end {
+    right: 0 !important;
+    left: auto !important;
+}
+
+/* Filter dropdown */
+.filter-menu {
+    min-width: 320px;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Tag search styles */
+.tags-filter-container { padding: 0 0.25rem; }
+
+.tag-search-container { margin-bottom: 0.5rem; }
+
+.available-tags {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+    min-height: 1.5rem;
+}
+
+.selected-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: var(--primary-100);
+    color: var(--primary-700);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.remove-tag {
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.7;
+}
+
+.remove-tag:hover { opacity: 1; }
+
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+}

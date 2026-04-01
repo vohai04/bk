@@ -1,167 +1,68 @@
 ﻿﻿@using Microsoft.AspNetCore.Http
+@{
+    var isAdminPage = ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Admin") == true;
+    var username    = Context.Session.GetString("UserName") ?? Context.Request.Cookies["UserName"];
+    var userRole    = Context.Session.GetString("Role") ?? Context.Request.Cookies["Role"];
+    var isAdmin     = userRole == "Admin";
+}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - BookInfoFinder</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/BookInfoFinder.styles.css" asp-append-version="true" />
+
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-@{
-    var isAdminPage = ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Admin") == true;
-}
-<body class="modern-body@(isAdminPage ? " admin-page admin-sidebar-open" : "")">
-    <style>
-        /* Chatbot window styling */
-        .chatbot-window {
-            position: fixed;
-            right: 20px;
-            top: 80px;
-            width: 350px;
-            height: 400px;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            z-index: 1060;
-            display: flex;
-            flex-direction: column;
-        }
 
-        /* Mobile responsive chatbot */
-        @@media (max-width: 768px) {
-            .chatbot-window {
-                right: 10px;
-                top: 70px;
-                width: calc(100vw - 20px);
-                max-width: 320px;
-                height: 350px;
-            }
-        }
+    <!-- App CSS (modular, imported via site.css) -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-        /* Additional mobile responsive styles */
-        @@media (max-width: 576px) {
-            .modern-header {
-                padding: 0.5rem 0;
-            }
-            
-            .container {
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-            
-            .brand-name {
-                font-size: 1.2rem;
-            }
-            
-            .brand-subtitle {
-                font-size: 0.7rem;
-            }
-            
-            .navbar-collapse {
-                margin-top: 0.5rem;
-                padding: 0.75rem;
-            }
-        }
-        .chatbot-header {
-            padding: 10px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #ccc;
-            border-radius: 10px 10px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: bold;
-        }
-        .chatbot-header span {
-            flex: 1;
-            text-align: center;
-        }
-        .chatbot-body {
-            flex: 1;
-            padding: 10px;
-            overflow-y: auto;
-        }
-        .chatbot-footer {
-            padding: 10px;
-            border-top: 1px solid #ccc;
-            border-radius: 0 0 10px 10px;
-            display: flex;
-            background: #f8f9fa;
-        }
-        .chatbot-footer input {
-            flex: 1;
-            margin-right: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            padding: 5px;
-        }
-        .chatbot-footer button {
-            border-radius: 5px;
-            border: none;
-            background: #007bff;
-            color: white;
-            padding: 5px 10px;
-        }
-        /* Chat messages styling */
-        #chatMessages .chat-message {
-            display: flex;
-            margin-bottom: 10px;
-        }
-        #chatMessages .chat-message.user {
-            justify-content: flex-end;
-        }
-        #chatMessages .chat-message.bot {
-            justify-content: flex-start;
-        }
-        #chatMessages .chat-bubble {
-            padding: 8px 12px;
-            border-radius: 18px;
-            max-width: 80%;
-            word-wrap: break-word;
-        }
-        #chatMessages .chat-message.user .chat-bubble {
-            background-color: #007bff;
-            color: white;
-        }
-        #chatMessages .chat-message.bot .chat-bubble {
-            background-color: #e9ecef;
-            color: #333;
-        }
-    </style>
-    @{
-        var isAdminPage = ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Admin") == true;
-        var username = Context.Session.GetString("UserName") ?? Context.Request.Cookies["UserName"];
-        var userRole = Context.Session.GetString("Role") ?? Context.Request.Cookies["Role"];
-        var isAdmin = userRole == "Admin";
+    <!-- Admin CSS (only when on admin pages) -->
+    @if (isAdminPage)
+    {
+        <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
     }
 
+    <!-- Razor page-scoped styles -->
+    <link rel="stylesheet" href="~/BookInfoFinder.styles.css" asp-append-version="true" />
+</head>
+
+<body class="modern-body@(isAdminPage ? " admin-page admin-sidebar-open" : "")">
+
+    <!-- ==================== HEADER ==================== -->
     <header class="modern-header">
         <nav class="navbar navbar-expand-lg">
             <div class="container">
+
                 @if (isAdminPage)
                 {
                     <button class="btn btn-link sidebar-toggle" id="sidebarToggle" title="Toggle Sidebar">
                         <i class="bi bi-chevron-left"></i>
                     </button>
                 }
-                
+
                 @if (!isAdminPage)
                 {
-                    <!-- Mobile hamburger button - moved next to logo -->
-                    <button class="navbar-toggler d-lg-none me-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <!-- Mobile hamburger -->
+                    <button class="navbar-toggler d-lg-none me-2" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                            aria-controls="navbarNav" aria-expanded="false"
+                            aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon">
                             <i class="bi bi-list"></i>
                         </span>
                     </button>
                 }
-                
-                <a class="navbar-brand modern-brand" asp-area="" asp-page="@(isAdminPage ? "/Admin/Dashboard" : "/Index")">
+
+                <a class="navbar-brand modern-brand" asp-area=""
+                   asp-page="@(isAdminPage ? "/Admin/Dashboard" : "/Index")">
                     <div class="brand-icon">
                         <i class="bi bi-book"></i>
                     </div>
@@ -176,8 +77,7 @@
 
                 @if (!isAdminPage)
                 {
-
-                    <!-- Navigation menu -->
+                    <!-- Desktop / collapsible nav -->
                     <div class="collapse navbar-collapse" id="navbarNav">
                         <div class="navbar-nav nav-center mx-auto">
                             <a class="nav-link" asp-area="" asp-page="/Index">
@@ -192,27 +92,36 @@
                                 <i class="bi bi-clock-history"></i>
                                 <span>Lịch sử</span>
                             </a>
-                            
+
                             <!-- Filter Dropdown -->
                             <div class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle filter-dropdown" href="#" id="filterDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle filter-dropdown" href="#"
+                                   id="filterDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="bi bi-funnel"></i>
                                     <span>Bộ lọc</span>
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end filter-menu" aria-labelledby="filterDropdown">
+                                <ul class="dropdown-menu dropdown-menu-end filter-menu"
+                                    aria-labelledby="filterDropdown">
                                     <li><h6 class="dropdown-header"><i class="bi bi-star-fill text-warning"></i> Sách nổi bật</h6></li>
-                                    <li><a class="dropdown-item filter-item" href="/?filter=top-rated" data-filter="top-rated">
-                                        <i class="bi bi-star-fill text-warning"></i>
-                                        <span>Đánh giá cao nhất</span>
-                                    </a></li>
-                                    <li><a class="dropdown-item filter-item" href="/?filter=trending" data-filter="trending">
-                                        <i class="bi bi-heart-fill text-danger"></i>
-                                        <span>Yêu thích nhất</span>
-                                    </a></li>
-                                    <li><a class="dropdown-item filter-item" href="/?filter=most-searched" data-filter="most-searched">
-                                        <i class="bi bi-fire text-info"></i>
-                                        <span>Xu hướng tìm kiếm</span>
-                                    </a></li>
+                                    <li>
+                                        <a class="dropdown-item filter-item" href="/?filter=top-rated" data-filter="top-rated">
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <span>Đánh giá cao nhất</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item filter-item" href="/?filter=trending" data-filter="trending">
+                                            <i class="bi bi-heart-fill text-danger"></i>
+                                            <span>Yêu thích nhất</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item filter-item" href="/?filter=most-searched" data-filter="most-searched">
+                                            <i class="bi bi-fire text-info"></i>
+                                            <span>Xu hướng tìm kiếm</span>
+                                        </a>
+                                    </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><h6 class="dropdown-header"><i class="bi bi-tags-fill text-primary"></i> Lọc theo thẻ</h6></li>
                                     <li>
@@ -220,11 +129,11 @@
                                             <div class="tags-filter-container">
                                                 <div class="selected-tags" id="selectedTags"></div>
                                                 <div class="tag-search-container">
-                                                    <input type="text" class="form-control form-control-sm tag-search-input" 
+                                                    <input type="text" class="form-control form-control-sm tag-search-input"
                                                            placeholder="Tìm thẻ..." id="tagSearchInput">
                                                 </div>
                                                 <div class="available-tags" id="availableTags">
-                                                    <!-- Tags will be loaded here -->
+                                                    <!-- Tags loaded by layout.js -->
                                                 </div>
                                                 <div class="filter-actions mt-2">
                                                     <button class="btn btn-primary btn-sm" id="applyTagFilter">
@@ -239,7 +148,7 @@
                                     </li>
                                 </ul>
                             </div>
-                        
+
                             <a class="nav-link" asp-area="" asp-page="/Privacy">
                                 <i class="bi bi-shield-check"></i>
                                 <span>Chính sách</span>
@@ -252,22 +161,29 @@
                                 </a>
                             }
                         </div>
-                    </div> <!-- Close navbar-collapse -->
+                    </div><!-- /navbar-collapse -->
                 }
 
+                <!-- Right: user menu / login -->
                 <div class="navbar-nav nav-end">
                     @if (!string.IsNullOrEmpty(username))
                     {
+                        <!-- Notification bell -->
                         <div class="nav-item">
-                            <a class="nav-link position-relative me-2" href="/Notifications" id="notificationButton" title="Thông báo">
+                            <a class="nav-link position-relative me-2" href="/Notifications"
+                               id="notificationButton" title="Thông báo">
                                 <i class="bi bi-bell" style="font-size: 1.25rem;"></i>
-                                <!-- badge hidden by default; JS will show when unread > 0 -->
-                                <span id="notificationCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.65rem; display:none;"></span>
+                                <span id="notificationCount"
+                                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                      style="font-size:0.65rem; display:none;"></span>
                             </a>
                         </div>
 
+                        <!-- User dropdown -->
                         <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
+                               id="userMenuDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
                                 <div class="user-avatar me-2">
                                     <i class="bi bi-person-circle" style="font-size: 1.5rem;"></i>
                                 </div>
@@ -282,7 +198,6 @@
                                         <i class="bi bi-person me-2"></i> Hồ sơ
                                     </a>
                                 </li>
-                                <!-- Settings removed; only Profile is shown -->
                                 @if (isAdmin)
                                 {
                                     <li>
@@ -308,13 +223,15 @@
                         <a href="/Account/Register" class="btn-register">Đăng ký</a>
                     }
                 </div>
+
             </div>
         </nav>
     </header>
 
+    <!-- ==================== MAIN CONTENT ==================== -->
     @if (isAdminPage)
     {
-        <!-- Admin Layout -->
+        <!-- Admin Layout with sidebar -->
         <div class="admin-layout">
             <aside class="admin-sidebar">
                 <nav class="sidebar-nav">
@@ -359,13 +276,13 @@
     }
     else
     {
-        <!-- Main Content Layout -->
+        <!-- Regular content -->
         <main class="main-content">
             @RenderBody()
         </main>
     }
 
-    <!-- Modern Footer -->
+    <!-- ==================== FOOTER ==================== -->
     <footer class="modern-footer">
         <div class="container">
             <div class="footer-content">
@@ -398,7 +315,7 @@
         </div>
     </footer>
 
-    <!-- Toast Notification -->
+    <!-- ==================== TOAST ==================== -->
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1201">
         <div id="sharedToast" class="toast modern-toast" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="toast-header">
@@ -412,434 +329,48 @@
         </div>
     </div>
 
-    <!-- Profile handled on /Account/Profile page; modal removed from layout -->
+    <!-- ==================== CHATBOT ==================== -->
+    <!-- Floating button -->
+    <div class="floating-chatbot">
+        <button onclick="toggleChatbotModal()" class="btn btn-primary"
+                title="Chatbot" data-bs-toggle="tooltip" data-bs-placement="left">
+            <i class="bi bi-robot"></i>
+        </button>
+    </div>
 
+    <!-- Chatbot window -->
+    <div id="chatbotWindow" class="chatbot-window" style="display: none;">
+        <div class="chatbot-header">
+            <span><i class="bi bi-robot"></i> Chatbot Tư Vấn Sách</span>
+            <button onclick="toggleChatbotModal()" aria-label="Đóng">&times;</button>
+        </div>
+        <div class="chatbot-body" id="chatMessages">
+            <!-- Messages inserted by chatbot.js -->
+        </div>
+        <div class="chatbot-footer">
+            <input type="text" id="chatInput" placeholder="Nhập từ khóa hoặc câu hỏi về sách...">
+            <button id="sendChat">Gửi</button>
+        </div>
+    </div>
+
+    <!-- ==================== SCRIPTS ==================== -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- SignalR (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.11/signalr.min.js"></script>
 
+    <!-- Emit server-side user id for SignalR -->
     <script>
-        // Coming Soon Function
-        function showComingSoon() {
-            if (typeof showToast === 'function') {
-                showToast('Tính năng này sẽ sớm được cập nhật! 🚀', 'info');
-            } else {
-                alert('Tính năng này sẽ sớm được cập nhật! 🚀');
-            }
-        }
-        
-        // Header Filter Functionality
-        let selectedTags = [];
-        let availableTagsData = [];
-        
-        function initHeaderFilters() {
-            loadAvailableTags();
-            
-            // Tag search functionality
-            $('#tagSearchInput').on('input', function() {
-                const searchTerm = $(this).val().toLowerCase();
-                filterAvailableTags(searchTerm);
-            });
-            
-            // Apply tag filter
-            $('#applyTagFilter').on('click', function() {
-                if (selectedTags.length > 0) {
-                    const tagParams = selectedTags.join(',');
-                    window.location.href = `/Index?tag=${encodeURIComponent(tagParams)}`;
-                } else {
-                    showToast('Vui lòng chọn ít nhất một thẻ', 'warning');
-                }
-            });
-            
-            // Clear tag filter
-            $('#clearTagFilter').on('click', function() {
-                selectedTags = [];
-                updateSelectedTagsDisplay();
-                filterAvailableTags('');
-            });
-            
-            // Handle direct filter links
-            $('.filter-item').on('click', function(e) {
-                e.preventDefault();
-                const filter = $(this).data('filter');
-                if (filter) {
-                    // Navigate to Index page with filter
-                    window.location.href = `/Index?filter=${filter}`;
-                }
-            });
-        }
-        
-        function loadAvailableTags() {
-            $.get('/Index?handler=TagCounts')
-                .done(function(tags) {
-                    availableTagsData = tags || [];
-                    displayAvailableTags(availableTagsData);
-                })
-                .catch(function() {
-                    console.log('Could not load tags');
-                });
-        }
-        
-        function displayAvailableTags(tags) {
-            const $container = $('#availableTags');
-            $container.empty();
-            
-            // Create a styled checkbox list like in AddBook
-            tags.forEach(function(tag, index) {
-                const isSelected = selectedTags.includes(tag.name);
-                const $checkboxWrapper = $(`
-                    <div class="mb-2">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" 
-                                   id="filter_tag_${index}" 
-                                   data-tag="${tag.name}"
-                                   ${isSelected ? 'checked' : ''} />
-                            <label class="form-check-label" for="filter_tag_${index}">
-                                ${tag.name} <span class="text-muted">(${tag.count || 0})</span>
-                            </label>
-                        </div>
-                    </div>
-                `);
-                
-                $checkboxWrapper.find('input').on('change', function() {
-                    toggleTag(tag.name);
-                });
-                
-                $container.append($checkboxWrapper);
-            });
-        }
-        
-        function filterAvailableTags(searchTerm) {
-            const filtered = availableTagsData.filter(tag => 
-                tag.name.toLowerCase().includes(searchTerm)
-            );
-            displayAvailableTags(filtered);
-        }
-        
-        function toggleTag(tagName) {
-            const index = selectedTags.indexOf(tagName);
-            if (index > -1) {
-                selectedTags.splice(index, 1);
-            } else {
-                selectedTags.push(tagName);
-            }
-            updateSelectedTagsDisplay();
-            displayAvailableTags(availableTagsData.filter(tag => 
-                tag.name.toLowerCase().includes($('#tagSearchInput').val().toLowerCase())
-            ));
-        }
-        
-        function updateSelectedTagsDisplay() {
-            const $container = $('#selectedTags');
-            $container.empty();
-            
-            selectedTags.forEach(function(tagName) {
-                const $tag = $(`
-                    <span class="selected-tag">
-                        ${tagName}
-                        <span class="remove-tag" data-tag="${tagName}">×</span>
-                    </span>
-                `);
-                
-                $tag.find('.remove-tag').on('click', function() {
-                    toggleTag(tagName);
-                });
-                
-                $container.append($tag);
-            });
-        }
-        
-        // Initialize tooltips
-        $(document).ready(function() {
-            console.log('Layout scripts loaded');
-            $('[data-bs-toggle="tooltip"]').tooltip();
-            initHeaderFilters();
-            initDropdownPositioning();
-        });
-        
-        // Ensure dropdowns are positioned correctly on all screen sizes
-        function initDropdownPositioning() {
-            $('.dropdown').on('show.bs.dropdown', function () {
-                const dropdown = $(this);
-                const menu = dropdown.find('.dropdown-menu');
-                const viewport = $(window);
-                
-                // Reset any previous positioning
-                menu.removeClass('dropdown-menu-right').removeClass('dropdown-menu-left').removeClass('dropdown-menu-end');
-                menu.css({
-                    'left': '',
-                    'right': '',
-                    'max-width': '',
-                    'min-width': '',
-                    'position': '',
-                    'top': '',
-                    'transform': ''
-                });
-                
-                setTimeout(function() {
-                    if (viewport.width() <= 991) {
-                        // Mobile: Static dropdown within the collapsed nav - always align left
-                        menu.css({
-                            'position': 'static',
-                            'width': '100%',
-                            'transform': 'none',
-                            'margin-top': '0.5rem',
-                            'margin-bottom': '0.5rem',
-                            'float': 'none',
-                            'left': '0',
-                            'right': 'auto'
-                        });
-                        menu.removeClass('dropdown-menu-end');
-                    } else {
-                        // Desktop: Normal dropdown behavior (can be left or right)
-                        const menuOffset = menu.offset();
-                        const menuWidth = menu.outerWidth();
-                        const viewportWidth = viewport.width();
-                        
-                        if (menuOffset && (menuOffset.left + menuWidth > viewportWidth - 20)) {
-                            menu.addClass('dropdown-menu-end');
-                        }
-                    }
-                }, 10);
-            });
-            
-            // Override navbar collapse positioning to always be left-aligned
-            $('.navbar-collapse').on('show.bs.collapse', function() {
-                if ($(window).width() <= 991) {
-                    $(this).css({
-                        'left': '1rem',
-                        'right': 'auto'
-                    });
-                }
-            });
-            
-            // Handle window resize
-            $(window).on('resize', function() {
-                $('.dropdown-menu.show').each(function() {
-                    const menu = $(this);
-                    const dropdown = menu.closest('.dropdown');
-                    dropdown.find('[data-bs-toggle="dropdown"]').dropdown('hide');
-                });
-            });
-        }
-
-        // Use delegated handlers outside of ready to make this robust if layout is re-rendered
-        // Admin sidebar toggle (delegated)
-        $(document).on('click', '#sidebarToggle', function() {
-            const $icon = $(this).find('i');
-            if ($(window).width() < 768) {
-                // Mobile: use show class for overlay
-                $('.admin-sidebar').toggleClass('show');
-            } else {
-                // Desktop: toggle collapsed/expanded and compute new state
-                $('.admin-sidebar').toggleClass('collapsed');
-                $('.admin-main').toggleClass('expanded');
-                const collapsedNow = $('.admin-sidebar').hasClass('collapsed');
-
-                // Update body class so header/footer shift accordingly
-                if (collapsedNow) {
-                    $('body').removeClass('admin-sidebar-open');
-                } else {
-                    $('body').addClass('admin-sidebar-open');
-                }
-
-                // When collapsed, show chevron-right (indicates it will expand)
-                if (collapsedNow) {
-                    $icon.removeClass('bi-chevron-left').addClass('bi-chevron-right');
-                } else {
-                    $icon.removeClass('bi-chevron-right').addClass('bi-chevron-left');
-                }
-            }
-        });
-
-        // Keep header/footer in sync with sidebar state on load/resize
-        function syncSidebarStateToBody() {
-            if ($(window).width() < 768) {
-                // Mobile: don't shift header/footer
-                $('body').removeClass('admin-sidebar-open');
-                return;
-            }
-
-            // Desktop: if sidebar is not collapsed, ensure body has class
-            if ($('.admin-sidebar').length && !$('.admin-sidebar').hasClass('collapsed')) {
-                $('body').addClass('admin-sidebar-open');
-            } else {
-                $('body').removeClass('admin-sidebar-open');
-            }
-        }
-
-        $(window).on('resize', function() {
-            syncSidebarStateToBody();
-        });
-
-        // Run once on ready to set correct initial state
-        $(document).ready(function() {
-            syncSidebarStateToBody();
-        });
-
-        // Close sidebar when clicking outside on mobile
-        $(document).on('click', function(e) {
-            if ($(window).width() < 768) {
-                if (!$(e.target).closest('.admin-sidebar, #sidebarToggle').length) {
-                    $('.admin-sidebar').removeClass('show');
-                }
-            }
-        });
+        window.currentUserId = '@(Context.Session.GetString("UserId") ?? Context.Request.Cookies["UserId"] ?? "")';
     </script>
-    <!-- Profile modal / ajax removed; profile page will handle view/edit/password -->
-    <script>
-        (function () {
-            // Try to get current user id from server if not emitted into the page
-            var currentUserId = '@(Context.Session.GetString("UserId") ?? Context.Request.Cookies["UserId"] ?? "")';
-                var initializeWithUser = function (userId, unreadCount) {
-                    if (!userId) return;
-                    var countEl = document.getElementById('notificationCount');
-                    if (countEl && typeof unreadCount === 'number') {
-                        if (unreadCount > 0) {
-                            countEl.innerText = unreadCount;
-                            countEl.style.display = '';
-                        } else {
-                            countEl.innerText = '';
-                            countEl.style.display = 'none';
-                        }
-                    }
 
-                    try {
-                        const connection = new signalR.HubConnectionBuilder()
-                            .withUrl('/notificationHub')
-                            .withAutomaticReconnect()
-                            .build();
+    <!-- App JS modules -->
+    <script src="~/js/layout.js" asp-append-version="true"></script>
+    <script src="~/js/chatbot.js" asp-append-version="true"></script>
+    <script src="~/js/signalr-hub.js" asp-append-version="true"></script>
 
-                        connection.on('ReceiveNotification', function (payload) {
-                            try {
-                                const message = (payload && (payload.message || payload.Message || payload.title || payload.Title)) || 'Bạn có thông báo mới';
-                                if (typeof showToast === 'function') {
-                                    showToast(message, 'info');
-                                }
-                                const countEl2 = document.getElementById('notificationCount');
-                                if (countEl2) {
-                                    let n = parseInt(countEl2.innerText) || 0;
-                                    n = n + 1;
-                                    countEl2.innerText = n;
-                                    countEl2.style.display = '';
-                                }
-                            } catch (e) { console.error(e); }
-                        });
-
-                        connection.start().then(function () {
-                            console.log('SignalR connected');
-                            connection.invoke('Register', parseInt(userId)).catch(function (err) { console.error(err.toString()); });
-                        }).catch(function (err) { console.error(err.toString()); });
-                    } catch (ex) {
-                        console.error('SignalR init error', ex);
-                    }
-                };
-
-            if (currentUserId && currentUserId.length > 0) {
-                initializeWithUser(currentUserId, null);
-            } else {
-                // Use jQuery to fetch user id and unread count (sends cookies/session)
-                $.getJSON('/Notifications?handler=UnreadCount')
-                    .done(function (data) {
-                        console.log('UnreadCount result', data);
-                        if (data && data.userId) {
-                            initializeWithUser(data.userId, data.unread || 0);
-                        }
-                    })
-                    .fail(function (jqxhr, status, err) {
-                        console.warn('Could not fetch unread count/user id', status, err);
-                    });
-            }
-        })();
-    </script>
-    <script>
-        // Chatbot functions
-        function toggleChatbotModal() {
-            const windowEl = document.getElementById('chatbotWindow');
-            if (windowEl.style.display === 'none' || windowEl.style.display === '') {
-                windowEl.style.display = 'flex';
-                $('.floating-chatbot').hide();
-                setTimeout(() => {
-                    $('#chatInput').focus();
-                    if ($('#chatMessages').children().length === 0) {
-                        addMessage('bot', 'Xin chào! Tôi có thể giúp bạn tìm sách. Hãy nhập từ khóa như tên sách, tác giả, hoặc thể loại.');
-                    }
-                }, 100);
-            } else {
-                windowEl.style.display = 'none';
-                $('.floating-chatbot').show();
-            }
-        }
-
-        function addMessage(sender, text) {
-            const messages = document.getElementById('chatMessages');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `chat-message ${sender}`;
-            msgDiv.innerHTML = `<div class="chat-bubble">${text}</div>`;
-            messages.appendChild(msgDiv);
-            messages.scrollTop = messages.scrollHeight;
-        }
-
-        // Use event delegation for dynamic elements
-        $(document).on('click', '#sendChat', function() {
-            const input = $('#chatInput');
-            const message = input.val().trim();
-            if (!message) return;
-            addMessage('user', message);
-            input.val('');
-            console.log('Sending message:', message);
-            // Send to server using fetch
-            fetch('/Index?handler=Chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({ message: message })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Response:', data);
-                addMessage('bot', data.reply);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                addMessage('bot', 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.');
-            });
-        });
-
-        // Allow Enter key to send
-        $(document).on('keypress', '#chatInput', function(e) {
-            if (e.which === 13) {
-                $('#sendChat').trigger('click');
-            }
-        });
-    </script>
-    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
-
-<!-- Floating Chatbot Button -->
-<div class="floating-chatbot">
-    <button onclick="toggleChatbotModal()" class="btn btn-primary rounded-circle" 
-            style="position: fixed; bottom: 20px; right: 20px; z-index: 1060; width: 60px; height: 60px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;" 
-            title="Chatbot" data-bs-toggle="tooltip" data-bs-placement="left">
-        <i class="bi bi-robot" style="font-size: 24px;"></i>
-    </button>
-</div>
-
-<!-- Chatbot Window -->
-<div id="chatbotWindow" class="chatbot-window" style="display: none;">
-    <div class="chatbot-header">
-        <span><i class="bi bi-robot"></i> Chatbot Tư Vấn Sách</span>
-        <button onclick="toggleChatbotModal()" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
-    </div>
-    <div class="chatbot-body" id="chatMessages">
-        <!-- Messages will be added here -->
-    </div>
-    <div class="chatbot-footer">
-        <input type="text" id="chatInput" placeholder="Nhập từ khóa hoặc câu hỏi về sách...">
-        <button id="sendChat">Gửi</button>
-    </div>
-</div>

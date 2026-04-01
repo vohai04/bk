@@ -1,0 +1,459 @@
+/* =====================================================
+   RESPONSIVE.CSS - All Media Queries (Mobile-First)
+   BookInfoFinder
+
+   Breakpoints:
+   xs:  < 480px   (small phones)
+   sm:  480–575px (phones)
+   md:  576–767px (large phones)
+   lg:  768–991px (tablets)
+   xl:  992–1199px (small desktops)
+   2xl: ≥ 1200px  (large desktops)
+   ===================================================== */
+
+/* ==============================
+   MOBILE NAVIGATION (≤ 991px)
+   Hamburger menu shown
+   ============================== */
+@media (max-width: 991.98px) {
+    /* Show hamburger, arrange nav order */
+    .navbar-toggler {
+        display: block !important;
+        order: 1;
+        margin-right: 0.75rem;
+    }
+
+    .navbar-brand {
+        order: 2;
+        flex: 1;
+    }
+
+    .nav-end {
+        order: 3;
+        margin-left: auto;
+    }
+
+    .navbar > .container {
+        flex-wrap: wrap;
+        position: relative;
+    }
+
+    /* Collapsed nav panel */
+    .navbar-collapse {
+        order: 4;
+        width: 100%;
+        margin-top: 0;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        padding: 0.75rem;
+        border: 1px solid var(--gray-200);
+        position: absolute;
+        top: calc(100%);
+        left: 1rem;
+        right: auto;
+        width: calc(100% - 2rem);
+        max-width: 360px;
+        z-index: var(--z-dropdown);
+    }
+
+    /* Ensure navbar has positioning context */
+    .modern-header .navbar { position: relative; }
+
+    /* Nav links stacked vertically */
+    .nav-center {
+        display: flex !important;
+        flex-direction: column;
+        width: 100%;
+        margin: 0;
+        gap: 0;
+    }
+
+    .nav-center .nav-link {
+        flex-direction: row;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin: 0.2rem 0;
+        color: var(--gray-700);
+        gap: 0.6rem;
+        font-size: 0.9rem;
+        justify-content: flex-start;
+        width: 100%;
+    }
+
+    .nav-center .nav-link i {
+        font-size: 1.1rem;
+        width: 20px;
+    }
+
+    .nav-center .nav-link:hover {
+        background-color: var(--primary-50);
+        color: var(--primary-700);
+        transform: translateX(4px);
+    }
+
+    /* Dropdown in collapsed nav */
+    .nav-item.dropdown {
+        position: relative;
+        width: 100%;
+    }
+
+    .dropdown-menu {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        transform: none !important;
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        box-shadow: none;
+        margin-top: 0.25rem;
+        margin-bottom: 0.25rem;
+        width: 100%;
+        max-width: 100%;
+        z-index: auto;
+        float: none;
+    }
+
+    .dropdown-item {
+        padding: 0.65rem 1rem;
+        font-size: 0.875rem;
+        color: var(--gray-700);
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
+    .dropdown-item:hover {
+        background-color: var(--primary-50);
+        color: var(--primary-700);
+    }
+
+    /* Filter menu on mobile */
+    .filter-menu {
+        width: 100%;
+        max-width: 100%;
+        max-height: 55vh;
+        overflow-y: auto;
+    }
+
+    /* Admin sidebar hidden by default on tablet */
+    .admin-sidebar {
+        transform: translateX(-100%) !important;
+    }
+
+    .admin-sidebar.show {
+        transform: translateX(0) !important;
+    }
+
+    .admin-sidebar.collapsed {
+        transform: translateX(-100%) !important;
+    }
+}
+
+/* ==============================
+   TABLET LANDSCAPE & DESKTOP (≥ 769px)
+   ============================== */
+@media (min-width: 769px) {
+    /* Admin sidebar mobile overlay reset */
+    /* (handled in layout.css for desktop shift) */
+}
+
+/* ==============================
+   MEDIUM MOBILE (≤ 768px)
+   ============================== */
+@media (max-width: 768px) {
+    /* Admin sidebar mobile overlay */
+    .admin-sidebar {
+        z-index: 100600 !important;
+    }
+
+    /* Backdrop when sidebar open on mobile */
+    body.admin-page.admin-sidebar-open::before {
+        content: '';
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 100499;
+    }
+
+    /* Admin stats grid */
+    .admin-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* Footer single column */
+    .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: var(--space-lg);
+    }
+
+    .footer-copyright {
+        text-align: center;
+        margin-top: 0;
+    }
+
+    /* Index sidebar */
+    .index-layout {
+        flex-direction: column;
+    }
+
+    .sidebar-left {
+        width: 100%;
+        position: static;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    /* Filter dropdown */
+    .filter-menu {
+        min-width: 100%;
+        max-width: 100%;
+        right: 0 !important;
+        left: 0 !important;
+    }
+
+    /* Search */
+    .search-container {
+        margin: var(--space-md);
+        padding: var(--space-md) 0;
+    }
+
+    /* Hero */
+    .hero-section {
+        margin: var(--space-md);
+        padding: var(--space-lg);
+    }
+
+    /* Book grid */
+    .book-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: var(--space-lg);
+        padding: 0 var(--space-md);
+    }
+}
+
+/* ==============================
+   SMALL PHONES (≤ 576px)
+   ============================== */
+@media (max-width: 576px) {
+    /* Header */
+    .modern-header {
+        height: auto;
+        min-height: 60px;
+    }
+
+    .modern-header .navbar {
+        height: auto;
+        min-height: 60px;
+        padding: 0.5rem 0;
+    }
+
+    .modern-body {
+        padding-top: 60px;
+    }
+
+    .modern-header .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    /* Brand */
+    .brand-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
+    }
+
+    .brand-name     { font-size: 1.1rem; }
+    .brand-subtitle { font-size: 0.65rem; }
+
+    /* Collapsed nav */
+    .navbar-collapse {
+        left: 0.5rem;
+        width: calc(100% - 1rem);
+        max-width: 300px;
+        padding: 0.75rem;
+        border-radius: 10px;
+    }
+
+    .dropdown-menu {
+        border-radius: 8px;
+        border: 1px solid var(--gray-200);
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .filter-menu { max-height: 50vh; }
+
+    /* Search bar */
+    .search-input-main {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+    }
+
+    .search-btn-main {
+        padding: 12px 16px;
+        font-size: 1.1rem;
+        min-width: 56px;
+    }
+
+    /* Book grid: single column */
+    .book-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+        padding: 0 var(--space-sm);
+    }
+
+    .book-image { height: 200px; }
+
+    /* Hero text */
+    .hero-title    { font-size: 1.75rem; }
+    .hero-subtitle { font-size: 0.9rem; }
+
+    /* Footer */
+    .footer-links {
+        gap: var(--space-sm);
+    }
+
+    .footer-links a {
+        padding: 8px 12px;
+        font-size: 0.82rem;
+        gap: 5px;
+    }
+
+    .footer-copyright { font-size: 0.8rem; }
+
+    /* Admin main padding */
+    .admin-main { padding: 1rem; }
+
+    /* Pagination */
+    .pagination { gap: 0.25rem; }
+    .page-link  { min-width: 36px; height: 36px; font-size: 0.85rem; }
+
+    /* Chatbot */
+    .chatbot-window {
+        right: 8px;
+        top: 68px;
+        width: calc(100vw - 16px);
+        max-width: 340px;
+        height: 380px;
+    }
+
+    .floating-chatbot {
+        bottom: 16px;
+        right: 12px;
+    }
+}
+
+/* ==============================
+   EXTRA SMALL (≤ 380px)
+   ============================== */
+@media (max-width: 380px) {
+    .brand-name  { font-size: 1rem; }
+    .brand-icon  { display: none; } /* Hide logo icon on very small screens */
+
+    .user-name   { display: none; } /* Only show avatar */
+
+    .book-grid   { padding: 0 var(--space-xs); }
+
+    .admin-main  { padding: 0.75rem; }
+}
+
+/* ==============================
+   DESKTOP FOOTER (≥ 768px)
+   ============================== */
+@media (min-width: 768px) {
+    .footer-content {
+        grid-template-columns: 1.2fr 2fr 1fr;
+        text-align: left;
+        gap: var(--space-xl);
+    }
+
+    .footer-brand {
+        justify-content: flex-start;
+        gap: var(--space-md);
+        font-size: 1.4rem;
+    }
+
+    .footer-brand i { font-size: 2rem; }
+
+    .footer-links {
+        gap: var(--space-lg);
+        justify-content: center;
+    }
+
+    .footer-links a {
+        font-size: 0.95rem;
+        padding: 12px 18px;
+        border-radius: 25px;
+        gap: 8px;
+    }
+
+    .footer-copyright {
+        text-align: right;
+        font-size: 0.9rem;
+        margin-top: 0;
+    }
+}
+
+/* ==============================
+   LARGE DESKTOP (≥ 1200px)
+   ============================== */
+@media (min-width: 1200px) {
+    .modern-footer { padding: 80px 0 40px; }
+
+    .footer-content {
+        max-width: 1400px;
+        gap: var(--space-2xl);
+    }
+
+    .footer-brand { font-size: 1.6rem; }
+    .footer-brand i { font-size: 2.2rem; }
+
+    .footer-links { gap: var(--space-2xl); }
+    .footer-links a { font-size: 1rem; padding: 14px 22px; border-radius: 30px; }
+
+    .footer-copyright { font-size: 0.95rem; }
+
+    /* Index sidebar */
+    .sidebar-left {
+        top: var(--header-height);
+        height: calc(100vh - var(--header-height));
+    }
+}
+
+/* ==============================
+   DROPDOWN DESKTOP (≥ 992px)
+   ============================== */
+@media (min-width: 992px) {
+    .dropdown-menu.dropdown-menu-end {
+        right: 0;
+        left: auto;
+        transform: none;
+    }
+}
+
+/* ==============================
+   INDEX SIDEBAR RESPONSIVE (≤ 992px)
+   ============================== */
+@media (max-width: 992px) {
+    .index-layout {
+        flex-direction: column;
+    }
+
+    .sidebar-left {
+        width: 100%;
+        position: static;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--gray-200);
+    }
+}

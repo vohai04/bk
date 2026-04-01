@@ -1,0 +1,174 @@
+/* =====================================================
+   CHATBOT.CSS - Chatbot Window & Messages
+   BookInfoFinder
+   ===================================================== */
+
+/* ── Floating button wrapper ── */
+.floating-chatbot {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1060;
+}
+
+.floating-chatbot .btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.floating-chatbot .btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+}
+
+.floating-chatbot .btn i {
+    font-size: 1.5rem;
+}
+
+/* ── Chatbot Window ── */
+.chatbot-window {
+    position: fixed;
+    right: 20px;
+    top: 80px;
+    width: 350px;
+    height: 440px;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    z-index: 1060;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ── Header ── */
+.chatbot-header {
+    padding: 12px 16px;
+    background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+}
+
+.chatbot-header span {
+    flex: 1;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.chatbot-header button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.85);
+    transition: color 0.2s ease;
+    padding: 0;
+    line-height: 1;
+}
+
+.chatbot-header button:hover {
+    color: white;
+}
+
+/* ── Body / Messages ── */
+.chatbot-body {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    background: var(--gray-50);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chatbot-body::-webkit-scrollbar { width: 4px; }
+.chatbot-body::-webkit-scrollbar-track  { background: transparent; }
+.chatbot-body::-webkit-scrollbar-thumb  { background: var(--gray-300); border-radius: 2px; }
+
+/* ── Chat Messages ── */
+#chatMessages .chat-message {
+    display: flex;
+    margin-bottom: 8px;
+}
+
+#chatMessages .chat-message.user { justify-content: flex-end; }
+#chatMessages .chat-message.bot  { justify-content: flex-start; }
+
+#chatMessages .chat-bubble {
+    padding: 8px 14px;
+    border-radius: 18px;
+    max-width: 80%;
+    word-wrap: break-word;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+#chatMessages .chat-message.user .chat-bubble {
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+#chatMessages .chat-message.bot .chat-bubble {
+    background: white;
+    color: var(--gray-800);
+    border: 1px solid var(--gray-200);
+    border-bottom-left-radius: 4px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ── Footer / Input ── */
+.chatbot-footer {
+    padding: 12px;
+    border-top: 1px solid var(--gray-200);
+    border-radius: 0 0 16px 16px;
+    display: flex;
+    gap: 8px;
+    background: white;
+    flex-shrink: 0;
+}
+
+.chatbot-footer input {
+    flex: 1;
+    border-radius: 20px;
+    border: 1px solid var(--gray-300);
+    padding: 8px 14px;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+    min-width: 0;
+}
+
+.chatbot-footer input:focus {
+    border-color: var(--primary-400);
+}
+
+.chatbot-footer button {
+    border-radius: 20px;
+    border: none;
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    color: white;
+    padding: 8px 16px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.chatbot-footer button:hover {
+    background: linear-gradient(135deg, var(--primary-600), var(--primary-700));
+    transform: scale(1.03);
+}
