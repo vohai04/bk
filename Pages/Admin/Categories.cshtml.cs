@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
- 
+
 namespace BookInfoFinder.Pages.Admin
 {
     public class CategoriesModel : PageModel
@@ -25,12 +25,12 @@ namespace BookInfoFinder.Pages.Admin
         {
             CurrentPage = page < 1 ? 1 : page;
             int pageSize = 10;
-            
+
             var result = await _categoryService.GetCategoriesPagedAsync(CurrentPage, pageSize);
             Categories = result.Categories;
             TotalCount = result.TotalCount;
             TotalPages = (int)Math.Ceiling((double)TotalCount / pageSize);
-            
+
             EditCategoryId = edit;
         }
 
@@ -58,7 +58,8 @@ namespace BookInfoFinder.Pages.Admin
                         .ToList();
                 }
 
-                var categoryResult = filteredCategories.Select(cat => new {
+                var categoryResult = filteredCategories.Select(cat => new
+                {
                     cat.CategoryId,
                     cat.Name,
                     cat.Description,
@@ -86,16 +87,19 @@ namespace BookInfoFinder.Pages.Admin
                 if (await _categoryService.IsCategoryNameExistsAsync(name.Trim()))
                     return new JsonResult(new { success = false, message = "Tên thể loại đã tồn tại." });
 
-                var categoryCreateDto = new CategoryCreateDto { 
+                var categoryCreateDto = new CategoryCreateDto
+                {
                     Name = name.Trim(),
                     Description = description?.Trim() ?? ""
                 };
                 var createdCategory = await _categoryService.CreateCategoryAsync(categoryCreateDto);
-                
-                return new JsonResult(new { 
-                    success = true, 
-                    category = new { 
-                        createdCategory.CategoryId, 
+
+                return new JsonResult(new
+                {
+                    success = true,
+                    category = new
+                    {
+                        createdCategory.CategoryId,
                         createdCategory.Name,
                         createdCategory.Description,
                         createdCategory.BookCount,
@@ -115,9 +119,9 @@ namespace BookInfoFinder.Pages.Admin
             try
             {
                 var existingCategory = await _categoryService.GetCategoryByIdAsync(categoryId);
-                if (existingCategory == null) 
+                if (existingCategory == null)
                     return new JsonResult(new { success = false, message = "Không tìm thấy thể loại." });
-                
+
                 if (string.IsNullOrWhiteSpace(name) || name.Length > 50)
                     return new JsonResult(new { success = false, message = "Tên thể loại không hợp lệ." });
 
@@ -126,18 +130,20 @@ namespace BookInfoFinder.Pages.Admin
                 if (nameExists && !existingCategory.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))
                     return new JsonResult(new { success = false, message = "Tên thể loại đã tồn tại." });
 
-                var categoryUpdateDto = new CategoryUpdateDto 
-                { 
+                var categoryUpdateDto = new CategoryUpdateDto
+                {
                     CategoryId = categoryId,
                     Name = name.Trim(),
                     Description = description?.Trim() ?? ""
                 };
                 var updatedCategory = await _categoryService.UpdateCategoryAsync(categoryUpdateDto);
-                
-                return new JsonResult(new { 
+
+                return new JsonResult(new
+                {
                     success = true,
-                    category = new { 
-                        updatedCategory.CategoryId, 
+                    category = new
+                    {
+                        updatedCategory.CategoryId,
                         updatedCategory.Name,
                         updatedCategory.Description,
                         updatedCategory.BookCount,

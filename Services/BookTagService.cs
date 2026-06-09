@@ -54,7 +54,7 @@ namespace BookInfoFinder.Services
                     .ToListAsync();
 
                 var bookIds = books.Select(b => b.BookId).ToList();
-                
+
                 var ratings = await _context.Ratings
                     .Where(r => bookIds.Contains(r.BookId))
                     .GroupBy(r => r.BookId)
@@ -132,7 +132,7 @@ namespace BookInfoFinder.Services
                     .ToListAsync();
 
                 var bookIds = books.Select(b => b.BookId).ToList();
-                
+
                 var ratings = await _context.Ratings
                     .Where(r => bookIds.Contains(r.BookId))
                     .GroupBy(r => r.BookId)
@@ -311,7 +311,7 @@ namespace BookInfoFinder.Services
                     .ToListAsync();
 
                 var tagIds = popularTags.Select(pt => pt.TagId).ToList();
-                
+
                 var tags = await _context.Tags
                     .Where(t => tagIds.Contains(t.TagId))
                     .ToListAsync();

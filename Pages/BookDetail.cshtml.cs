@@ -115,7 +115,7 @@ public class BookDetailModel : PageModel
             // Get replies for each comment (limit 3 latest by default - like Facebook)
             var replies = await _bookCommentService.GetRepliesByCommentAsync(comment.BookCommentId);
             var latestReplies = replies.Take(3).ToList(); // Show only 3 latest replies initially
-            
+
             enhancedComments.Add(new
             {
                 bookCommentId = comment.BookCommentId,
@@ -170,9 +170,9 @@ public class BookDetailModel : PageModel
 
         var hasMore = allReplies.Count > skip + take;
 
-        return new JsonResult(new 
-        { 
-            success = true, 
+        return new JsonResult(new
+        {
+            success = true,
             replies = replies,
             hasMore = hasMore,
             totalReplies = allReplies.Count
@@ -197,7 +197,7 @@ public class BookDetailModel : PageModel
             return $"{(int)(timeSpan.TotalDays / 7)} tuần trước";
         if (timeSpan.TotalDays < 365)
             return $"{(int)(timeSpan.TotalDays / 30)} tháng trước";
-        
+
         return $"{(int)(timeSpan.TotalDays / 365)} năm trước";
     }
 
@@ -280,19 +280,19 @@ public class BookDetailModel : PageModel
         {
             return new JsonResult(new { success = false, message = "Bạn cần đăng nhập để thêm vào yêu thích!" });
         }
-        
+
         var isFavorite = await _favoriteService.IsFavoriteAsync(userId, bookId);
         if (isFavorite)
         {
             return new JsonResult(new { success = false, message = "Sách đã có trong yêu thích." });
         }
-        
+
         var favoriteCreateDto = new FavoriteCreateDto
         {
             UserId = userId,
             BookId = bookId
         };
-        
+
         await _favoriteService.AddToFavoritesAsync(favoriteCreateDto);
         return new JsonResult(new { success = true, message = "Đã thêm vào danh sách yêu thích!" });
     }
@@ -443,7 +443,7 @@ public class BookDetailModel : PageModel
             };
 
             var updated = await _bookCommentService.UpdateCommentAsync(updateDto);
-            
+
             return new JsonResult(new
             {
                 success = true,

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
 using BookInfoFinder.Models;
- 
+
 namespace BookInfoFinder.Pages.Admin
 {
     public class UsersModel : PageModel
@@ -21,19 +21,19 @@ namespace BookInfoFinder.Pages.Admin
         {
             CurrentPage = page < 1 ? 1 : page;
             int pageSize = 10;
-            
+
             try
             {
                 var allUsers = await _userService.GetAllUsersAsync();
                 Users = allUsers.ToList();
                 TotalCount = Users.Count;
-                
+
                 // Simple pagination
                 Users = Users
                     .Skip((CurrentPage - 1) * pageSize)
                     .Take(pageSize)
                     .ToList();
-                    
+
                 TotalPages = (int)Math.Ceiling((double)TotalCount / pageSize);
                 EditUserId = edit;
             }
@@ -91,7 +91,7 @@ namespace BookInfoFinder.Pages.Admin
                 // Apply search filter
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    filteredUsers = filteredUsers.Where(u => 
+                    filteredUsers = filteredUsers.Where(u =>
                         u.UserName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                         u.Email.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                         u.FullName.Contains(search, StringComparison.OrdinalIgnoreCase));
@@ -144,7 +144,7 @@ namespace BookInfoFinder.Pages.Admin
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(email) || 
+                if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(email) ||
                     string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(fullName))
                 {
                     return new JsonResult(new { success = false, message = "Vui lòng điền đầy đủ thông tin." });
@@ -170,8 +170,9 @@ namespace BookInfoFinder.Pages.Admin
                 };
 
                 var createdUser = await _userService.CreateUserAsync(userCreateDto);
-                return new JsonResult(new { 
-                    success = true, 
+                return new JsonResult(new
+                {
+                    success = true,
                     user = new { createdUser.UserId, createdUser.UserName, createdUser.Email, createdUser.FullName, createdUser.Role }
                 });
             }
@@ -182,16 +183,16 @@ namespace BookInfoFinder.Pages.Admin
         }
 
         public async Task<JsonResult> OnPostAjaxEditAsync(
-            [FromForm] int userId, 
-            [FromForm] string userName, 
+            [FromForm] int userId,
+            [FromForm] string userName,
             [FromForm] string fullName,
-            [FromForm] string email, 
+            [FromForm] string email,
             [FromForm] string roleStr)
         {
             try
             {
                 var existingUser = await _userService.GetUserByIdAsync(userId);
-                if (existingUser == null) 
+                if (existingUser == null)
                     return new JsonResult(new { success = false, message = "Không tìm thấy người dùng." });
 
                 if (string.IsNullOrWhiteSpace(email) || email.Length > 100)
@@ -221,7 +222,8 @@ namespace BookInfoFinder.Pages.Admin
                 };
 
                 var updatedUser = await _userService.UpdateUserAsync(userUpdateDto);
-                return new JsonResult(new { 
+                return new JsonResult(new
+                {
                     success = true,
                     user = new { updatedUser.UserId, updatedUser.UserName, updatedUser.Email, updatedUser.FullName, updatedUser.Role }
                 });

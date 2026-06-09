@@ -161,7 +161,7 @@ function initDropdownPositioning() {
 
 /* ── Admin Sidebar Toggle ── */
 function syncSidebarStateToBody() {
-    if ($(window).width() < 768) {
+    if ($(window).width() <= 991) {
         $('body').removeClass('admin-sidebar-open');
         return;
     }
@@ -176,7 +176,7 @@ function syncSidebarStateToBody() {
 $(document).on('click', '#sidebarToggle', function () {
     const $icon = $(this).find('i');
 
-    if ($(window).width() < 768) {
+    if ($(window).width() <= 991) {
         // Mobile: overlay
         $('.admin-sidebar').toggleClass('show');
     } else {
@@ -194,7 +194,7 @@ $(document).on('click', '#sidebarToggle', function () {
 
 // Close sidebar when clicking outside on mobile
 $(document).on('click', function (e) {
-    if ($(window).width() < 768) {
+    if ($(window).width() <= 991) {
         if (!$(e.target).closest('.admin-sidebar, #sidebarToggle').length) {
             $('.admin-sidebar').removeClass('show');
         }

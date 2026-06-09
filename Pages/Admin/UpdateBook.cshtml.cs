@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
- 
+
 namespace BookInfoFinder.Pages.Admin
 {
     public class UpdateBookModel : PageModel
@@ -231,7 +231,7 @@ namespace BookInfoFinder.Pages.Admin
                     await imageFile.CopyToAsync(memoryStream);
                     var imageBytes = memoryStream.ToArray();
                     var base64String = Convert.ToBase64String(imageBytes);
-                    
+
                     // Add data URL prefix based on content type
                     var mimeType = imageFile.ContentType;
                     return $"data:{mimeType};base64,{base64String}";

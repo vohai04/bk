@@ -130,6 +130,20 @@
     }
 
     /* Filter menu on mobile */
+    
+    /* Fix mobile nav user menu */
+    .nav-user-mobile {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--gray-200);
+    }
+    .nav-user-mobile .user-name { color: var(--gray-800); display: block !important; }
+    .nav-user-mobile .user-role { color: var(--gray-600); }
+    .nav-user-mobile .btn-login, .nav-user-mobile .btn-register { text-align: center; margin-bottom: 0.5rem; }
+
     .filter-menu {
         width: 100%;
         max-width: 100%;
@@ -162,7 +176,7 @@
 /* ==============================
    MEDIUM MOBILE (≤ 768px)
    ============================== */
-@media (max-width: 768px) {
+@media (max-width: 991.98px) {
     /* Admin sidebar mobile overlay */
     .admin-sidebar {
         z-index: 100600 !important;
@@ -220,10 +234,12 @@
         left: 0 !important;
     }
 
-    /* Search */
+        /* Search */
     .search-container {
-        margin: var(--space-md);
-        padding: var(--space-md) 0;
+        margin: 0 auto;
+        padding: var(--space-md);
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     /* Hero */
@@ -305,14 +321,20 @@
         min-width: 56px;
     }
 
-    /* Book grid: single column */
+        /* Book grid: 2 columns on small screens */
     .book-grid {
-        grid-template-columns: 1fr;
-        gap: var(--space-md);
-        padding: 0 var(--space-sm);
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-sm);
+        padding: 0 var(--space-xs);
     }
 
-    .book-image { height: 200px; }
+    .book-image { height: 160px; object-fit: contain; background: white; padding: 4px; }
+    
+    .book-content { padding: 8px; }
+    .book-title { font-size: 0.85rem; margin-bottom: 4px; line-height: 1.3; }
+    .book-author { font-size: 0.75rem; margin-bottom: 6px; }
+    .book-stats { margin-bottom: 6px; padding: 4px 0; font-size: 0.75rem; flex-wrap: wrap; gap: 4px; }
+    .book-btn { padding: 6px; font-size: 0.75rem; }
 
     /* Hero text */
     .hero-title    { font-size: 1.75rem; }

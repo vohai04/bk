@@ -2,13 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
- 
+
 namespace BookInfoFinder.Pages.Admin
 {
     public class TagsModel : PageModel
     {
         private readonly ITagService _tagService;
-        
+
         public TagsModel(ITagService tagService) => _tagService = tagService;
 
         public List<TagDto> Tags { get; set; } = new();
@@ -21,7 +21,7 @@ namespace BookInfoFinder.Pages.Admin
         {
             CurrentPage = page < 1 ? 1 : page;
             int pageSize = 10;
-            
+
             var result = await _tagService.GetTagsPagedAsync(CurrentPage, pageSize);
             Tags = result.Tags;
             TotalCount = result.TotalCount;
@@ -71,12 +71,12 @@ namespace BookInfoFinder.Pages.Admin
                 if (await _tagService.IsTagNameExistsAsync(name.Trim()))
                     return new JsonResult(new { success = false, message = "Tên tag đã tồn tại." });
 
-                var tagCreateDto = new TagCreateDto 
-                { 
+                var tagCreateDto = new TagCreateDto
+                {
                     Name = name.Trim(),
                     Description = description?.Trim() ?? string.Empty
                 };
-                
+
                 var createdTag = await _tagService.CreateTagAsync(tagCreateDto);
                 return new JsonResult(new { success = true });
             }
@@ -91,9 +91,9 @@ namespace BookInfoFinder.Pages.Admin
             try
             {
                 var existingTag = await _tagService.GetTagByIdAsync(tagId);
-                if (existingTag == null) 
+                if (existingTag == null)
                     return new JsonResult(new { success = false, message = "Không tìm thấy tag." });
-                
+
                 if (string.IsNullOrWhiteSpace(name) || name.Length > 50)
                     return new JsonResult(new { success = false, message = "Tên tag không hợp lệ." });
 
@@ -102,15 +102,16 @@ namespace BookInfoFinder.Pages.Admin
                 if (nameExists && !existingTag.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))
                     return new JsonResult(new { success = false, message = "Tên tag đã tồn tại." });
 
-                var tagUpdateDto = new TagUpdateDto 
-                { 
+                var tagUpdateDto = new TagUpdateDto
+                {
                     TagId = tagId,
                     Name = name.Trim(),
                     Description = description?.Trim() ?? string.Empty
                 };
                 var updatedTag = await _tagService.UpdateTagAsync(tagUpdateDto);
-                
-                return new JsonResult(new { 
+
+                return new JsonResult(new
+                {
                     success = true,
                     tag = new { updatedTag.TagId, updatedTag.Name }
                 });

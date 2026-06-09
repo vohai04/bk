@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
- 
+
 namespace BookInfoFinder.Pages.Admin
 {
     public class ManageNXBModel : PageModel
@@ -24,7 +24,7 @@ namespace BookInfoFinder.Pages.Admin
         {
             CurrentPage = page < 1 ? 1 : page;
             int pageSize = 10;
-            
+
             var result = await _publisherService.GetPublishersPagedAsync(CurrentPage, pageSize);
             Publishers = result.Publishers;
             TotalCount = result.TotalCount;
@@ -46,7 +46,8 @@ namespace BookInfoFinder.Pages.Admin
 
                 var result = await _publisherService.GetPublishersPagedAsync(page, pageSize, search);
 
-                var publisherResult = result.Publishers.Select(p => new {
+                var publisherResult = result.Publishers.Select(p => new
+                {
                     p.PublisherId,
                     p.Name,
                     p.Address,
@@ -74,16 +75,17 @@ namespace BookInfoFinder.Pages.Admin
                 if (await _publisherService.IsPublisherNameExistsAsync(name.Trim()))
                     return new JsonResult(new { success = false, message = "Tên nhà xuất bản đã tồn tại." });
 
-                var publisherCreateDto = new PublisherCreateDto 
-                { 
-                    Name = name.Trim(), 
+                var publisherCreateDto = new PublisherCreateDto
+                {
+                    Name = name.Trim(),
                     Address = address?.Trim() ?? string.Empty,
                     ContactInfo = contactInfo?.Trim() ?? string.Empty
                 };
                 var createdPublisher = await _publisherService.CreatePublisherAsync(publisherCreateDto);
-                
-                return new JsonResult(new { 
-                    success = true, 
+
+                return new JsonResult(new
+                {
+                    success = true,
                     publisher = new { createdPublisher.PublisherId, createdPublisher.Name, createdPublisher.Address }
                 });
             }
@@ -98,9 +100,9 @@ namespace BookInfoFinder.Pages.Admin
             try
             {
                 var existingPublisher = await _publisherService.GetPublisherByIdAsync(publisherId);
-                if (existingPublisher == null) 
+                if (existingPublisher == null)
                     return new JsonResult(new { success = false, message = "Không tìm thấy nhà xuất bản." });
-                
+
                 if (string.IsNullOrWhiteSpace(name) || name.Length > 100)
                     return new JsonResult(new { success = false, message = "Tên nhà xuất bản không hợp lệ." });
 
@@ -109,16 +111,17 @@ namespace BookInfoFinder.Pages.Admin
                 if (nameExists && !existingPublisher.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))
                     return new JsonResult(new { success = false, message = "Tên nhà xuất bản đã tồn tại." });
 
-                var publisherUpdateDto = new PublisherUpdateDto 
-                { 
+                var publisherUpdateDto = new PublisherUpdateDto
+                {
                     PublisherId = publisherId,
                     Name = name.Trim(),
                     Address = address?.Trim() ?? string.Empty,
                     ContactInfo = contactInfo?.Trim() ?? string.Empty
                 };
                 var updatedPublisher = await _publisherService.UpdatePublisherAsync(publisherUpdateDto);
-                
-                return new JsonResult(new { 
+
+                return new JsonResult(new
+                {
                     success = true,
                     publisher = new { updatedPublisher.PublisherId, updatedPublisher.Name, updatedPublisher.Address }
                 });

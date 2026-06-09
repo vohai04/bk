@@ -166,10 +166,10 @@ namespace BookInfoFinder.Services
                 {
                     Type = "book",
                     Title = b.Title,
-                    Description = (string) ("Đã thêm sách"),
-                    UserName = (string) (b.User != null ? b.User.UserName : "Hệ thống"),
+                    Description = (string)("Đã thêm sách"),
+                    UserName = (string)(b.User != null ? b.User.UserName : "Hệ thống"),
                     CreatedAt = b.PublicationDate,
-                    ActionUrl = (string) ("/BookDetail/" + b.BookId),
+                    ActionUrl = (string)("/BookDetail/" + b.BookId),
                     EntityId = (int?)b.BookId,
                     EntityType = "Book"
                 });
@@ -465,7 +465,7 @@ namespace BookInfoFinder.Services
                     .FirstOrDefaultAsync(pc => pc.BookCommentId == replyComment.ParentCommentId.Value);
             }
 
-                return new
+            return new
             {
                 notificationId = notification.NotificationId,
                 replyId = replyComment.BookCommentId,

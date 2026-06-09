@@ -11,20 +11,20 @@ namespace BookInfoFinder.Data
         public BookContext() { }
         public BookContext(DbContextOptions<BookContext> options) : base(options) { }
 
-    public DbSet<Book> Books { get; set; }
-    public DbSet<Author> Authors { get; set; }
-    public DbSet<Category> Categories { get; set; }
-    public DbSet<Publisher> Publishers { get; set; }
-    public DbSet<User> Users { get; set; }
-    public DbSet<Favorite> Favorites { get; set; }
-    public DbSet<Tag> Tags { get; set; }
-    public DbSet<BookTag> BookTags { get; set; }
-    public DbSet<SearchHistory> SearchHistories { get; set; }
-    public DbSet<Rating> Ratings { get; set; }
-    public DbSet<BookComment> BookComments { get; set; }
-    public DbSet<Chatbot> Chatbots { get; set; }
-    public DbSet<ActivityLog> ActivityLogs { get; set; }
-    public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Book> Books { get; set; }
+        public DbSet<Author> Authors { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<Publisher> Publishers { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Favorite> Favorites { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+        public DbSet<BookTag> BookTags { get; set; }
+        public DbSet<SearchHistory> SearchHistories { get; set; }
+        public DbSet<Rating> Ratings { get; set; }
+        public DbSet<BookComment> BookComments { get; set; }
+        public DbSet<Chatbot> Chatbots { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -116,7 +116,7 @@ namespace BookInfoFinder.Data
                 entity.Property(static u => u.UserName).IsRequired().HasMaxLength(256);
                 entity.Property(static u => u.Password).IsRequired().HasMaxLength(100);
                 entity.Property(static u => u.Email).IsRequired().HasMaxLength(256);
-                
+
                 // Add unique constraints
                 entity.HasIndex(static u => u.UserName).IsUnique();
                 entity.HasIndex(static u => u.Email).IsUnique();
@@ -357,7 +357,7 @@ namespace BookInfoFinder.Data
         {
             // Use static DateTime values with UTC kind for PostgreSQL compatibility
             var seedDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            
+
             // Seed Roles
             modelBuilder.Entity<User>().HasData(
                 new User

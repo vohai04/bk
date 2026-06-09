@@ -70,8 +70,8 @@ namespace BookInfoFinder.Services
                 if (category == null) return null;
 
                 var bookCount = await _context.Books.CountAsync(b => b.CategoryId == category.CategoryId);
-               // return DtoMapper.ToDto(category, bookCount);
-               return category.ToDto(bookCount);
+                // return DtoMapper.ToDto(category, bookCount);
+                return category.ToDto(bookCount);
             }
             catch (Exception ex)
             {
@@ -155,7 +155,7 @@ namespace BookInfoFinder.Services
             try
             {
                 var categories = await _context.Categories
-                    .Where(c => c.Name.ToLower().Contains(searchTerm.ToLower()) || 
+                    .Where(c => c.Name.ToLower().Contains(searchTerm.ToLower()) ||
                                (c.Description != null && c.Description.ToLower().Contains(searchTerm.ToLower())))
                     .ToListAsync();
 
@@ -201,7 +201,7 @@ namespace BookInfoFinder.Services
                     .ToListAsync();
 
                 var bookIds = books.Select(b => b.BookId).ToList();
-                
+
                 var ratings = await _context.Ratings
                     .Where(r => bookIds.Contains(r.BookId))
                     .GroupBy(r => r.BookId)
@@ -239,7 +239,7 @@ namespace BookInfoFinder.Services
             try
             {
                 var totalCount = await _context.Categories.CountAsync();
-                
+
                 var categories = await _context.Categories
                     .OrderBy(c => c.Name)
                     .Skip((page - 1) * pageSize)

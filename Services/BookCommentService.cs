@@ -74,7 +74,7 @@ namespace BookInfoFinder.Services
                     .ToListAsync();
 
                 var commentDtos = new List<BookCommentDto>();
-                
+
                 foreach (var comment in comments)
                 {
                     var commentDto = comment.ToDto();
@@ -82,7 +82,7 @@ namespace BookInfoFinder.Services
                     commentDto.TotalRepliesCount = await CountAllRepliesAsync(comment.BookCommentId);
                     commentDtos.Add(commentDto);
                 }
-                
+
                 return (commentDtos, totalCount);
             }
             catch (Exception ex)
@@ -139,14 +139,14 @@ namespace BookInfoFinder.Services
                     TotalRepliesCount = 0, // Will be calculated
                     Replies = new List<BookCommentDto>() // Initialize empty
                 };
-                
+
                 // Recursively lấy replies của reply này
                 var nestedReplies = await GetRepliesTreeAsync(reply.BookCommentId);
-                    _logger.LogInformation($"Reply {reply.BookCommentId} has {nestedReplies.Count} nested replies");
+                _logger.LogInformation($"Reply {reply.BookCommentId} has {nestedReplies.Count} nested replies");
                 replyDto.Replies = nestedReplies; // Set nested replies manually
                 replyDto.ReplyCount = nestedReplies.Count;
                 replyDto.TotalRepliesCount = nestedReplies.Count;
-                
+
                 result.Add(replyDto);
             }
 
@@ -204,7 +204,7 @@ namespace BookInfoFinder.Services
             {
                 if (commentCreateDto.ParentCommentId != null)
                     throw new ArgumentException("Root comment cannot have parent");
-                
+
                 if (commentCreateDto.Star == null || commentCreateDto.Star < 1 || commentCreateDto.Star > 5)
                     throw new ArgumentException("Root comment must have rating between 1 and 5");
 
@@ -244,7 +244,7 @@ namespace BookInfoFinder.Services
             {
                 if (commentCreateDto.ParentCommentId == null)
                     throw new ArgumentException("Reply must have parent comment");
-                
+
                 if (commentCreateDto.Star != null)
                     throw new ArgumentException("Reply cannot have rating");
 
@@ -276,12 +276,12 @@ namespace BookInfoFinder.Services
                     ""
                 );
 
-                    // Create notification for comment reply
-                    // NOTE: pass the parent comment id (the comment being replied to), not the new reply id
-                    if (commentCreateDto.ParentCommentId.HasValue)
-                    {
-                        await _dashboardService.CreateCommentReplyNotificationAsync(commentCreateDto.ParentCommentId.Value, commentCreateDto.UserId);
-                    }
+                // Create notification for comment reply
+                // NOTE: pass the parent comment id (the comment being replied to), not the new reply id
+                if (commentCreateDto.ParentCommentId.HasValue)
+                {
+                    await _dashboardService.CreateCommentReplyNotificationAsync(commentCreateDto.ParentCommentId.Value, commentCreateDto.UserId);
+                }
 
                 return savedComment.ToDto();
             }
@@ -305,8 +305,8 @@ namespace BookInfoFinder.Services
 
                 commentUpdateDto.UpdateEntity(comment);
                 await _context.SaveChangesAsync();
-                
-                return comment.ToDto(); 
+
+                return comment.ToDto();
             }
             catch (Exception ex)
             {
@@ -478,7 +478,7 @@ namespace BookInfoFinder.Services
                 foreach (var rootComment in rootComments)
                 {
                     var commentDto = rootComment.ToDto();
-                    
+
                     if (maxDepth > 1)
                     {
                         // Get first level replies

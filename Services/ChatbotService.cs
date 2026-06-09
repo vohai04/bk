@@ -43,8 +43,6 @@ public class ChatbotService : IChatbotService
         _httpClient = new HttpClient();
         _geminiApiKey = _config["GEMINI:ApiKey"];
         _geminiModel = _config["GEMINI:Model"] ?? "gemini-2.0-flash-exp";
-        
-        Console.WriteLine($"Gemini API Key: {(_geminiApiKey != null ? "✅ LOADED" : "❌ NULL")}, model={_geminiModel}");
     }
 
     // ==================== MAIN ENTRY POINT ====================
@@ -86,9 +84,8 @@ public class ChatbotService : IChatbotService
 
             return response;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"❌ Error in GetChatbotReplyAsync: {ex.Message}");
             return "😔 Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.";
         }
     }
@@ -105,7 +102,7 @@ public class ChatbotService : IChatbotService
         {
             var history = await GetHistoryAsync(sessionId);
             var recentMessages = history.OrderByDescending(h => h.CreatedAt).Take(5).ToList();
-            
+
             if (recentMessages.Any())
             {
                 conversationHistory = "\n=== LỊCH SỬ HỘI THOẠI GẦN ĐÂY ===\n";
@@ -273,14 +270,12 @@ LƯU Ý QUAN TRỌNG:
 
             return "⚠️ Không thể phân tích phản hồi từ AI.";
         }
-        catch (HttpRequestException ex)
+        catch (HttpRequestException)
         {
-            Console.WriteLine($"❌ HTTP Error: {ex.Message}");
             return "😔 Lỗi kết nối với AI. Vui lòng kiểm tra API key hoặc kết nối mạng.";
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error: {ex.Message}");
             return $"😔 Lỗi: {ex.Message}";
         }
     }
@@ -303,9 +298,8 @@ LƯU Ý QUAN TRỌNG:
                 })
                 .ToListAsync();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"❌ Error getting history: {ex.Message}");
             return new List<ChatbotDto>();
         }
     }
@@ -325,9 +319,8 @@ LƯU Ý QUAN TRỌNG:
             _db.Chatbots.Add(chatbotMessage);
             await _db.SaveChangesAsync();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine($"❌ Error adding message: {ex.Message}");
         }
     }
 }

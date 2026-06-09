@@ -25,7 +25,7 @@ namespace BookInfoFinder.Pages
         }
 
         public List<NotificationItem> Items { get; set; } = new List<NotificationItem>();
-        public int Page { get; set; } = 1;
+        new public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;
         public int TotalCount { get; set; }
 
@@ -59,10 +59,10 @@ namespace BookInfoFinder.Pages
                         {
                             var bookId = details.GetType().GetProperty("bookId")?.GetValue(details)?.ToString();
                             var replyId = details.GetType().GetProperty("replyId")?.GetValue(details)?.ToString();
-                                if (!string.IsNullOrEmpty(bookId) && !string.IsNullOrEmpty(replyId))
-                                {
-                                    url = $"/BookDetail/{bookId}#comment-content-{replyId}";
-                                }
+                            if (!string.IsNullOrEmpty(bookId) && !string.IsNullOrEmpty(replyId))
+                            {
+                                url = $"/BookDetail/{bookId}#comment-content-{replyId}";
+                            }
                         }
                         catch { }
                     }

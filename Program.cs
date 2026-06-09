@@ -39,10 +39,10 @@ var dbName = Environment.GetEnvironmentVariable("DB_NAME");
 var dbUser = Environment.GetEnvironmentVariable("DB_USER");
 var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
 
-if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbName) && 
+if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbName) &&
     !string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPassword))
 {
-    builder.Configuration["ConnectionStrings:DefaultConnection"] = 
+    builder.Configuration["ConnectionStrings:DefaultConnection"] =
         $"Host={dbHost};Database={dbName};Username={dbUser};Password={dbPassword}";
 }
 
@@ -57,25 +57,25 @@ var geminiApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
 if (!string.IsNullOrEmpty(geminiApiKey))
     builder.Configuration["GEMINI:ApiKey"] = geminiApiKey;
 QuestPDF.Settings.License = LicenseType.Community;
- 
+
 builder.Services.AddRazorPages()
     .AddRazorRuntimeCompilation();
 builder.Services.AddRazorPages(options =>
 {
-   options.Conventions.ConfigureFilter(new Microsoft.AspNetCore.Mvc.IgnoreAntiforgeryTokenAttribute());
+    options.Conventions.ConfigureFilter(new Microsoft.AspNetCore.Mvc.IgnoreAntiforgeryTokenAttribute());
 });
 builder.Services.AddSession(options =>
 {
-   options.IdleTimeout = TimeSpan.FromHours(2);
-   options.Cookie.HttpOnly = true;
-   options.Cookie.IsEssential = true;
-   options.Cookie.SameSite = SameSiteMode.Lax;
-   // Improved for production
-   options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
-   options.Cookie.Name = "BookInfoFinder.Session";
-   // Add more robust settings for production
-   options.Cookie.MaxAge = TimeSpan.FromHours(2);
-   options.IOTimeout = TimeSpan.FromSeconds(30);
+    options.IdleTimeout = TimeSpan.FromHours(2);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    // Improved for production
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+    options.Cookie.Name = "BookInfoFinder.Session";
+    // Add more robust settings for production
+    options.Cookie.MaxAge = TimeSpan.FromHours(2);
+    options.IOTimeout = TimeSpan.FromSeconds(30);
 });
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddDbContext<BookContext>(options =>
@@ -100,11 +100,11 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 // Page routes
 builder.Services.AddRazorPages(options =>
 {
-   options.Conventions.AddPageRoute("/Account/Login", "Login");
-   options.Conventions.AddPageRoute("/Account/Register", "Register");
-   options.Conventions.AddPageRoute("/Account/Logout", "Logout");
-   options.Conventions.AddPageRoute("/Admin/Dashboard", "Dashboard");
-   options.Conventions.AddPageRoute("/Account/ForgotPassword", "ForgotPassword");
+    options.Conventions.AddPageRoute("/Account/Login", "Login");
+    options.Conventions.AddPageRoute("/Account/Register", "Register");
+    options.Conventions.AddPageRoute("/Account/Logout", "Logout");
+    options.Conventions.AddPageRoute("/Admin/Dashboard", "Dashboard");
+    options.Conventions.AddPageRoute("/Account/ForgotPassword", "ForgotPassword");
 });
 builder.Services.AddMemoryCache();
 var app = builder.Build();
@@ -128,14 +128,14 @@ using (var scope = app.Services.CreateScope())
 // Configure pipeline
 if (!app.Environment.IsDevelopment())
 {
-   app.UseExceptionHandler("/Error");
-   app.UseHsts();
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
 else
 {
-   app.UseDeveloperExceptionPage();
+    app.UseDeveloperExceptionPage();
 }
- 
+
 app.MapHub<NotificationHub>("/notificationHub");
 app.UseHttpsRedirection();
 app.UseStaticFiles();

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
- 
+
 namespace BookInfoFinder.Models.Entity
 {
     [Table("Authors")]
@@ -10,10 +10,10 @@ namespace BookInfoFinder.Models.Entity
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int AuthorId { get; set; }
- 
+
         [StringLength(30)]
         public string Name { get; set; } = string.Empty;
- 
+
         [StringLength(100)]
         public string? Biography { get; set; }
 
@@ -28,6 +28,6 @@ namespace BookInfoFinder.Models.Entity
 
         [JsonIgnore]
         public ICollection<Book> Books { get; set; } = new List<Book>();
- 
+
     }
 }

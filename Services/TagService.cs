@@ -171,12 +171,12 @@ namespace BookInfoFinder.Services
 
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    query = query.Where(t => t.Name.Contains(search) || 
+                    query = query.Where(t => t.Name.Contains(search) ||
                                            (t.Description != null && t.Description.Contains(search)));
                 }
 
                 var totalCount = await query.CountAsync();
-                
+
                 var tags = await query
                     .OrderBy(t => t.Name)
                     .Skip((page - 1) * pageSize)
@@ -228,7 +228,7 @@ namespace BookInfoFinder.Services
                 }
 
                 var tags = await _context.Tags
-                    .Where(t => t.Name.Contains(searchTerm) || 
+                    .Where(t => t.Name.Contains(searchTerm) ||
                                (t.Description != null && t.Description.Contains(searchTerm)))
                     .OrderBy(t => t.Name)
                     .ToListAsync();
@@ -257,12 +257,12 @@ namespace BookInfoFinder.Services
 
                 if (!string.IsNullOrWhiteSpace(searchTerm))
                 {
-                    query = query.Where(t => t.Name.Contains(searchTerm) || 
+                    query = query.Where(t => t.Name.Contains(searchTerm) ||
                                            (t.Description != null && t.Description.Contains(searchTerm)));
                 }
 
                 var totalCount = await query.CountAsync();
-                
+
                 var tags = await query
                     .OrderBy(t => t.Name)
                     .Skip((page - 1) * pageSize)
@@ -409,7 +409,7 @@ namespace BookInfoFinder.Services
                     .Select(bt => bt.Book);
 
                 var totalCount = await query.CountAsync();
-                
+
                 var books = await query
                     .OrderBy(b => b.Title)
                     .Skip((page - 1) * pageSize)

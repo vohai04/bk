@@ -14,4 +14,3 @@ public class BookListDto
     public int RatingCount { get; set; }
     public int TotalFavorites { get; set; }
 }
- 

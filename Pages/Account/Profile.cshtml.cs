@@ -14,8 +14,8 @@ namespace BookInfoFinder.Pages.Account
             _userService = userService;
         }
 
-    // Make non-nullable to avoid CS8602 in Razor views; initialized and replaced with real data in OnGetAsync
-    public UserDto Profile { get; set; } = new UserDto();
+        // Make non-nullable to avoid CS8602 in Razor views; initialized and replaced with real data in OnGetAsync
+        public UserDto Profile { get; set; } = new UserDto();
 
         public async Task<IActionResult> OnGetAsync()
         {
@@ -43,41 +43,46 @@ namespace BookInfoFinder.Pages.Account
                 return new JsonResult(new { success = false, message = "Bạn cần đăng nhập" });
             }
 
-                if (dto == null || dto.UserId != sessionUserId)
-                    return new JsonResult(new { success = false, message = "Dữ liệu không hợp lệ" });
+            if (dto == null || dto.UserId != sessionUserId)
+                return new JsonResult(new { success = false, message = "Dữ liệu không hợp lệ" });
 
-                try
+            try
+            {
+                // Only update FullName and Email
+                var user = await _userService.GetUserByIdAsync(dto.UserId);
+                if (user == null)
+                    return new JsonResult(new { success = false, message = "Không tìm thấy người dùng" });
+
+                user.FullName = dto.FullName;
+                user.Email = dto.Email;
+
+                // Update entity
+                var updateDto = new UserUpdateDto
                 {
-                    // Only update FullName and Email
-                    var user = await _userService.GetUserByIdAsync(dto.UserId);
-                    if (user == null)
-                        return new JsonResult(new { success = false, message = "Không tìm thấy người dùng" });
-
-                    user.FullName = dto.FullName;
-                    user.Email = dto.Email;
-
-                    // Update entity
-                    var updateDto = new UserUpdateDto
+                    UserId = user.UserId,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    UserName = user.UserName,
+                    Role = user.Role,
+                    Status = user.Status
+                };
+                var updated = await _userService.UpdateUserAsync(updateDto);
+                return new JsonResult(new
+                {
+                    success = true,
+                    user = new
                     {
-                        UserId = user.UserId,
-                        FullName = user.FullName,
-                        Email = user.Email,
-                        UserName = user.UserName,
-                        Role = user.Role,
-                        Status = user.Status
-                    };
-                    var updated = await _userService.UpdateUserAsync(updateDto);
-                    return new JsonResult(new { success = true, user = new {
                         userId = updated.UserId,
                         email = updated.Email,
                         fullName = updated.FullName,
                         updatedAt = updated.UpdatedAt?.ToString("dd/MM/yyyy HH:mm")
-                    }});
-                }
-                catch (Exception ex)
-                {
-                    return new JsonResult(new { success = false, message = ex.Message });
-                }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
         }
 
         // AJAX handler: change password (simple implementation using ResetPasswordAsync)

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
 using BookInfoFinder.Data;
- 
+
 namespace BookInfoFinder.Pages.Admin
 {
     public class ManageAuthorModel : PageModel
@@ -27,7 +27,7 @@ namespace BookInfoFinder.Pages.Admin
         {
             CurrentPage = page < 1 ? 1 : page;
             int pageSize = 10;
-            
+
             var result = await _authorService.GetAuthorsPagedAsync(CurrentPage, pageSize);
             Authors = result.Authors;
             TotalCount = result.TotalCount;
@@ -58,7 +58,8 @@ namespace BookInfoFinder.Pages.Admin
                         .ToList();
                 }
 
-                var authorResult = filteredAuthors.Select(a => new {
+                var authorResult = filteredAuthors.Select(a => new
+                {
                     a.AuthorId,
                     a.Name,
                     a.Biography,
@@ -103,20 +104,22 @@ namespace BookInfoFinder.Pages.Admin
                     }
                 }
 
-                var authorCreateDto = new AuthorCreateDto 
-                { 
-                    Name = name.Trim(), 
+                var authorCreateDto = new AuthorCreateDto
+                {
+                    Name = name.Trim(),
                     Biography = biography?.Trim() ?? string.Empty,
                     DateOfBirth = parsedDateOfBirth,
                     Nationality = nationality?.Trim() ?? string.Empty
                 };
                 var createdAuthor = await _authorService.CreateAuthorAsync(authorCreateDto);
-                
-                return new JsonResult(new { 
-                    success = true, 
-                    author = new { 
-                        createdAuthor.AuthorId, 
-                        createdAuthor.Name, 
+
+                return new JsonResult(new
+                {
+                    success = true,
+                    author = new
+                    {
+                        createdAuthor.AuthorId,
+                        createdAuthor.Name,
                         createdAuthor.Biography,
                         createdAuthor.DateOfBirth,
                         DateOfBirthFormatted = createdAuthor.DateOfBirth?.ToString("dd/MM/yyyy") ?? "",

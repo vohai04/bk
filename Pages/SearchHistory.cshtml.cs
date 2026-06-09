@@ -4,14 +4,14 @@ using BookInfoFinder.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
- 
+
 namespace BookInfoFinder.Pages
 {
     public class SearchHistoryModel : PageModel
     {
         private readonly ISearchHistoryService _historyService;
         private readonly IUserService _userService;
- 
+
         public SearchHistoryModel(ISearchHistoryService historyService, IUserService userService)
         {
             _historyService = historyService;
@@ -19,19 +19,19 @@ namespace BookInfoFinder.Pages
         }
 
         // Handle page load with URL parameters
-        public async Task OnGetAsync(int page = 1)
+        public void OnGet(int page = 1)
         {
             // Read page parameter from URL like Users page
             CurrentPage = page < 1 ? 1 : page;
-            
+
             // Pass to ViewData for JavaScript
             ViewData["InitialPage"] = CurrentPage;
         }
 
         // Properties for pagination like Users page
-        [BindProperty(SupportsGet = true)] 
+        [BindProperty(SupportsGet = true)]
         public int CurrentPage { get; set; } = 1;
- 
+
         // AJAX Get history with pagination
         public async Task<JsonResult> OnGetAjaxGetAsync()
         {
@@ -47,16 +47,17 @@ namespace BookInfoFinder.Pages
                 // Get user ID from session with cookie fallback
                 var userIdStr = HttpContext.Session.GetString("UserId");
                 var cookieUserId = HttpContext.Request.Cookies["UserId"];
-                
+
                 if (string.IsNullOrEmpty(userIdStr) && !string.IsNullOrEmpty(cookieUserId))
                 {
                     userIdStr = cookieUserId;
                 }
-                
+
                 if (!int.TryParse(userIdStr, out int userId))
                 {
-                    return new JsonResult(new { 
-                        histories = new List<object>(), 
+                    return new JsonResult(new
+                    {
+                        histories = new List<object>(),
                         totalCount = 0,
                         totalPages = 0,
                         showToast = true,
@@ -66,8 +67,9 @@ namespace BookInfoFinder.Pages
 
                 var (histories, totalCount) = await _historyService.GetSearchHistoriesByUserPagedAsync(userId, page, pageSize);
                 var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-                
-                var historiesVm = histories.Select(h => new {
+
+                var historiesVm = histories.Select(h => new
+                {
                     searchHistoryId = h.SearchHistoryId,
                     searchQuery = h.SearchQuery,
                     resultCount = h.ResultCount,
@@ -76,7 +78,8 @@ namespace BookInfoFinder.Pages
                     date = h.SearchedAt.ToString("dd/MM/yyyy HH:mm")
                 }).ToList();
 
-                return new JsonResult(new { 
+                return new JsonResult(new
+                {
                     histories = historiesVm,
                     totalCount = totalCount,
                     totalPages = totalPages
@@ -84,11 +87,12 @@ namespace BookInfoFinder.Pages
             }
             catch (Exception ex)
             {
-                return new JsonResult(new { 
-                    histories = new List<object>(), 
+                return new JsonResult(new
+                {
+                    histories = new List<object>(),
                     totalCount = 0,
                     totalPages = 0,
-                    error = $"Có lỗi khi tải lịch sử tìm kiếm: {ex.Message}" 
+                    error = $"Có lỗi khi tải lịch sử tìm kiếm: {ex.Message}"
                 });
             }
         }
@@ -97,7 +101,7 @@ namespace BookInfoFinder.Pages
         private string GetTimeAgo(DateTime dateTime)
         {
             var timeSpan = DateTime.Now - dateTime;
-            
+
             if (timeSpan.TotalMinutes < 1)
                 return "Vừa xong";
             if (timeSpan.TotalMinutes < 60)
@@ -110,24 +114,24 @@ namespace BookInfoFinder.Pages
                 return $"{(int)(timeSpan.TotalDays / 7)} tuần trước";
             if (timeSpan.TotalDays < 365)
                 return $"{(int)(timeSpan.TotalDays / 30)} tháng trước";
-            
+
             return $"{(int)(timeSpan.TotalDays / 365)} năm trước";
         }
- 
+
         // AJAX Delete one
         public async Task<JsonResult> OnPostAjaxDeleteAsync([FromForm] int id)
         {
             await _historyService.DeleteHistoryAsync(id);
             return new JsonResult(new { success = true });
         }
- 
+
         // AJAX Delete all
         public async Task<JsonResult> OnPostAjaxDeleteAllAsync()
         {
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
                 return new JsonResult(new { success = false });
- 
+
             await _historyService.DeleteAllHistoriesOfUserAsync(userId);
             return new JsonResult(new { success = true });
         }

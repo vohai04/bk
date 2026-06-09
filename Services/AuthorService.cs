@@ -22,13 +22,13 @@ namespace BookInfoFinder.Services
             {
                 var authors = await _context.Authors.ToListAsync();
                 var authorDtos = new List<AuthorDto>();
-                
+
                 foreach (var author in authors)
                 {
                     var bookCount = await _context.Books.CountAsync(b => b.AuthorId == author.AuthorId);
                     authorDtos.Add(DtoMapper.ToDto(author, bookCount));
                 }
-                
+
                 return authorDtos;
             }
             catch (Exception ex)
@@ -44,7 +44,7 @@ namespace BookInfoFinder.Services
             {
                 var author = await _context.Authors
                     .FirstOrDefaultAsync(a => a.AuthorId == authorId);
-                
+
                 if (author == null) return null;
 
                 var bookCount = await _context.Books.CountAsync(b => b.AuthorId == authorId);
@@ -63,7 +63,7 @@ namespace BookInfoFinder.Services
             {
                 var author = await _context.Authors
                     .FirstOrDefaultAsync(a => a.Name == name);
-                
+
                 if (author == null) return null;
 
                 var bookCount = await _context.Books.CountAsync(b => b.AuthorId == author.AuthorId);
@@ -81,7 +81,7 @@ namespace BookInfoFinder.Services
             try
             {
                 var author = DtoMapper.ToEntity(authorCreateDto);
-                
+
                 _context.Authors.Add(author);
                 await _context.SaveChangesAsync();
 
@@ -100,7 +100,7 @@ namespace BookInfoFinder.Services
             {
                 var author = await _context.Authors
                     .FirstOrDefaultAsync(a => a.AuthorId == authorUpdateDto.AuthorId);
-                
+
                 if (author == null)
                     throw new ArgumentException("Author not found");
 
@@ -123,7 +123,7 @@ namespace BookInfoFinder.Services
             {
                 var author = await _context.Authors
                     .FirstOrDefaultAsync(a => a.AuthorId == authorId);
-                
+
                 if (author == null) return false;
 
                 // Check if author has books
@@ -150,7 +150,7 @@ namespace BookInfoFinder.Services
             try
             {
                 var authors = await _context.Authors
-                    .Where(a => a.Name.ToLower().Contains(searchTerm.ToLower()) || 
+                    .Where(a => a.Name.ToLower().Contains(searchTerm.ToLower()) ||
                                (a.Biography != null && a.Biography.ToLower().Contains(searchTerm.ToLower())))
                     .ToListAsync();
 
@@ -196,7 +196,7 @@ namespace BookInfoFinder.Services
                     .ToListAsync();
 
                 var bookIds = books.Select(b => b.BookId).ToList();
-                
+
                 var ratings = await _context.Ratings
                     .Where(r => bookIds.Contains(r.BookId))
                     .GroupBy(r => r.BookId)
@@ -234,7 +234,7 @@ namespace BookInfoFinder.Services
             try
             {
                 var totalCount = await _context.Authors.CountAsync();
-                
+
                 var authors = await _context.Authors
                     .OrderBy(a => a.Name)
                     .Skip((page - 1) * pageSize)

@@ -41,7 +41,7 @@ namespace BookInfoFinder.Services
         public async Task<UserDto> CreateUserAsync(UserCreateDto userCreateDto)
         {
             var user = userCreateDto.ToEntity();
-            
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
@@ -54,7 +54,7 @@ namespace BookInfoFinder.Services
                 user.UserId,
                 ""
             );
-            
+
             return user.ToDto();
         }
 
@@ -90,12 +90,12 @@ namespace BookInfoFinder.Services
         public async Task<bool> ResetPasswordAsync(int userId, string newPassword)
         {
             var user = await _context.Users.FindAsync(userId);
-            if (user == null) 
+            if (user == null)
                 return false;
 
             user.Password = newPassword;
             user.UpdatedAt = DateTime.UtcNow;
-            
+
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
             return true;
@@ -151,7 +151,7 @@ namespace BookInfoFinder.Services
 
             user.Status = 1;
             user.UpdatedAt = DateTime.UtcNow;
-            
+
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
             return true;
@@ -164,7 +164,7 @@ namespace BookInfoFinder.Services
 
             user.Status = 0;
             user.UpdatedAt = DateTime.UtcNow;
-            
+
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
             return true;

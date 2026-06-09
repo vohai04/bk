@@ -55,7 +55,7 @@ namespace BookInfoFinder.Services
                     .ToListAsync();
 
                 var bookIds = books.Select(b => b.BookId).ToList();
-                
+
                 var ratings = await _context.Ratings
                     .Where(r => bookIds.Contains(r.BookId))
                     .GroupBy(r => r.BookId)
@@ -162,7 +162,7 @@ namespace BookInfoFinder.Services
             try
             {
                 var book = DtoMapper.ToEntity(bookCreateDto);
-                
+
                 _context.Books.Add(book);
                 await _context.SaveChangesAsync();
 
@@ -247,52 +247,52 @@ namespace BookInfoFinder.Services
             }
         }
 
-       public async Task<bool> DeleteBookAsync(int bookId)
-{
-    try
-    {
-        var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
-        if (book == null) return false;
+        public async Task<bool> DeleteBookAsync(int bookId)
+        {
+            try
+            {
+                var book = await _context.Books.FirstOrDefaultAsync(b => b.BookId == bookId);
+                if (book == null) return false;
 
-        // Xóa các bản ghi liên quan
-        var comments = _context.BookComments.Where(c => c.BookId == bookId);
-        _context.BookComments.RemoveRange(comments);
+                // Xóa các bản ghi liên quan
+                var comments = _context.BookComments.Where(c => c.BookId == bookId);
+                _context.BookComments.RemoveRange(comments);
 
-        var ratings = _context.Ratings.Where(r => r.BookId == bookId);
-        _context.Ratings.RemoveRange(ratings);
+                var ratings = _context.Ratings.Where(r => r.BookId == bookId);
+                _context.Ratings.RemoveRange(ratings);
 
-        var favorites = _context.Favorites.Where(f => f.BookId == bookId);
-        _context.Favorites.RemoveRange(favorites);
+                var favorites = _context.Favorites.Where(f => f.BookId == bookId);
+                _context.Favorites.RemoveRange(favorites);
 
-        var tags = _context.BookTags.Where(bt => bt.BookId == bookId);
-        _context.BookTags.RemoveRange(tags);
+                var tags = _context.BookTags.Where(bt => bt.BookId == bookId);
+                _context.BookTags.RemoveRange(tags);
 
-        var histories = _context.SearchHistories.Where(h => h.BookId == bookId);
-        _context.SearchHistories.RemoveRange(histories);
+                var histories = _context.SearchHistories.Where(h => h.BookId == bookId);
+                _context.SearchHistories.RemoveRange(histories);
 
-        // Xóa sách
-        _context.Books.Remove(book);
+                // Xóa sách
+                _context.Books.Remove(book);
 
-        await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
-        // Log activity (giữ nguyên)
-        await _dashboardService.LogActivityAsync(
-            book.UserId.ToString(),
-            "Book Deleted",
-            $"Deleted book: '{book.Title}'",
-            "Book",
-            bookId,
-            ""
-        );
+                // Log activity (giữ nguyên)
+                await _dashboardService.LogActivityAsync(
+                    book.UserId.ToString(),
+                    "Book Deleted",
+                    $"Deleted book: '{book.Title}'",
+                    "Book",
+                    bookId,
+                    ""
+                );
 
-        return true;
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error deleting book: {BookId}", bookId);
-        return false;
-    }
-}
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting book: {BookId}", bookId);
+                return false;
+            }
+        }
 
         public async Task<BookDetailDto?> GetBookDetailWithStatsAndCommentsAsync(int bookId, int page, int pageSize)
         {
@@ -367,7 +367,7 @@ namespace BookInfoFinder.Services
                     .ToListAsync();
 
                 var bookIds = books.Select(b => b.BookId).ToList();
-                
+
                 var ratings = await _context.Ratings
                     .Where(r => bookIds.Contains(r.BookId))
                     .GroupBy(r => r.BookId)
@@ -417,16 +417,16 @@ namespace BookInfoFinder.Services
 
                 if (!string.IsNullOrEmpty(title))
                     query = query.Where(b => b.Title.Contains(title));
-                
+
                 if (!string.IsNullOrEmpty(author))
                     query = query.Where(b => b.Author != null && b.Author.Name.Contains(author));
-                
+
                 if (!string.IsNullOrEmpty(category))
                     query = query.Where(b => b.Category != null && b.Category.Name.Contains(category));
-                
+
                 if (publicationDate.HasValue)
                     query = query.Where(b => b.PublicationDate.Year == publicationDate.Value.Year);
-                
+
                 if (!string.IsNullOrEmpty(tag))
                     query = query.Where(b => b.BookTags.Any(bt => bt.Tag.Name.Contains(tag)));
 
@@ -457,7 +457,8 @@ namespace BookInfoFinder.Services
                     {
                         case "rating":
                             allBooks = allBooks
-                                .Select(b => {
+                                .Select(b =>
+                                {
                                     var rating = allRatings.TryGetValue(b.BookId, out var r) ? r : null;
                                     return new { Book = b, AvgRating = rating?.Avg ?? 0, RatingCount = rating?.Count ?? 0 };
                                 })
@@ -468,7 +469,8 @@ namespace BookInfoFinder.Services
                             break;
                         case "favorites":
                             allBooks = allBooks
-                                .Select(b => {
+                                .Select(b =>
+                                {
                                     var favCount = allFavorites.TryGetValue(b.BookId, out var count) ? count : 0;
                                     var avgRating = allRatings.TryGetValue(b.BookId, out var r) ? r.Avg : 0;
                                     return new { Book = b, FavoriteCount = favCount, AvgRating = avgRating };
@@ -481,7 +483,8 @@ namespace BookInfoFinder.Services
                         case "searched":
                             // Use rating count as approximation for search popularity
                             allBooks = allBooks
-                                .Select(b => {
+                                .Select(b =>
+                                {
                                     var ratingCount = allRatings.TryGetValue(b.BookId, out var r) ? r.Count : 0;
                                     var avgRating = r?.Avg ?? 0;
                                     return new { Book = b, RatingCount = ratingCount, AvgRating = avgRating };

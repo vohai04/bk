@@ -36,8 +36,8 @@ namespace BookInfoFinder.Services
                 var totalComments = await _context.BookComments.CountAsync();
                 var totalFavorites = await _context.Favorites.CountAsync();
                 var totalRatings = await _context.Ratings.CountAsync();
-                
-                var averageRating = totalRatings > 0 
+
+                var averageRating = totalRatings > 0
                     ? Math.Round(await _context.Ratings.AverageAsync(r => r.Star), 2)
                     : 0;
 
@@ -71,40 +71,40 @@ namespace BookInfoFinder.Services
                 var totalBooks = await _context.Books
                     .Where(b => b.PublicationDate >= startDate && b.PublicationDate <= endDate)
                     .CountAsync();
-                
+
                 var totalCategories = await _context.Categories
                     .Where(c => c.CreatedAt >= startDate && c.CreatedAt <= endDate)
                     .CountAsync();
-                
+
                 var totalTags = await _context.Tags
                     .Where(t => t.CreatedAt >= startDate && t.CreatedAt <= endDate)
                     .CountAsync();
-                
+
                 var totalAuthors = await _context.Authors
                     .Where(a => a.CreatedAt >= startDate && a.CreatedAt <= endDate)
                     .CountAsync();
-                
+
                 var totalPublishers = await _context.Publishers
                     .Where(p => p.CreatedAt >= startDate && p.CreatedAt <= endDate)
                     .CountAsync();
-                
+
                 var totalUsers = await _context.Users
                     .Where(u => u.CreatedAt >= startDate && u.CreatedAt <= endDate)
                     .CountAsync();
-                
+
                 var totalComments = await _context.BookComments
                     .Where(c => c.CreatedAt >= startDate && c.CreatedAt <= endDate)
                     .CountAsync();
-                
+
                 var totalFavorites = await _context.Favorites
                     .Where(f => f.CreatedAt >= startDate && f.CreatedAt <= endDate)
                     .CountAsync();
-                
+
                 var totalRatings = await _context.Ratings
                     .Where(r => r.CreatedAt >= startDate && r.CreatedAt <= endDate)
                     .CountAsync();
-                
-                var averageRating = totalRatings > 0 
+
+                var averageRating = totalRatings > 0
                     ? Math.Round(await _context.Ratings
                         .Where(r => r.CreatedAt >= startDate && r.CreatedAt <= endDate)
                         .AverageAsync(r => r.Star), 2)

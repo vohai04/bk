@@ -7,7 +7,7 @@ namespace BookInfoFinder.Services.Interface
         // Dashboard statistics
         Task<DashboardReportDto> GetDashboardReportAsync();
         Task<DashboardReportDto> GetDashboardReportByDateRangeAsync(DateTime startDate, DateTime endDate);
-        
+
         // QuestPDF export methods
         Task<byte[]> ExportTodayReportToPdfAsync();
         Task<byte[]> ExportWeekReportToPdfAsync();

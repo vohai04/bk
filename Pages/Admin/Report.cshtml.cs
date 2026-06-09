@@ -6,23 +6,23 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Threading.Tasks;
- 
- 
- 
- 
+
+
+
+
 namespace BookInfoFinder.Pages.Admin
 {
     public class ReportModel : PageModel
     {
-    private readonly IBookService _bookService;
-    private readonly ICategoryService _categoryService;
-    private readonly ITagService _tagService;
-    private readonly IAuthorService _authorService;
-    private readonly IPublisherService _publisherService;
-    private readonly IUserService _userService;
-    private readonly IReportService _reportService;
-    private readonly ILogger<ReportModel> _logger;
- 
+        private readonly IBookService _bookService;
+        private readonly ICategoryService _categoryService;
+        private readonly ITagService _tagService;
+        private readonly IAuthorService _authorService;
+        private readonly IPublisherService _publisherService;
+        private readonly IUserService _userService;
+        private readonly IReportService _reportService;
+        private readonly ILogger<ReportModel> _logger;
+
         public ReportModel(
             IBookService bookService,
             ICategoryService categoryService,
@@ -42,8 +42,8 @@ namespace BookInfoFinder.Pages.Admin
             _reportService = reportService;
             _logger = logger;
         }
- 
-    public void OnGet() { }
+
+        public void OnGet() { }
 
         public async Task<IActionResult> OnPostExportTodayPdfAsync()
         {
@@ -189,7 +189,6 @@ namespace BookInfoFinder.Pages.Admin
         }
 
         // Note: Temporary file download helper removed - exports stream PDF directly to client via POST handlers
- 
+
     }
 }
- 

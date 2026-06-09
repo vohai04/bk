@@ -20,7 +20,7 @@ namespace BookInfoFinder.Pages.Account
 
         [BindProperty]
         public LoginRequestModel LoginRequest { get; set; } = new();
-        
+
         public string? ErrorMessage { get; set; }
         public string? SuccessMessage { get; set; }
 
@@ -66,7 +66,7 @@ namespace BookInfoFinder.Pages.Account
                 };
 
                 var user = await _userService.ValidateUserAsync(loginRequest);
-                
+
                 if (user == null)
                 {
                     ErrorMessage = "Tên đăng nhập hoặc mật khẩu không đúng.";

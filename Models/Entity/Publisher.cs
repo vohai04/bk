@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
- 
+
 namespace BookInfoFinder.Models.Entity
 {
     [Table("Publisher")]
@@ -9,10 +9,10 @@ namespace BookInfoFinder.Models.Entity
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int PublisherId { get; set; }
- 
+
         [StringLength(50)]
         public string Name { get; set; } = string.Empty;
- 
+
         [StringLength(100)]
         public string? Address { get; set; }
 
@@ -22,8 +22,8 @@ namespace BookInfoFinder.Models.Entity
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? UpdatedAt { get; set; }
- 
+
         public ICollection<Book> Books { get; set; } = new List<Book>();
- 
+
     }
 }

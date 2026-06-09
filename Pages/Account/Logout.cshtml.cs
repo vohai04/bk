@@ -28,12 +28,12 @@ namespace BookInfoFinder.Pages.Account
             try
             {
                 var userName = HttpContext.Session.GetString("UserName");
-                
+
                 // Xóa toàn bộ session
                 HttpContext.Session.Clear();
-                
+
                 _logger.LogInformation("User {Username} logged out successfully", userName);
-                
+
                 return RedirectToPage("/Index", new { message = "Bạn đã đăng xuất thành công." });
             }
             catch (Exception ex)

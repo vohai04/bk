@@ -34,7 +34,7 @@ namespace BookInfoFinder.Services
             try
             {
                 _logger.LogInformation("=== EMAIL SERVICE DEBUG ===");
-                _logger.LogInformation("Email Settings - Email: {Email}, Password configured: {HasPassword}", 
+                _logger.LogInformation("Email Settings - Email: {Email}, Password configured: {HasPassword}",
                     _settings.Email, !string.IsNullOrEmpty(_settings.Password));
                 _logger.LogInformation("Environment: {Environment}", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"));
 
@@ -65,7 +65,7 @@ BookInfoFinder Team
 ";
 
                 var success = await SendEmailAsync(otpRequest.Email, subject, body);
-                
+
                 if (success)
                 {
                     // Store OTP for verification
@@ -87,7 +87,7 @@ BookInfoFinder Team
             try
             {
                 var isValid = await ValidateStoredOTPAsync(otpVerify.Email, otpVerify.OTP);
-                
+
                 if (isValid)
                 {
                     // Clear OTP after successful verification
@@ -135,7 +135,7 @@ BookInfoFinder Team
 ";
 
                 var success = await SendEmailAsync(resetRequest.Email, subject, body);
-                
+
                 if (success)
                 {
                     // Store OTP for password reset verification
@@ -152,7 +152,7 @@ BookInfoFinder Team
             }
         }
 
-    
+
 
 
         public bool IsValidEmail(string email)
@@ -175,7 +175,7 @@ BookInfoFinder Team
         public async Task StoreOTPAsync(string email, string otp, TimeSpan expiry)
         {
             await Task.CompletedTask; // Async signature for consistency
-            
+
             var otpKey = GetOTPKey(email);
             var otpInfo = new OTPInfo
             {
@@ -191,9 +191,9 @@ BookInfoFinder Team
         public async Task<bool> ValidateStoredOTPAsync(string email, string otp)
         {
             await Task.CompletedTask; // Async signature for consistency
-            
+
             var otpKey = GetOTPKey(email);
-            
+
             if (_memoryCache.TryGetValue(otpKey, out OTPInfo? otpInfo) && otpInfo != null)
             {
                 if (DateTime.UtcNow <= otpInfo.ExpiresAt && otpInfo.OTP == otp)
@@ -208,10 +208,10 @@ BookInfoFinder Team
         public async Task ClearOTPAsync(string email)
         {
             await Task.CompletedTask; // Async signature for consistency
-            
+
             var otpKey = GetOTPKey(email);
             _memoryCache.Remove(otpKey);
-            
+
             _logger.LogDebug("OTP cleared for email: {Email}", email);
         }
 
@@ -221,7 +221,7 @@ BookInfoFinder Team
             {
                 _logger.LogInformation("=== SENDING EMAIL ===");
                 _logger.LogInformation("To: {ToEmail}, Subject: {Subject}", toEmail, subject);
-                _logger.LogInformation("SMTP Config - Email: {Email}, Password configured: {HasPassword}", 
+                _logger.LogInformation("SMTP Config - Email: {Email}, Password configured: {HasPassword}",
                     _settings.Email, !string.IsNullOrEmpty(_settings.Password));
 
                 if (string.IsNullOrEmpty(_settings.Email) || string.IsNullOrEmpty(_settings.Password))
@@ -238,13 +238,13 @@ BookInfoFinder Team
 
                 using var client = new SmtpClient();
                 client.ServerCertificateValidationCallback = (s, c, h, e) => true;
-                
+
                 // Set timeout ngắn hơn cho production
                 client.Timeout = 15000; // 15 seconds
 
                 _logger.LogInformation("Connecting to SMTP server...");
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-                
+
                 // Thử ports theo thứ tự ưu tiên cho hosting providers
                 // Port 2525: Alternative submission port, ít bị hosting chặn nhất
                 // Port 587: Standard SMTP port với STARTTLS 
@@ -261,24 +261,24 @@ BookInfoFinder Team
                 };
 
                 Exception? lastException = null;
-                
+
                 foreach (var config in smtpConfigs)
                 {
                     try
                     {
                         _logger.LogInformation("=== TESTING PORT {Port} ===", config.Port);
-                        _logger.LogInformation("Trying SMTP: {Host}:{Port} (StartTLS: {StartTls})", 
+                        _logger.LogInformation("Trying SMTP: {Host}:{Port} (StartTLS: {StartTls})",
                             config.Host, config.Port, config.UseStartTls);
-                        
-                        var secureOptions = config.UseStartTls 
-                            ? MailKit.Security.SecureSocketOptions.StartTls 
+
+                        var secureOptions = config.UseStartTls
+                            ? MailKit.Security.SecureSocketOptions.StartTls
                             : MailKit.Security.SecureSocketOptions.SslOnConnect;
-                            
+
                         await client.ConnectAsync(config.Host, config.Port, secureOptions, cts.Token);
-                        
+
                         _logger.LogInformation("✅ Connected! Authenticating...");
                         await client.AuthenticateAsync(_settings.Email, _settings.Password, cts.Token);
-                        
+
                         _logger.LogInformation("✅ Authenticated! Sending email...");
                         await client.SendAsync(message, cts.Token);
                         await client.DisconnectAsync(true, cts.Token);
@@ -296,10 +296,10 @@ BookInfoFinder Team
                             MailKit.Security.AuthenticationException => "AUTH FAILED - Kiểm tra email/password",
                             _ => ex.GetType().Name
                         };
-                        
-                        _logger.LogWarning("❌ Failed {Host}:{Port} - {ErrorType}: {Error}", 
+
+                        _logger.LogWarning("❌ Failed {Host}:{Port} - {ErrorType}: {Error}",
                             config.Host, config.Port, errorType, ex.Message);
-                        
+
                         if (client.IsConnected)
                         {
                             try { await client.DisconnectAsync(true); } catch { }

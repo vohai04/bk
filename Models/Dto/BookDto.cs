@@ -18,7 +18,7 @@ public class BookDto
     public int UserId { get; set; }
     public string UserName { get; set; } = string.Empty;
     public List<TagDto> Tags { get; set; } = new();
-    
+
     // Statistics (optional for admin views)
     public double AverageRating { get; set; }
     public int RatingCount { get; set; }

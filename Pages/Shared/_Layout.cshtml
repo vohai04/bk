@@ -161,9 +161,127 @@
                                 </a>
                             }
                         </div>
-                    </div><!-- /navbar-collapse -->
-                }
+                                    <!-- Right: user menu / login -->
+                <div class="navbar-nav nav-end nav-user-mobile mt-3 pt-3 border-top d-lg-none">
+                    @if (!string.IsNullOrEmpty(username))
+                    {
+                        <!-- Notification bell -->
+                        <div class="nav-item">
+                            <a class="nav-link position-relative me-2" href="/Notifications"
+                               id="notificationButton" title="Thông báo">
+                                <i class="bi bi-bell" style="font-size: 1.25rem;"></i>
+                                <span id="notificationCount"
+                                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                      style="font-size:0.65rem; display:none;"></span>
+                            </a>
+                        </div>
 
+                        <!-- User dropdown -->
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
+                               id="userMenuDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar me-2">
+                                    <i class="bi bi-person-circle" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="d-none d-md-block text-start">
+                                    <div class="user-name">@username</div>
+                                    <small class="user-role text-muted">@(isAdmin ? "Admin" : "User")</small>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Account/Profile">
+                                        <i class="bi bi-person me-2"></i> Hồ sơ
+                                    </a>
+                                </li>
+                                @if (isAdmin)
+                                {
+                                    <li>
+                                        <a class="dropdown-item" asp-area="" asp-page="/Admin/Dashboard">
+                                            <i class="bi bi-speedometer2 me-2"></i> Admin
+                                        </a>
+                                    </li>
+                                }
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" asp-page="/Account/Logout" class="px-3">
+                                        <button type="submit" class="btn btn-link dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a href="/Account/Login" class="btn-login">Đăng nhập</a>
+                        <a href="/Account/Register" class="btn-register">Đăng ký</a>
+                    }
+                </div>
+                    </div><!-- /navbar-collapse -->
+                <!-- Right: user menu / login -->
+                <div class="navbar-nav nav-end d-none d-lg-flex">
+                    @if (!string.IsNullOrEmpty(username))
+                    {
+                        <!-- Notification bell -->
+                        <div class="nav-item">
+                            <a class="nav-link position-relative me-2" href="/Notifications"
+                               id="notificationButton" title="Thông báo">
+                                <i class="bi bi-bell" style="font-size: 1.25rem;"></i>
+                                <span id="notificationCount"
+                                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                      style="font-size:0.65rem; display:none;"></span>
+                            </a>
+                        </div>
+
+                        <!-- User dropdown -->
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
+                               id="userMenuDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar me-2">
+                                    <i class="bi bi-person-circle" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div class="d-none d-md-block text-start">
+                                    <div class="user-name">@username</div>
+                                    <small class="user-role text-muted">@(isAdmin ? "Admin" : "User")</small>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-page="/Account/Profile">
+                                        <i class="bi bi-person me-2"></i> Hồ sơ
+                                    </a>
+                                </li>
+                                @if (isAdmin)
+                                {
+                                    <li>
+                                        <a class="dropdown-item" asp-area="" asp-page="/Admin/Dashboard">
+                                            <i class="bi bi-speedometer2 me-2"></i> Admin
+                                        </a>
+                                    </li>
+                                }
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" asp-page="/Account/Logout" class="px-3">
+                                        <button type="submit" class="btn btn-link dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a href="/Account/Login" class="btn-login">Đăng nhập</a>
+                        <a href="/Account/Register" class="btn-register">Đăng ký</a>
+                    }
+                </div>
+                @if (isAdminPage)
+                {
                 <!-- Right: user menu / login -->
                 <div class="navbar-nav nav-end">
                     @if (!string.IsNullOrEmpty(username))
@@ -223,6 +341,11 @@
                         <a href="/Account/Register" class="btn-register">Đăng ký</a>
                     }
                 </div>
+                }
+
+                }
+
+
 
             </div>
         </nav>

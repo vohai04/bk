@@ -68,8 +68,8 @@ namespace BookInfoFinder.Services
             {
                 Name = dto.Name, // Fixed property name
                 Biography = dto.Biography,
-                DateOfBirth = dto.DateOfBirth?.Kind == DateTimeKind.Unspecified 
-                    ? DateTime.SpecifyKind(dto.DateOfBirth.Value, DateTimeKind.Utc) 
+                DateOfBirth = dto.DateOfBirth?.Kind == DateTimeKind.Unspecified
+                    ? DateTime.SpecifyKind(dto.DateOfBirth.Value, DateTimeKind.Utc)
                     : dto.DateOfBirth?.ToUniversalTime(),
                 Nationality = dto.Nationality,
                 CreatedAt = DateTime.UtcNow
@@ -80,8 +80,8 @@ namespace BookInfoFinder.Services
         {
             entity.Name = dto.Name; // Fixed property name
             entity.Biography = dto.Biography;
-            entity.DateOfBirth = dto.DateOfBirth?.Kind == DateTimeKind.Unspecified 
-                ? DateTime.SpecifyKind(dto.DateOfBirth.Value, DateTimeKind.Utc) 
+            entity.DateOfBirth = dto.DateOfBirth?.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(dto.DateOfBirth.Value, DateTimeKind.Utc)
                 : dto.DateOfBirth?.ToUniversalTime();
             entity.Nationality = dto.Nationality;
             entity.UpdatedAt = DateTime.UtcNow;

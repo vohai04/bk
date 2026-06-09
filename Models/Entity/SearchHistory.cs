@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
- 
+
 namespace BookInfoFinder.Models.Entity
 {
     [Table("SearchHistories")]
@@ -9,11 +9,11 @@ namespace BookInfoFinder.Models.Entity
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int SearchHistoryId { get; set; }
- 
+
         [StringLength(100)]
         public string? Title { get; set; }
- 
-                [StringLength(100)]
+
+        [StringLength(100)]
         public string? Author { get; set; }
 
         [StringLength(50)]
@@ -25,14 +25,14 @@ namespace BookInfoFinder.Models.Entity
         public DateTime SearchedAt { get; set; } = DateTime.UtcNow;
 
         public int ResultCount { get; set; } = 0;
- 
+
         [ForeignKey("User")]
         public int UserId { get; set; }
         public User User { get; set; } = null!;
- 
+
         [ForeignKey("Book")]
         public int? BookId { get; set; } // Cho phép null
         public Book? Book { get; set; }  // Cho phép null
- 
+
     }
 }

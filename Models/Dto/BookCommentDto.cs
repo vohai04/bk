@@ -13,19 +13,19 @@ namespace BookInfoFinder.Models.Dto
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; } = null;
         public int? ParentCommentId { get; set; } // null = comment gốc, !null = reply
-        
+
         // Hierarchy information
         public int Level { get; set; } = 0; // 0 = root, 1 = reply to root, 2 = reply to reply...
         public bool IsRootComment => ParentCommentId == null;
         public bool IsReply => ParentCommentId != null;
-        
+
         // Statistics
         public int ReplyCount { get; set; } // Số replies trực tiếp
         public int TotalRepliesCount { get; set; } // Tổng số replies (bao gồm cả nested)
-        
+
         // Nested replies (optional - chỉ load khi cần)
         public List<BookCommentDto> Replies { get; set; } = new();
-        
+
         // Parent comment info (cho replies)
         public string? ParentUserName { get; set; }
         public string? ParentComment { get; set; }
@@ -36,13 +36,13 @@ namespace BookInfoFinder.Models.Dto
         public int BookId { get; set; }
         public int UserId { get; set; }
         public string Comment { get; set; } = "";
-        
+
         // Star rating - chỉ cho comment gốc (ParentCommentId == null)
         public int? Star { get; set; } // 1-5, required for root comments
-        
+
         // Reply information
         public int? ParentCommentId { get; set; } // null = root comment, !null = reply
-        
+
         // Validation
         public bool IsRootComment => ParentCommentId == null;
         public bool IsReply => ParentCommentId != null;

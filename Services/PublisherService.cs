@@ -153,7 +153,7 @@ namespace BookInfoFinder.Services
                     .ToListAsync();
 
                 var bookIds = books.Select(b => b.BookId).ToList();
-                
+
                 var ratings = await _context.Ratings
                     .Where(r => bookIds.Contains(r.BookId))
                     .GroupBy(r => r.BookId)
@@ -191,15 +191,15 @@ namespace BookInfoFinder.Services
             try
             {
                 var query = _context.Publishers.AsQueryable();
-                
+
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    query = query.Where(p => p.Name.Contains(search) || 
+                    query = query.Where(p => p.Name.Contains(search) ||
                                            (p.Address != null && p.Address.Contains(search)));
                 }
 
                 var totalCount = await query.CountAsync();
-                
+
                 var publishers = await query
                     .OrderBy(p => p.Name)
                     .Skip((page - 1) * pageSize)
@@ -227,7 +227,7 @@ namespace BookInfoFinder.Services
             try
             {
                 var publishers = await _context.Publishers
-                    .Where(p => p.Name.Contains(searchTerm) || 
+                    .Where(p => p.Name.Contains(searchTerm) ||
                                (p.Address != null && p.Address.Contains(searchTerm)))
                     .ToListAsync();
 

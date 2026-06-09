@@ -83,7 +83,7 @@ namespace BookInfoFinder.Services
                     .ToList();
 
                 var searchHistoryDtos = pagedRecords.Select(sh => sh.ToDto(sh.User?.UserName ?? "")).ToList();
-                
+
                 return (searchHistoryDtos, totalCount);
             }
             catch (Exception ex)

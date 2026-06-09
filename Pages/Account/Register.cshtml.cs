@@ -19,7 +19,7 @@ namespace BookInfoFinder.Pages.Account
 
         [BindProperty]
         public RegisterRequestModel RegisterRequest { get; set; } = new();
-        
+
         public string? ErrorMessage { get; set; }
         public string? SuccessMessage { get; set; }
 
