@@ -13,7 +13,6 @@ namespace BookInfoFinder.Pages.Admin
         private readonly IPublisherService _publisherService;
         private readonly ITagService _tagService;
         private readonly IBookTagService _bookTagService;
-        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public UpdateBookModel(
             IBookService bookService,
@@ -21,8 +20,7 @@ namespace BookInfoFinder.Pages.Admin
             ICategoryService categoryService,
             IPublisherService publisherService,
             ITagService tagService,
-            IBookTagService bookTagService,
-            IWebHostEnvironment webHostEnvironment)
+            IBookTagService bookTagService)
         {
             _bookService = bookService;
             _authorService = authorService;
@@ -30,7 +28,6 @@ namespace BookInfoFinder.Pages.Admin
             _publisherService = publisherService;
             _tagService = tagService;
             _bookTagService = bookTagService;
-            _webHostEnvironment = webHostEnvironment;
         }
 
         public List<AuthorDto> Authors { get; set; } = new();
@@ -116,14 +113,14 @@ namespace BookInfoFinder.Pages.Admin
                 // Handle image upload
                 if (ImageFile != null)
                 {
-                    var imagePath = SaveImageToFolder(ImageFile);
+                    var imagePath = await EncodeCoverAsync(ImageFile);
                     if (imagePath == null)
                     {
                         await LoadDataAsync();
                         ModelState.AddModelError("ImageFile", "Lỗi khi upload ảnh. Vui lòng thử lại.");
                         return Page();
                     }
-                    Book.ImageBase64 = imagePath; // Save relative path instead of base64
+                    Book.ImageBase64 = imagePath;
                 }
 
                 // Set update properties
@@ -171,79 +168,12 @@ namespace BookInfoFinder.Pages.Admin
             }
         }
 
-        private string? SaveImageToFolder(IFormFile imageFile)
+        private async Task<string?> EncodeCoverAsync(IFormFile imageFile)
         {
-            try
+            try { return await Services.ImageHelper.ToDataUrlAsync(imageFile, HttpContext.RequestAborted); }
+            catch (ArgumentException error)
             {
-                // Validate file
-                if (imageFile.Length == 0)
-                    return null;
-
-                // Check file size (max 5MB)
-                if (imageFile.Length > 5 * 1024 * 1024)
-                {
-                    ModelState.AddModelError("ImageFile", "Kích thước file không được vượt quá 5MB.");
-                    return null;
-                }
-
-                // Check file extension
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                var fileExtension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    ModelState.AddModelError("ImageFile", "Chỉ chấp nhận file ảnh (.jpg, .jpeg, .png, .gif, .webp).");
-                    return null;
-                }
-
-                // Use ImageHelper to save file
-                return Services.ImageHelper.SaveFileToImages(imageFile, _webHostEnvironment.WebRootPath);
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Lỗi khi xử lý ảnh: {ex.Message}";
-                return null;
-            }
-        }
-
-        private async Task<string?> ConvertImageToBase64Async(IFormFile imageFile)
-        {
-            try
-            {
-                // Validate file
-                if (imageFile.Length == 0)
-                    return null;
-
-                // Check file size (max 5MB)
-                if (imageFile.Length > 5 * 1024 * 1024)
-                {
-                    ModelState.AddModelError("ImageFile", "Kích thước file không được vượt quá 5MB.");
-                    return null;
-                }
-
-                // Check file extension
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                var fileExtension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    ModelState.AddModelError("ImageFile", "Chỉ chấp nhận file ảnh (.jpg, .jpeg, .png, .gif, .webp).");
-                    return null;
-                }
-
-                // Convert to base64
-                using (var memoryStream = new MemoryStream())
-                {
-                    await imageFile.CopyToAsync(memoryStream);
-                    var imageBytes = memoryStream.ToArray();
-                    var base64String = Convert.ToBase64String(imageBytes);
-
-                    // Add data URL prefix based on content type
-                    var mimeType = imageFile.ContentType;
-                    return $"data:{mimeType};base64,{base64String}";
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Lỗi khi xử lý ảnh: {ex.Message}";
+                ModelState.AddModelError("ImageFile", error.Message);
                 return null;
             }
         }

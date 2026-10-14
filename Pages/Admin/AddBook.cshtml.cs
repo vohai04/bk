@@ -12,22 +12,19 @@ namespace BookInfoFinder.Pages.Admin
         private readonly ICategoryService _categoryService;
         private readonly IPublisherService _publisherService;
         private readonly ITagService _tagService;
-        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public AddBookModel(
             IBookService bookService,
             IAuthorService authorService,
             ICategoryService categoryService,
             IPublisherService publisherService,
-            ITagService tagService,
-            IWebHostEnvironment webHostEnvironment)
+            ITagService tagService)
         {
             _bookService = bookService;
             _authorService = authorService;
             _categoryService = categoryService;
             _publisherService = publisherService;
             _tagService = tagService;
-            _webHostEnvironment = webHostEnvironment;
         }
 
         [BindProperty] public BookCreateDto Book { get; set; } = new();
@@ -77,10 +74,10 @@ namespace BookInfoFinder.Pages.Admin
                     return RedirectToPage("/Account/Login");
                 }
 
-                // Handle image upload and save to images folder
+                // Persist cover bytes in PostgreSQL, independent of the container filesystem.
                 if (ImageFile != null)
                 {
-                    var imagePath = SaveImageToFolder(ImageFile);
+                    var imagePath = await EncodeCoverAsync(ImageFile);
                     if (imagePath == null)
                     {
                         await LoadDataAsync();
@@ -92,7 +89,7 @@ namespace BookInfoFinder.Pages.Admin
                         ModelState.AddModelError("ImageFile", errorMessage);
                         return Page();
                     }
-                    Book.ImageBase64 = imagePath; // Save relative path instead of base64
+                    Book.ImageBase64 = imagePath;
                 }
 
                 // Set book properties
@@ -162,39 +159,14 @@ namespace BookInfoFinder.Pages.Admin
             }
         }
 
-        private string? SaveImageToFolder(IFormFile imageFile)
+        private async Task<string?> EncodeCoverAsync(IFormFile imageFile)
         {
-            try
+            try { return await Services.ImageHelper.ToDataUrlAsync(imageFile, HttpContext.RequestAborted); }
+            catch (ArgumentException error)
             {
-                // Validate file
-                if (imageFile.Length == 0)
-                    return null;
-
-                // Check file size (max 5MB)
-                if (imageFile.Length > 5 * 1024 * 1024)
-                {
-                    ModelState.AddModelError("ImageFile", "Kích thước file không được vượt quá 5MB.");
-                    return null;
-                }
-
-                // Check file extension
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                var fileExtension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    ModelState.AddModelError("ImageFile", "Chỉ chấp nhận file ảnh (.jpg, .jpeg, .png, .gif, .webp).");
-                    return null;
-                }
-
-                // Use ImageHelper to save file
-                return Services.ImageHelper.SaveFileToImages(imageFile, _webHostEnvironment.WebRootPath);
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Lỗi khi xử lý ảnh: {ex.Message}";
+                ModelState.AddModelError("ImageFile", error.Message);
                 return null;
             }
         }
-
     }
 }

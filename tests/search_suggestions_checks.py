@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright, expect
 
 base = os.environ.get('BOOK_TEST_URL', 'http://localhost:5180')
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
+    browser = p.chromium.launch(headless=True, channel=os.environ.get('BOOK_TEST_BROWSER_CHANNEL'))
     page = browser.new_page(viewport={'width':1440, 'height':1050})
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))

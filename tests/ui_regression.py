@@ -47,7 +47,7 @@ try:
         user_id = conn.execute('INSERT INTO "Users" ("FullName","UserName","Password","Email","CreatedAt","Role","Status") VALUES (%s,%s,%s,%s,NOW(),%s,1) RETURNING "UserId"', ('UI test', name, password, name + '@example.invalid', role)).fetchone()[0]
         names.append(name); fixture_ids.append(user_id)
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, channel=os.environ.get('BOOK_TEST_BROWSER_CHANNEL'))
         context = browser.new_context(viewport={'width':1440,'height':1050})
         page = context.new_page()
         errors = []

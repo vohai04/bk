@@ -473,16 +473,22 @@ namespace BookInfoFinder.Pages
         }
 
         // Chatbot handler
+        public async Task<JsonResult> OnGetChatHistoryAsync()
+        {
+            Response.Headers.CacheControl = "no-store";
+            var history = await _chatbotService.GetHistoryAsync(BookInfoFinder.Services.ChatConversation.Resolve(HttpContext));
+            return new JsonResult(new { messages = history.Select(message => new
+            {
+                id = message.ChatbotId, role = message.Role, text = message.Message, createdAt = message.CreatedAt
+            }) });
+        }
+
         public async Task<JsonResult> OnPostChatAsync(string message)
         {
-            // Use user session or create a persistent one for the conversation
-            var sessionId = HttpContext.Session.GetString("ChatSessionId");
-            if (string.IsNullOrEmpty(sessionId))
-            {
-                sessionId = Guid.NewGuid().ToString();
-                HttpContext.Session.SetString("ChatSessionId", sessionId);
-            }
-
+            Response.Headers.CacheControl = "no-store";
+            if (string.IsNullOrWhiteSpace(message) || message.Length > 2000)
+                return new JsonResult(new { reply = "Nhập câu hỏi từ 1 đến 2000 ký tự." }) { StatusCode = 400 };
+            var sessionId = BookInfoFinder.Services.ChatConversation.Resolve(HttpContext);
             var reply = await _chatbotService.GetChatbotReplyAsync(message, sessionId);
             return new JsonResult(new { reply });
         }

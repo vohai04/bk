@@ -37,6 +37,16 @@ foreach (var pair in new[] { (401,"xác thực"), (403,"xác thực"), (404,"Mod
     handler.Status = pair.Item1;
     await Check("HTTP " + pair.Item1, pair.Item2);
 }
+handler.Body = """{"candidates":[{"content":{"parts":[{"text":"Recovered"}]}}]}""";
+handler.Statuses = new Queue<int>(new[] {503, 200});
+var previousCalls = handler.Calls;
+await Check("temporary 503 is retried and recovers", "Recovered");
+if (handler.Calls != previousCalls + 2) throw new Exception("Unexpected retry count");
+handler.Statuses = new Queue<int>(new[] {503, 503, 503, 200});
+previousCalls = handler.Calls;
+await Check("persistent 503 stops after three attempts", "gián đoạn");
+if (handler.Calls != previousCalls + 3) throw new Exception("Unbounded retries");
+handler.Statuses.Clear();
 handler.Failure = new HttpRequestException("test-secret");
 await Check("network failure sanitized", "Chưa thể kết nối");
 handler.Failure = new TaskCanceledException("test-secret");
@@ -45,15 +55,18 @@ settings["GEMINI:ApiKey"] = "";
 await Check("missing configuration", "chưa được cấu hình");
 
 sealed class FakeHandler : HttpMessageHandler {
+    public int Calls;
+    public Queue<int> Statuses = new();
     public int Status = 200;
     public string Body = "{}";
     public Exception? Failure;
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) {
+        Calls++;
         if (request.RequestUri!.Query.Length != 0 || request.RequestUri.ToString().Contains("test-secret")) throw new Exception("Secret in URI");
         if (request.Headers.GetValues("x-goog-api-key").Single() != "test-secret") throw new Exception("Missing API key header");
         if (!request.RequestUri.AbsolutePath.Contains("gemini-3.8-flash")) throw new Exception("Incorrect model");
         if (Failure != null) throw Failure;
-        return Task.FromResult(new HttpResponseMessage((HttpStatusCode)Status) { Content = new StringContent(Body, Encoding.UTF8, "application/json") });
+        return Task.FromResult(new HttpResponseMessage((HttpStatusCode)(Statuses.Count > 0 ? Statuses.Dequeue() : Status)) { Content = new StringContent(Body, Encoding.UTF8, "application/json") });
     }
 }
 ''', encoding='utf-8')

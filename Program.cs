@@ -95,6 +95,7 @@ builder.Services.AddScoped<IPublisherService, PublisherService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<IBookCommentService, BookCommentService>();
 builder.Services.AddScoped<IChatbotService, ChatbotService>();
+builder.Services.AddScoped<ChatCatalog>();
 builder.Services.AddHttpClient<GeminiClient>(client => client.Timeout = TimeSpan.FromSeconds(45));
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddHttpContextAccessor();
@@ -139,6 +140,7 @@ using (var scope = app.Services.CreateScope())
     {
         context.Database.Migrate();
         await BookInfoFinder.Services.PasswordStorage.UpgradeLegacyAsync(context);
+        await ImageHelper.PersistLegacyCoversAsync(context, app.Environment.WebRootPath, app.Logger);
         Console.WriteLine("✅ Database migration completed successfully.");
     }
     catch (Exception ex)

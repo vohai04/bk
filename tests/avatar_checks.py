@@ -31,7 +31,7 @@ try:
     user_id = db.execute('INSERT INTO "Users" ("FullName","UserName","Password","Email","CreatedAt","Role","Status") VALUES (%s,%s,%s,%s,NOW(),1,1) RETURNING "UserId"', ('Avatar test',username,password,username+'@example.invalid')).fetchone()[0]
     other_user = db.execute('SELECT "UserId" FROM "Users" WHERE "UserId"<>%s ORDER BY "UserId" LIMIT 1',(user_id,)).fetchone()[0]
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, channel=os.environ.get('BOOK_TEST_BROWSER_CHANNEL'))
         context = browser.new_context(viewport={'width':1440,'height':1050})
         page = context.new_page()
         errors = []

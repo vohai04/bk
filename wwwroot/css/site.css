@@ -38,6 +38,7 @@ a{color:#2d6b53}a:hover{color:#245440}
 .chat-bubble{padding:11px 14px;border:1px solid #e2e9e4;background:#fff;color:#273b34;border-radius:3px 14px 14px 14px;font-size:13px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}
 .chat-message--user .chat-bubble{background:#2d6b53;color:#fff;border-color:#2d6b53;border-radius:14px 3px 14px 14px}
 .chat-message--pending .chat-bubble{background:#eff4ef;color:#526359;font-style:italic}
+.chat-bubble a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 @media(max-width:480px){.chatbot-window{right:16px;bottom:16px}.chatbot-body{padding:14px 12px;gap:16px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 

@@ -18,7 +18,7 @@ try:
     def count():
         return db.execute('SELECT count(*) FROM "Favorites" WHERE "UserId"=%s AND "BookId"=%s',(user_id,book_id)).fetchone()[0]
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, channel=os.environ.get('BOOK_TEST_BROWSER_CHANNEL'))
         page = browser.new_page()
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
