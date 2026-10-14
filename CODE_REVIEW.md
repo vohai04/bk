@@ -82,3 +82,9 @@ Quy tắc UI tham khảo: https://raw.githubusercontent.com/vercel-labs/web-inte
 - Không gửi chi tiết exception database vào prompt. Tránh tải danh sách sách hai lần khi tạo context. Nút gửi khóa trong lúc chờ để tránh gửi trùng.
 - `python tests/gemini_checks.py`: 11 kiểm tra độc lập dùng HTTP giả lập, gồm phản hồi nhiều phần, loại bỏ phần suy nghĩ, JSON lỗi/rỗng, HTTP 401/403/404/429/500, mất kết nối, timeout và thiếu cấu hình. Key chỉ nằm ở môi trường, `appsettings.json` không chứa key.
 - Docker bỏ qua `artifacts/`, `.git/` và `tests/` để không đóng gói dữ liệu local hoặc lịch sử Git.
+
+## Phân biệt người gửi trong chat
+
+- Sửa class CSS không khớp JavaScript khiến người hỏi và trợ lý dùng cùng kiểu bong bóng. Người hỏi căn phải, nền xanh/chữ trắng; trợ lý căn trái, nền trắng. Mỗi tin có nhãn người gửi và giờ UTC+7, tooltip chứa ngày gửi.
+- Hiển thị dòng chờ dưới tên trợ lý, bỏ dòng chờ và bật lại nút gửi khi request kết thúc. Nội dung vẫn dùng `textContent` để không chèn HTML.
+- Kiểm tra trình duyệt bằng fixture lấy trực tiếp partial, CSS và JS của ứng dụng: vị trí/nhãn/màu người gửi, định dạng giờ, chờ và khôi phục nút gửi, nội dung HTML hiển thị như văn bản, không tràn ở chiều rộng 320px. Phản hồi trong fixture được giả lập; kiểm tra Gemini trên Render riêng đã trả lời thành công.

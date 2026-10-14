@@ -28,14 +28,31 @@ function toggleChatbotModal() {
 function addMessage(sender, text) {
     const messages = document.getElementById('chatMessages');
     if (!messages) return;
+    const isUser = sender === 'user';
+    const sentAt = new Date();
     const msgDiv = document.createElement('div');
-    msgDiv.className = `chat-message ${sender}`;
+    msgDiv.className = `chat-message chat-message--${isUser ? 'user' : 'bot'}`;
+    const meta = document.createElement('div');
+    meta.className = 'chat-message-meta';
+    const author = document.createElement('span');
+    author.className = 'chat-message-author';
+    author.textContent = isUser ? 'Bạn' : 'Trợ lý sách';
+    const time = document.createElement('time');
+    time.dateTime = sentAt.toISOString();
+    time.textContent = new Intl.DateTimeFormat('vi-VN', {
+        hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Ho_Chi_Minh'
+    }).format(sentAt);
+    time.title = new Intl.DateTimeFormat('vi-VN', {
+        dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh'
+    }).format(sentAt);
+    meta.append(author, time);
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble';
     bubble.textContent = text;
-    msgDiv.appendChild(bubble);
+    msgDiv.append(meta, bubble);
     messages.appendChild(msgDiv);
     messages.scrollTop = messages.scrollHeight;
+    return msgDiv;
 }
 
 function sendChatMessage() {
@@ -48,6 +65,9 @@ function sendChatMessage() {
 
     addMessage('user', message);
     $input.val('');
+    const pending = addMessage('bot', 'Đang tìm câu trả lời cho bạn…');
+    pending.classList.add('chat-message--pending');
+    document.getElementById('chatMessages').setAttribute('aria-busy', 'true');
 
     fetch('/Index?handler=Chat', {
         method: 'POST',
@@ -61,6 +81,8 @@ function sendChatMessage() {
     .then(function (data) { addMessage('bot', data.reply); })
     .catch(function () { addMessage('bot', 'Chưa gửi được tin nhắn. Bạn tải lại trang rồi thử lại nhé.'); })
     .finally(function () {
+        pending.remove();
+        document.getElementById('chatMessages').setAttribute('aria-busy', 'false');
         chatPending = false;
         $('#sendChat').prop('disabled', false).text('Gửi');
     });
