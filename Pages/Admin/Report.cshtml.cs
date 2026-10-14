@@ -157,8 +157,8 @@ namespace BookInfoFinder.Pages.Admin
                     },
                     publisherData = new
                     {
-                        labels = (publishers ?? Enumerable.Empty<dynamic>()).Take(10).Select(p => p.Name).ToArray(),
-                        data = (publishers ?? Enumerable.Empty<dynamic>()).Take(10).Select(p => 1).ToArray()
+                        labels = (publishers ?? []).OrderByDescending(p => p.BookCount).ThenBy(p => p.Name).Take(10).Select(p => p.Name).ToArray(),
+                        data = (publishers ?? []).OrderByDescending(p => p.BookCount).ThenBy(p => p.Name).Take(10).Select(p => p.BookCount).ToArray()
                     },
                     categoryData = new
                     {

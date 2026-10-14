@@ -15,13 +15,15 @@ namespace BookInfoFinder.Services
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<BookService> _logger;
         private readonly IDashboardService _dashboardService;
+        private readonly IHttpContextAccessor _http;
 
-        public BookService(BookContext context, IWebHostEnvironment env, ILogger<BookService> logger, IDashboardService dashboardService)
+        public BookService(BookContext context, IWebHostEnvironment env, ILogger<BookService> logger, IDashboardService dashboardService, IHttpContextAccessor http)
         {
             _context = context;
             _env = env;
             _logger = logger;
             _dashboardService = dashboardService;
+            _http = http;
         }
 
         public async Task<List<string>> SuggestBookTitlesAsync(string keyword)
@@ -142,9 +144,11 @@ namespace BookInfoFinder.Services
                         Comment = c.Comment,
                         Star = c.Star ?? 0,
                         UserName = c.User?.UserName ?? "Ẩn danh",
+                    AvatarUrl = AvatarUrls.For(c.UserId, c.User?.AvatarVersion),
                         Role = (int)c.User?.Role!,
                         RoleName = c.User?.Role.ToString() ?? "user",
-                        CreatedAt = c.CreatedAt.ToLocalTime(),
+                        CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt,
                         ReplyCount = 0 // Will be populated separately if needed
                     }).ToList(),
                     TotalComments = await _context.BookComments.CountAsync(c => c.BookId == bookId)
@@ -181,12 +185,12 @@ namespace BookInfoFinder.Services
 
                 // Log activity
                 await _dashboardService.LogActivityAsync(
-                    bookCreateDto.UserId.ToString(), // userName - using UserId as string
+                    _http.HttpContext?.Session.GetString("UserName") ?? bookCreateDto.UserId.ToString(),
                     "Book Created",
-                    $"Created new book: '{book.Title}'",
+                    $"Thêm sách: “{book.Title}”",
                     "Book",
                     book.BookId,
-                    "" // ipAddress - empty for service layer
+                    _http.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? ""
                 );
 
                 return await GetBookDtoByIdAsync(book.BookId);
@@ -230,12 +234,12 @@ namespace BookInfoFinder.Services
 
                 // Log activity
                 await _dashboardService.LogActivityAsync(
-                    bookUpdateDto.UserId.ToString(),
+                    _http.HttpContext?.Session.GetString("UserName") ?? bookUpdateDto.UserId.ToString(),
                     "Book Updated",
-                    $"Updated book: '{book.Title}'",
+                    $"Cập nhật sách: “{book.Title}”",
                     "Book",
                     book.BookId,
-                    ""
+                    _http.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? ""
                 );
 
                 return await GetBookDtoByIdAsync(book.BookId);
@@ -277,12 +281,12 @@ namespace BookInfoFinder.Services
 
                 // Log activity (giữ nguyên)
                 await _dashboardService.LogActivityAsync(
-                    book.UserId.ToString(),
+                    _http.HttpContext?.Session.GetString("UserName") ?? book.UserId.ToString(),
                     "Book Deleted",
-                    $"Deleted book: '{book.Title}'",
+                    $"Xóa sách: “{book.Title}”",
                     "Book",
                     bookId,
-                    ""
+                    _http.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? ""
                 );
 
                 return true;
@@ -317,9 +321,11 @@ namespace BookInfoFinder.Services
                     Comment = c.Comment,
                     Star = c.Star ?? 0,
                     UserName = c.User?.UserName ?? "Ẩn danh",
+                    AvatarUrl = AvatarUrls.For(c.UserId, c.User?.AvatarVersion),
                     Role = (int)c.User?.Role!,
                     RoleName = c.User?.Role.ToString() ?? "user",
-                    CreatedAt = c.CreatedAt.ToLocalTime(),
+                    CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt,
                     ReplyCount = 0
                 }).ToList();
 
@@ -402,7 +408,7 @@ namespace BookInfoFinder.Services
             }
         }
 
-        public async Task<(List<BookDto> Books, int TotalCount)> SearchBooksAdminPagedAsync(string? title, string? author, string? category, DateTime? publicationDate, int page, int pageSize, string? tag, string? sort = null)
+        public async Task<(List<BookDto> Books, int TotalCount)> SearchBooksAdminPagedAsync(string? title, string? author, string? category, DateTime? publicationDate, int page, int pageSize, string? tag, string? sort = null, string? keyword = null)
         {
             try
             {
@@ -414,6 +420,14 @@ namespace BookInfoFinder.Services
                     .Include(b => b.BookTags)
                         .ThenInclude(bt => bt.Tag)
                     .AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(keyword))
+                {
+                    var pattern = $"%{keyword.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
+                    query = query.Where(b => EF.Functions.ILike(b.Title, pattern)
+                        || (b.Author != null && EF.Functions.ILike(b.Author.Name, pattern))
+                        || (b.Category != null && EF.Functions.ILike(b.Category.Name, pattern)));
+                }
 
                 if (!string.IsNullOrEmpty(title))
                     query = query.Where(b => b.Title.Contains(title));
@@ -432,94 +446,27 @@ namespace BookInfoFinder.Services
 
                 var totalCount = await query.CountAsync();
 
-                List<Book> books;
-                if (!string.IsNullOrEmpty(sort))
+                // Sort in PostgreSQL, then fetch only the requested page.
+                var ranked = query.Select(book => new
                 {
-                    // For complex sorting, we need to get all matching books first, then sort
-                    var allBooks = await query.ToListAsync();
-                    var allBookIds = allBooks.Select(b => b.BookId).ToList();
-
-                    // Get ratings and favorites for sorting
-                    var allRatings = await _context.Ratings
-                        .Where(r => allBookIds.Contains(r.BookId))
-                        .GroupBy(r => r.BookId)
-                        .Select(g => new { BookId = g.Key, Avg = g.Average(r => r.Star), Count = g.Count() })
-                        .ToDictionaryAsync(x => x.BookId, x => x);
-
-                    var allFavorites = await _context.Favorites
-                        .Where(f => allBookIds.Contains(f.BookId))
-                        .GroupBy(f => f.BookId)
-                        .Select(g => new { BookId = g.Key, Count = g.Count() })
-                        .ToDictionaryAsync(x => x.BookId, x => x.Count);
-
-                    // Sort books based on criteria
-                    switch (sort)
-                    {
-                        case "rating":
-                            allBooks = allBooks
-                                .Select(b =>
-                                {
-                                    var rating = allRatings.TryGetValue(b.BookId, out var r) ? r : null;
-                                    return new { Book = b, AvgRating = rating?.Avg ?? 0, RatingCount = rating?.Count ?? 0 };
-                                })
-                                .OrderByDescending(x => x.AvgRating)
-                                .ThenByDescending(x => x.RatingCount)
-                                .Select(x => x.Book)
-                                .ToList();
-                            break;
-                        case "favorites":
-                            allBooks = allBooks
-                                .Select(b =>
-                                {
-                                    var favCount = allFavorites.TryGetValue(b.BookId, out var count) ? count : 0;
-                                    var avgRating = allRatings.TryGetValue(b.BookId, out var r) ? r.Avg : 0;
-                                    return new { Book = b, FavoriteCount = favCount, AvgRating = avgRating };
-                                })
-                                .OrderByDescending(x => x.FavoriteCount)
-                                .ThenByDescending(x => x.AvgRating)
-                                .Select(x => x.Book)
-                                .ToList();
-                            break;
-                        case "searched":
-                            // Use rating count as approximation for search popularity
-                            allBooks = allBooks
-                                .Select(b =>
-                                {
-                                    var ratingCount = allRatings.TryGetValue(b.BookId, out var r) ? r.Count : 0;
-                                    var avgRating = r?.Avg ?? 0;
-                                    return new { Book = b, RatingCount = ratingCount, AvgRating = avgRating };
-                                })
-                                .OrderByDescending(x => x.RatingCount)
-                                .ThenByDescending(x => x.AvgRating)
-                                .Select(x => x.Book)
-                                .ToList();
-                            break;
-                        case "title":
-                            allBooks = allBooks.OrderBy(b => b.Title).ToList();
-                            break;
-                        case "year":
-                            allBooks = allBooks.OrderByDescending(b => b.PublicationDate).ToList();
-                            break;
-                        default:
-                            allBooks = allBooks.OrderBy(b => b.BookId).ToList();
-                            break;
-                    }
-
-                    // Apply pagination after sorting
-                    books = allBooks
-                        .Skip((page - 1) * pageSize)
-                        .Take(pageSize)
-                        .ToList();
-                }
-                else
+                    Book = book,
+                    Rating = _context.Ratings.Where(r => r.BookId == book.BookId)
+                        .Select(r => (double?)r.Star).Average() ?? 0,
+                    RatingCount = _context.Ratings.Count(r => r.BookId == book.BookId),
+                    Favorites = _context.Favorites.Count(f => f.BookId == book.BookId)
+                });
+                var ordered = sort switch
                 {
-                    // Default sorting - no need for complex logic
-                    books = await query
-                        .OrderBy(b => b.BookId)
-                        .Skip((page - 1) * pageSize)
-                        .Take(pageSize)
-                        .ToListAsync();
-                }
+                    "rating" => ranked.OrderByDescending(x => x.Rating).ThenByDescending(x => x.RatingCount),
+                    "favorites" => ranked.OrderByDescending(x => x.Favorites).ThenByDescending(x => x.Rating),
+                    "searched" => ranked.OrderByDescending(x => x.RatingCount).ThenByDescending(x => x.Rating),
+                    "title" => ranked.OrderBy(x => x.Book.Title).ThenBy(x => x.Book.BookId),
+                    "year" => ranked.OrderByDescending(x => x.Book.PublicationDate).ThenBy(x => x.Book.BookId),
+                    _ => ranked.OrderBy(x => x.Book.BookId).ThenBy(x => x.Book.BookId)
+                };
+                var books = await ordered.ThenBy(x => x.Book.BookId)
+                    .Skip((page - 1) * pageSize).Take(pageSize)
+                    .Select(x => x.Book).AsNoTracking().ToListAsync();
 
                 var bookIds = books.Select(b => b.BookId).ToList();
 

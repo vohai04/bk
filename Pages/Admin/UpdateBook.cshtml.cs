@@ -11,7 +11,6 @@ namespace BookInfoFinder.Pages.Admin
         private readonly IAuthorService _authorService;
         private readonly ICategoryService _categoryService;
         private readonly IPublisherService _publisherService;
-        private readonly IUserService _userService;
         private readonly ITagService _tagService;
         private readonly IBookTagService _bookTagService;
         private readonly IWebHostEnvironment _webHostEnvironment;
@@ -21,7 +20,6 @@ namespace BookInfoFinder.Pages.Admin
             IAuthorService authorService,
             ICategoryService categoryService,
             IPublisherService publisherService,
-            IUserService userService,
             ITagService tagService,
             IBookTagService bookTagService,
             IWebHostEnvironment webHostEnvironment)
@@ -30,7 +28,6 @@ namespace BookInfoFinder.Pages.Admin
             _authorService = authorService;
             _categoryService = categoryService;
             _publisherService = publisherService;
-            _userService = userService;
             _tagService = tagService;
             _bookTagService = bookTagService;
             _webHostEnvironment = webHostEnvironment;
@@ -91,10 +88,11 @@ namespace BookInfoFinder.Pages.Admin
             }
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(int id)
         {
             try
             {
+                if (Book.PublicationDate == default) ModelState.AddModelError("Book.PublicationDate", "Chọn ngày xuất bản.");
                 if (!ModelState.IsValid)
                 {
                     await LoadDataAsync();
@@ -108,6 +106,12 @@ namespace BookInfoFinder.Pages.Admin
                     TempData["ErrorMessage"] = "Bạn cần đăng nhập để cập nhật sách.";
                     return RedirectToPage("/Account/Login");
                 }
+
+                if (Book.BookId != id) return BadRequest();
+                var existingBook = await _bookService.GetBookByIdAsync(id);
+                if (existingBook is null) return NotFound();
+                Book.UserId = existingBook.UserId;
+                if (ImageFile is null) Book.ImageBase64 = existingBook.ImageBase64;
 
                 // Handle image upload
                 if (ImageFile != null)
@@ -123,7 +127,7 @@ namespace BookInfoFinder.Pages.Admin
                 }
 
                 // Set update properties
-                Book.UserId = userId;
+                // Preserve the original owner; the audit entry records the editor.
                 Book.TagIds = SelectedTagIds;
 
                 // Ensure publication date is UTC

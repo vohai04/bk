@@ -27,7 +27,8 @@ namespace BookInfoFinder.Services
 
         public async Task<DashboardStatsDto> GetDashboardStatsAsync()
         {
-            var today = DateTime.UtcNow.Date;
+            var today = DateTime.UtcNow.AddHours(7).Date.AddHours(-7);
+            var tomorrow = today.AddDays(1);
             var yesterday = today.AddDays(-1);
 
             var stats = new DashboardStatsDto
@@ -36,32 +37,18 @@ namespace BookInfoFinder.Services
                 TotalUsers = await _context.Users.CountAsync(),
                 TotalCategories = await _context.Categories.CountAsync(),
                 TotalComments = await _context.BookComments.CountAsync(),
-                NewBooksToday = await _context.Books.CountAsync(b => b.PublicationDate.Date >= today),
-                NewUsersToday = await _context.Users.CountAsync(u => u.CreatedAt.Date >= today),
-                NewCommentsToday = await _context.BookComments.CountAsync(c => c.CreatedAt.Date >= today),
-                NewCategoriesToday = await _context.Categories.CountAsync(c => c.CreatedAt.Date >= today),
+                NewBooksToday = await _context.ActivityLogs.Where(a => a.EntityType == "Book" && a.Action == "Book Created" && a.CreatedAt >= today && a.CreatedAt < tomorrow).Select(a => a.EntityId).Distinct().CountAsync(),
+                NewUsersToday = await _context.Users.CountAsync(u => u.CreatedAt >= today && u.CreatedAt < tomorrow),
+                NewCommentsToday = await _context.BookComments.CountAsync(c => c.CreatedAt >= today && c.CreatedAt < tomorrow),
+                NewCategoriesToday = await _context.Categories.CountAsync(c => c.CreatedAt >= today && c.CreatedAt < tomorrow),
                 ActiveUsersToday = await _context.SearchHistories
-                    .Where(s => s.SearchedAt.Date >= today)
+                    .Where(s => s.SearchedAt >= today && s.SearchedAt < tomorrow)
                     .Select(s => s.UserId)
                     .Distinct()
                     .CountAsync()
             };
 
             return stats;
-        }
-
-        public async Task<IEnumerable<ActivityLogDto>> GetRecentActivitiesAsync(int limit = 20)
-        {
-            var today = DateTime.UtcNow.Date;
-            var tomorrow = today.AddDays(1);
-
-            var activities = await _context.ActivityLogs
-                .Where(a => a.CreatedAt >= today && a.CreatedAt < tomorrow)
-                .OrderByDescending(a => a.CreatedAt)
-                .Take(limit)
-                .ToListAsync();
-
-            return activities.Select(a => a.ToDto());
         }
 
         public async Task<IEnumerable<NotificationDto>> GetNotificationsAsync(int userId, bool unreadOnly = false, int limit = 50)
@@ -105,213 +92,6 @@ namespace BookInfoFinder.Services
             return (items.Select(n => n.ToDto()), total);
         }
 
-        public async Task<IEnumerable<RecentActivityDto>> GetRecentActivitiesForDisplayAsync(int limit = 10)
-        {
-            var activities = new List<RecentActivityDto>();
-
-            var today = DateTime.UtcNow.Date;
-            var tomorrow = today.AddDays(1);
-
-            // Get recent books
-            var recentBooks = await _context.Books
-                .Include(b => b.User)
-                .Where(b => b.PublicationDate >= today && b.PublicationDate < tomorrow)
-                .OrderByDescending(b => b.PublicationDate)
-                .Take(limit / 4)
-                .ToListAsync();
-
-            activities.AddRange(recentBooks.Select(b => b.ToRecentActivityDto()));
-
-            // Get recent users
-            var recentUsers = await _context.Users
-                .Where(u => u.CreatedAt >= today && u.CreatedAt < tomorrow)
-                .OrderByDescending(u => u.CreatedAt)
-                .Take(limit / 4)
-                .ToListAsync();
-
-            activities.AddRange(recentUsers.Select(u => u.ToRecentActivityDto()));
-
-            // Get recent categories
-            var recentCategories = await _context.Categories
-                .Where(c => c.CreatedAt >= today && c.CreatedAt < tomorrow)
-                .OrderByDescending(c => c.CreatedAt)
-                .Take(limit / 4)
-                .ToListAsync();
-
-            activities.AddRange(recentCategories.Select(c => c.ToRecentActivityDto()));
-
-            // Get recent comments
-            var recentComments = await _context.BookComments
-                .Include(c => c.User)
-                .Where(c => c.CreatedAt >= today && c.CreatedAt < tomorrow)
-                .OrderByDescending(c => c.CreatedAt)
-                .Take(limit / 4)
-                .ToListAsync();
-
-            activities.AddRange(recentComments.Select(c => c.ToRecentActivityDto()));
-
-            // Sort by creation date and take top items
-            return activities
-                .OrderByDescending(a => a.CreatedAt)
-                .Take(limit);
-        }
-
-        public async Task<(IEnumerable<RecentActivityDto> Activities, int TotalCount)> GetRecentActivitiesPagedAsync(int page, int pageSize)
-        {
-            // Build queryable projections for each entity type so DB can do ordering/skip/take
-            // Note: we project to an anonymous type first then map to RecentActivityDto after materialize
-
-            var booksQ = _context.Books
-                .Select(b => new
-                {
-                    Type = "book",
-                    Title = b.Title,
-                    Description = (string)("Đã thêm sách"),
-                    UserName = (string)(b.User != null ? b.User.UserName : "Hệ thống"),
-                    CreatedAt = b.PublicationDate,
-                    ActionUrl = (string)("/BookDetail/" + b.BookId),
-                    EntityId = (int?)b.BookId,
-                    EntityType = "Book"
-                });
-
-            var usersQ = _context.Users
-                .Select(u => new
-                {
-                    Type = "user",
-                    Title = u.UserName,
-                    Description = "Đã đăng ký tài khoản",
-                    UserName = u.UserName,
-                    CreatedAt = u.CreatedAt,
-                    ActionUrl = "/Admin/Users",
-                    EntityId = (int?)u.UserId,
-                    EntityType = "User"
-                });
-
-            var categoriesQ = _context.Categories
-                .Select(c => new
-                {
-                    Type = "category",
-                    Title = c.Name,
-                    Description = "Thể loại mới",
-                    UserName = "Hệ thống",
-                    CreatedAt = c.CreatedAt,
-                    ActionUrl = "/Admin/Categories",
-                    EntityId = (int?)c.CategoryId,
-                    EntityType = "Category"
-                });
-
-            var today = DateTime.UtcNow.Date;
-            var tomorrow = today.AddDays(1);
-
-            // Fetch each entity's today's activities separately and materialize to avoid EF set-operation translation issues
-            var booksList = await _context.Books
-                .Where(b => b.PublicationDate >= today && b.PublicationDate < tomorrow)
-                .Select(b => new RecentActivityDto
-                {
-                    Type = "book",
-                    Title = b.Title,
-                    Description = "Đã thêm sách",
-                    UserName = b.User != null ? b.User.UserName : "Hệ thống",
-                    CreatedAt = b.PublicationDate,
-                    ActionUrl = "/BookDetail/" + b.BookId,
-                    EntityId = b.BookId,
-                    EntityType = "Book"
-                })
-                .ToListAsync();
-
-            var usersList = await _context.Users
-                .Where(u => u.CreatedAt >= today && u.CreatedAt < tomorrow)
-                .Select(u => new RecentActivityDto
-                {
-                    Type = "user",
-                    Title = u.UserName,
-                    Description = "Đã đăng ký tài khoản",
-                    UserName = u.UserName,
-                    CreatedAt = u.CreatedAt,
-                    ActionUrl = "/Admin/Users",
-                    EntityId = u.UserId,
-                    EntityType = "User"
-                })
-                .ToListAsync();
-
-            var categoriesList = await _context.Categories
-                .Where(c => c.CreatedAt >= today && c.CreatedAt < tomorrow)
-                .Select(c => new RecentActivityDto
-                {
-                    Type = "category",
-                    Title = c.Name,
-                    Description = "Thể loại mới",
-                    UserName = "Hệ thống",
-                    CreatedAt = c.CreatedAt,
-                    ActionUrl = "/Admin/Categories",
-                    EntityId = c.CategoryId,
-                    EntityType = "Category"
-                })
-                .ToListAsync();
-
-            var commentsList = await _context.BookComments
-                .Where(c => c.CreatedAt >= today && c.CreatedAt < tomorrow)
-                .Select(c => new RecentActivityDto
-                {
-                    Type = "comment",
-                    Title = c.Comment.Substring(0, Math.Min(60, c.Comment.Length)),
-                    Description = c.Comment,
-                    UserName = c.User != null ? c.User.UserName : "Unknown",
-                    CreatedAt = c.CreatedAt,
-                    ActionUrl = "/BookDetail/" + c.BookId + "#comment-content-" + c.BookCommentId,
-                    EntityId = c.BookCommentId,
-                    EntityType = "BookComment"
-                })
-                .ToListAsync();
-
-            // Combine lists in-memory and apply ordering + paging
-            var all = booksList
-                .Concat(usersList)
-                .Concat(categoriesList)
-                .Concat(commentsList)
-                .OrderByDescending(x => x.CreatedAt)
-                .ToList();
-
-            var total = all.Count;
-            var pageItems = all.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-            return (pageItems, total);
-        }
-
-        public async Task<(IEnumerable<ActivityLogDto> ActivityLogs, int TotalCount)> GetActivityLogsPagedAsync(int page, int pageSize, DateTime? startDate = null, DateTime? endDate = null, string? entityType = null)
-        {
-            // Build query and apply filters at DB level so total count reflects filters
-            var query = _context.ActivityLogs.AsQueryable();
-
-            if (startDate.HasValue)
-            {
-                // Use date range based on the provided date values (avoid timezone shifts)
-                // Ensure the DateTime has Kind=Utc so Npgsql maps to timestamptz correctly
-                var start = DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Utc);
-                query = query.Where(a => a.CreatedAt >= start);
-            }
-
-            if (endDate.HasValue)
-            {
-                // include full day (exclusive upper bound)
-                // Ensure the DateTime has Kind=Utc so Npgsql maps to timestamptz correctly
-                var end = DateTime.SpecifyKind(endDate.Value.Date.AddDays(1), DateTimeKind.Utc);
-                query = query.Where(a => a.CreatedAt < end);
-            }
-
-            if (!string.IsNullOrWhiteSpace(entityType))
-            {
-                var t = entityType.ToLower();
-                query = query.Where(a => (a.EntityType ?? string.Empty).ToLower().Contains(t));
-            }
-
-            query = query.OrderByDescending(a => a.CreatedAt);
-
-            var total = await query.CountAsync();
-            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-            return (items.Select(a => a.ToDto()), total);
-        }
-
         public async Task<bool> MarkNotificationAsReadAsync(int notificationId, int userId)
         {
             var notification = await _context.Notifications
@@ -319,11 +99,6 @@ namespace BookInfoFinder.Services
 
             if (notification == null)
                 return false;
-
-            // Don't mark comment_reply notifications as read automatically
-            // They should remain unread until user manually marks them or takes action
-            if (notification.Type == "comment_reply")
-                return true; // Return success but don't actually mark as read
 
             notification.IsRead = true;
             await _context.SaveChangesAsync();
@@ -333,7 +108,7 @@ namespace BookInfoFinder.Services
         public async Task<bool> MarkAllNotificationsAsReadAsync(int userId)
         {
             var notifications = await _context.Notifications
-                .Where(n => n.UserId == userId && !n.IsRead && n.Type != "comment_reply")
+                .Where(n => n.UserId == userId && !n.IsRead)
                 .ToListAsync();
 
             foreach (var notification in notifications)
@@ -348,7 +123,7 @@ namespace BookInfoFinder.Services
         public async Task<int> GetUnreadNotificationCountAsync(int userId)
         {
             return await _context.Notifications
-                .CountAsync(n => n.UserId == userId && !n.IsRead && n.Type != "comment_reply");
+                .CountAsync(n => n.UserId == userId && !n.IsRead);
         }
 
         public async Task LogActivityAsync(string userName, string action, string description, string entityType, int? entityId, string ipAddress)
@@ -411,75 +186,18 @@ namespace BookInfoFinder.Services
             }
         }
 
-        public async Task CreateCommentReplyNotificationAsync(int commentId, int replierUserId)
+        public async Task CreateCommentReplyNotificationAsync(int replyId, int replierUserId)
         {
-            var comment = await _context.BookComments
-                .Include(c => c.User)
-                .Include(c => c.Book)
-                .FirstOrDefaultAsync(c => c.BookCommentId == commentId);
-
-            if (comment == null || comment.UserId == replierUserId)
-                return;
-
+            var reply = await _context.BookComments.Include(c => c.Book).FirstOrDefaultAsync(c => c.BookCommentId == replyId);
+            if (reply?.ParentCommentId is not int parentId) return;
+            var parent = await _context.BookComments.FindAsync(parentId);
+            if (parent is null || parent.UserId == replierUserId) return;
             var replier = await _context.Users.FindAsync(replierUserId);
-            if (replier == null)
-                return;
-
-            var title = "Bình luận mới";
-            var message = $"{replier.UserName} đã trả lời bình luận của bạn trong sách \"{comment.Book?.Title ?? "Unknown"}\"";
-
-            await CreateNotificationAsync(
-                comment.UserId,
-                title,
-                message,
-                "comment_reply",
-                    comment.BookCommentId,
-                "book"
-            );
+            if (replier is null) return;
+            await CreateNotificationAsync(parent.UserId, "Phản hồi mới",
+                $"{replier.UserName} đã trả lời bình luận của bạn trong sách {reply.Book?.Title ?? "Không có tiêu đề"}",
+                "comment_reply", reply.BookCommentId, "BookComment");
         }
 
-        public async Task<object?> GetReplyDetailsAsync(int notificationId)
-        {
-            var notification = await _context.Notifications
-                .Include(n => n.User)
-                .FirstOrDefaultAsync(n => n.NotificationId == notificationId);
-
-            if (notification == null || notification.Type != "comment_reply")
-                return null;
-
-            // Get the reply comment details
-            var replyComment = await _context.BookComments
-                .Include(c => c.User)
-                .Include(c => c.Book)
-                .FirstOrDefaultAsync(c => c.BookCommentId == notification.RelatedEntityId);
-
-            if (replyComment == null)
-                return null;
-
-            // Get parent comment separately to avoid null reference
-            BookComment? parentComment = null;
-            if (replyComment.ParentCommentId.HasValue)
-            {
-                parentComment = await _context.BookComments
-                    .Include(pc => pc.User)
-                    .FirstOrDefaultAsync(pc => pc.BookCommentId == replyComment.ParentCommentId.Value);
-            }
-
-            return new
-            {
-                notificationId = notification.NotificationId,
-                replyId = replyComment.BookCommentId,
-                replyContent = replyComment.Comment,
-                replyUserName = replyComment.User?.UserName ?? "Ẩn danh",
-                replyUserRole = replyComment.User?.Role.ToString() ?? "user",
-                replyCreatedAt = replyComment.CreatedAt.ToLocalTime(),
-                parentCommentId = replyComment.ParentCommentId,
-                parentCommentContent = parentComment?.Comment ?? "",
-                parentCommentUserName = parentComment?.User?.UserName ?? "Ẩn danh",
-                bookId = replyComment.BookId,
-                bookTitle = replyComment.Book?.Title ?? "Unknown Book",
-                bookUrl = $"/BookDetail/{replyComment.BookId}"
-            };
-        }
     }
 }

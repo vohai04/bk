@@ -12,8 +12,6 @@ namespace BookInfoFinder.Pages.Admin
         private readonly ICategoryService _categoryService;
         private readonly IPublisherService _publisherService;
         private readonly ITagService _tagService;
-        private readonly IBookTagService _bookTagService;
-        private readonly IUserService _userService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
         public AddBookModel(
@@ -22,8 +20,6 @@ namespace BookInfoFinder.Pages.Admin
             ICategoryService categoryService,
             IPublisherService publisherService,
             ITagService tagService,
-            IBookTagService bookTagService,
-            IUserService userService,
             IWebHostEnvironment webHostEnvironment)
         {
             _bookService = bookService;
@@ -31,8 +27,6 @@ namespace BookInfoFinder.Pages.Admin
             _categoryService = categoryService;
             _publisherService = publisherService;
             _tagService = tagService;
-            _bookTagService = bookTagService;
-            _userService = userService;
             _webHostEnvironment = webHostEnvironment;
         }
 
@@ -54,6 +48,7 @@ namespace BookInfoFinder.Pages.Admin
         {
             try
             {
+                if (Book.PublicationDate == default) ModelState.AddModelError("Book.PublicationDate", "Chọn ngày xuất bản.");
                 if (!ModelState.IsValid)
                 {
                     await LoadDataAsync();
@@ -122,15 +117,6 @@ namespace BookInfoFinder.Pages.Admin
                     }
                     TempData["ErrorMessage"] = errorMessage;
                     return Page();
-                }
-
-                // Add book tags
-                if (SelectedTagIds.Any())
-                {
-                    foreach (var tagId in SelectedTagIds)
-                    {
-                        await _bookTagService.AddBookTagAsync(createdBook.BookId, tagId);
-                    }
                 }
 
                 // Return JSON for AJAX request
@@ -210,47 +196,5 @@ namespace BookInfoFinder.Pages.Admin
             }
         }
 
-        private async Task<string?> ConvertImageToBase64Async(IFormFile imageFile)
-        {
-            try
-            {
-                // Validate file
-                if (imageFile.Length == 0)
-                    return null;
-
-                // Check file size (max 5MB)
-                if (imageFile.Length > 5 * 1024 * 1024)
-                {
-                    ModelState.AddModelError("ImageFile", "Kích thước file không được vượt quá 5MB.");
-                    return null;
-                }
-
-                // Check file extension
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                var fileExtension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    ModelState.AddModelError("ImageFile", "Chỉ chấp nhận file ảnh (.jpg, .jpeg, .png, .gif, .webp).");
-                    return null;
-                }
-
-                // Convert to base64
-                using (var memoryStream = new MemoryStream())
-                {
-                    await imageFile.CopyToAsync(memoryStream);
-                    var imageBytes = memoryStream.ToArray();
-                    var base64String = Convert.ToBase64String(imageBytes);
-
-                    // Add data URL prefix based on content type
-                    var mimeType = imageFile.ContentType;
-                    return $"data:{mimeType};base64,{base64String}";
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Lỗi khi xử lý ảnh: {ex.Message}";
-                return null;
-            }
-        }
     }
 }

@@ -15,6 +15,7 @@ namespace BookInfoFinder.Services
                 UserName = user.UserName, // Fixed property name
                 Email = user.Email,
                 FullName = user.FullName,
+                AvatarUrl = AvatarUrls.For(user.UserId, user.AvatarVersion),
                 Role = user.Role.ToString(),
                 Status = user.Status, // Use int status instead of bool
                 CreatedAt = user.CreatedAt, // Now available in entity
@@ -337,6 +338,7 @@ namespace BookInfoFinder.Services
                 BookId = comment.BookId,
                 UserId = comment.UserId,
                 UserName = comment.User?.UserName ?? "",
+                AvatarUrl = AvatarUrls.For(comment.UserId, comment.User?.AvatarVersion),
                 Role = (int)(comment.User?.Role ?? Models.Role.User),
                 RoleName = (comment.User?.Role ?? Models.Role.User).ToString(),
                 ParentCommentId = comment.ParentCommentId,
@@ -402,64 +404,5 @@ namespace BookInfoFinder.Services
             };
         }
 
-        public static RecentActivityDto ToRecentActivityDto(this Book book)
-        {
-            return new RecentActivityDto
-            {
-                Type = "book",
-                Title = $"Sách mới: {book.Title}",
-                Description = $"Được thêm bởi {book.User?.UserName ?? "Hệ thống"}",
-                UserName = book.User?.UserName ?? "Hệ thống",
-                CreatedAt = book.PublicationDate != default ? book.PublicationDate : DateTime.UtcNow,
-                ActionUrl = $"/BookDetail/{book.BookId}",
-                EntityId = book.BookId,
-                EntityType = "Book"
-            };
-        }
-
-        public static RecentActivityDto ToRecentActivityDto(this User user)
-        {
-            return new RecentActivityDto
-            {
-                Type = "user",
-                Title = $"Người dùng mới: {user.UserName}",
-                Description = $"Đã đăng ký tài khoản",
-                UserName = user.UserName,
-                CreatedAt = user.CreatedAt,
-                ActionUrl = "/Admin/Users",
-                EntityId = user.UserId,
-                EntityType = "User"
-            };
-        }
-
-        public static RecentActivityDto ToRecentActivityDto(this Category category)
-        {
-            return new RecentActivityDto
-            {
-                Type = "category",
-                Title = $"Thể loại mới: {category.Name}",
-                Description = $"Được tạo bởi hệ thống",
-                UserName = "Hệ thống",
-                CreatedAt = category.CreatedAt,
-                ActionUrl = "/Admin/Categories",
-                EntityId = category.CategoryId,
-                EntityType = "Category"
-            };
-        }
-
-        public static RecentActivityDto ToRecentActivityDto(this BookComment comment)
-        {
-            return new RecentActivityDto
-            {
-                Type = "comment",
-                Title = $"Bình luận mới",
-                Description = $"\"{comment.Comment?.Substring(0, Math.Min(50, comment.Comment.Length)) ?? "Nội dung bình luận"}\"",
-                UserName = comment.User?.UserName ?? "Unknown",
-                CreatedAt = comment.CreatedAt,
-                ActionUrl = $"/BookDetail/{comment.BookId}#comment-{comment.BookCommentId}",
-                EntityId = comment.BookCommentId,
-                EntityType = "BookComment"
-            };
-        }
     }
 }

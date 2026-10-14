@@ -1,0 +1,31 @@
+@inject BookInfoFinder.Services.Interface.IUserService Users
+@{
+    var username = Context.Session.GetString("UserName");
+    var userId = int.TryParse(Context.Session.GetString("UserId"), out var id) ? id : 0;
+    var avatarUrl = userId > 0 ? (await Users.GetUserByIdAsync(userId))?.AvatarUrl : null;
+    var isAdmin = string.Equals(Context.Session.GetString("Role"), "Admin", StringComparison.OrdinalIgnoreCase);
+}
+@if (!string.IsNullOrEmpty(username))
+{
+    <div class="dropdown account-menu">
+        <button class="account-button" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Mở menu tài khoản">
+            <partial name="_Avatar" model="@(new BookInfoFinder.Models.View.AvatarViewModel(userId, username, avatarUrl, "account-avatar"))" />
+            <span class="account-name">@username</span>
+            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" asp-page="/Account/Profile">Hồ sơ của bạn</a></li>
+            @if (isAdmin)
+            {
+                <li><a class="dropdown-item" asp-page="/Admin/Dashboard">Khu vực quản trị</a></li>
+            }
+            <li><hr class="dropdown-divider" /></li>
+            <li><form method="post" asp-page="/Account/Logout"><button class="dropdown-item text-danger" type="submit">Đăng xuất</button></form></li>
+        </ul>
+    </div>
+}
+else
+{
+    <a class="quiet-link" asp-page="/Account/Login">Đăng nhập</a>
+    <a class="button-primary" asp-page="/Account/Register">Tạo tài khoản</a>
+}

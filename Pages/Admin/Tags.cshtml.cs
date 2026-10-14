@@ -11,25 +11,8 @@ namespace BookInfoFinder.Pages.Admin
 
         public TagsModel(ITagService tagService) => _tagService = tagService;
 
-        public List<TagDto> Tags { get; set; } = new();
-        [BindProperty(SupportsGet = true)] public int? EditTagId { get; set; }
-        [BindProperty(SupportsGet = true)] public int CurrentPage { get; set; } = 1;
-        public int TotalPages { get; set; }
-        public int TotalCount { get; set; }
+        public void OnGet() { }
 
-        public async Task OnGetAsync(int? edit, int page = 1)
-        {
-            CurrentPage = page < 1 ? 1 : page;
-            int pageSize = 10;
-
-            var result = await _tagService.GetTagsPagedAsync(CurrentPage, pageSize);
-            Tags = result.Tags;
-            TotalCount = result.TotalCount;
-            TotalPages = (int)Math.Ceiling((double)TotalCount / pageSize);
-            EditTagId = edit;
-        }
-
-        // AJAX handler cho filter + phân trang
         public async Task<JsonResult> OnGetAjaxSearchAsync()
         {
             try
@@ -39,8 +22,8 @@ namespace BookInfoFinder.Pages.Admin
                 int.TryParse(query["page"], out int page);
                 int.TryParse(query["pageSize"], out int pageSize);
 
-                page = page <= 0 ? 1 : page;
-                pageSize = pageSize <= 0 ? 10 : pageSize;
+                page = Math.Clamp(page, 1, 100000);
+                pageSize = pageSize <= 0 ? 10 : Math.Clamp(pageSize, 1, 50);
 
                 var result = await _tagService.GetTagsPagedAsync(page, pageSize, search);
 

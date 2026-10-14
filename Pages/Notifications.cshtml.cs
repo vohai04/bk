@@ -1,142 +1,51 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using BookInfoFinder.Data;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 
-namespace BookInfoFinder.Pages
+namespace BookInfoFinder.Pages;
+
+public sealed class NotificationsModel(IDashboardService dashboard, BookContext context) : PageModel
 {
-    public class NotificationsModel : PageModel
+    private int? UserId => int.TryParse(HttpContext.Session.GetString("UserId"), out var id) ? id : null;
+    public sealed record Item(NotificationDto Notification, string? TargetUrl);
+    public List<Item> Items { get; private set; } = [];
+    public int CurrentPage { get; private set; }
+    public int TotalPages { get; private set; }
+    public int UnreadCount { get; private set; }
+    public async Task OnGetAsync(int page = 1)
     {
-        private readonly IDashboardService _dashboardService;
-
-        public NotificationsModel(IDashboardService dashboardService)
-        {
-            _dashboardService = dashboardService;
-        }
-
-        public class NotificationItem
-        {
-            public NotificationDto Notification { get; set; } = default!;
-            public string? TargetUrl { get; set; }
-        }
-
-        public List<NotificationItem> Items { get; set; } = new List<NotificationItem>();
-        new public int Page { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
-        public int TotalCount { get; set; }
-
-        public async Task OnGetAsync(int page = 1, int pageSize = 10)
-        {
-            Page = Math.Max(1, page);
-            PageSize = Math.Max(1, pageSize);
-
-            var userIdStr = HttpContext.Session.GetString("UserId") ?? Request.Cookies["UserId"];
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
-            {
-                // Not logged in or no user id available
-                Items = new List<NotificationItem>();
-                TotalCount = 0;
-                return;
-            }
-
-            var (notifications, total) = await _dashboardService.GetNotificationsPagedAsync(userId, Page, PageSize);
-            TotalCount = total;
-
-            foreach (var n in notifications)
-            {
-                string? url = null;
-                if (n.Type == "comment_reply")
-                {
-                    // Ask service for reply details (includes replyId and book info)
-                    var details = await _dashboardService.GetReplyDetailsAsync(n.NotificationId);
-                    if (details != null)
-                    {
-                        try
-                        {
-                            var bookId = details.GetType().GetProperty("bookId")?.GetValue(details)?.ToString();
-                            var replyId = details.GetType().GetProperty("replyId")?.GetValue(details)?.ToString();
-                            if (!string.IsNullOrEmpty(bookId) && !string.IsNullOrEmpty(replyId))
-                            {
-                                url = $"/BookDetail/{bookId}#comment-content-{replyId}";
-                            }
-                        }
-                        catch { }
-                    }
-                }
-
-                // Fallback: if RelatedEntityType == book and RelatedEntityId present, link to book
-                if (url == null && n.RelatedEntityType?.ToLower() == "book" && n.RelatedEntityId.HasValue)
-                {
-                    url = $"/BookDetail/{n.RelatedEntityId.Value}";
-                }
-
-                Items.Add(new NotificationItem { Notification = n, TargetUrl = url });
-            }
-        }
-
-        // AJAX handler to return current user id and unread count
-        public async Task<IActionResult> OnGetUnreadCountAsync()
-        {
-            var userIdStr = HttpContext.Session.GetString("UserId") ?? Request.Cookies["UserId"];
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
-            {
-                return new JsonResult(new { userId = (int?)null, unread = 0 });
-            }
-
-            var count = await _dashboardService.GetUnreadNotificationCountAsync(userId);
-            return new JsonResult(new { userId = (int?)userId, unread = count });
-        }
-
-        // AJAX handler to return a page of notifications as JSON
-        public async Task<IActionResult> OnGetPageAsync(int page = 1, int pageSize = 8)
-        {
-            var userIdStr = HttpContext.Session.GetString("UserId") ?? Request.Cookies["UserId"];
-            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
-            {
-                return new JsonResult(new { items = new object[0], total = 0 });
-            }
-
-            var (notifications, total) = await _dashboardService.GetNotificationsPagedAsync(userId, page, pageSize);
-
-            var resultList = new List<object>();
-            foreach (var n in notifications)
-            {
-                string? url = null;
-                if (n.Type == "comment_reply")
-                {
-                    var details = await _dashboardService.GetReplyDetailsAsync(n.NotificationId);
-                    if (details != null)
-                    {
-                        try
-                        {
-                            var bookId = details.GetType().GetProperty("bookId")?.GetValue(details)?.ToString();
-                            var replyId = details.GetType().GetProperty("replyId")?.GetValue(details)?.ToString();
-                            if (!string.IsNullOrEmpty(bookId) && !string.IsNullOrEmpty(replyId))
-                            {
-                                url = $"/BookDetail/{bookId}#comment-content-{replyId}";
-                            }
-                        }
-                        catch { }
-                    }
-                }
-
-                if (url == null && n.RelatedEntityType?.ToLower() == "book" && n.RelatedEntityId.HasValue)
-                {
-                    url = $"/BookDetail/{n.RelatedEntityId.Value}";
-                }
-
-                resultList.Add(new
-                {
-                    notification = n,
-                    targetUrl = url
-                });
-            }
-
-            return new JsonResult(new { items = resultList, total });
-        }
+        if (!UserId.HasValue) return;
+        CurrentPage = Math.Clamp(page, 1, 100000);
+        var result = await dashboard.GetNotificationsPagedAsync(UserId.Value, CurrentPage, 10);
+        TotalPages = (int)Math.Ceiling(result.TotalCount / 10d);
+        UnreadCount = await dashboard.GetUnreadNotificationCountAsync(UserId.Value);
+        var notifications = result.Notifications.ToList();
+        var replyIds = notifications.Where(n => n.Type == "comment_reply" && n.RelatedEntityId.HasValue).Select(n => n.RelatedEntityId!.Value).ToList();
+        var replies = await context.BookComments.AsNoTracking().Where(c => replyIds.Contains(c.BookCommentId)).ToDictionaryAsync(c => c.BookCommentId, c => c.BookId);
+        Items = notifications.Select(n => new Item(n,
+            n.Type == "comment_reply" && n.RelatedEntityId.HasValue && replies.TryGetValue(n.RelatedEntityId.Value, out var bookId)
+            ? $"/BookDetail/{bookId}#comment-content-{n.RelatedEntityId}"
+            : n.RelatedEntityType?.ToLowerInvariant() == "book" && n.RelatedEntityId.HasValue ? $"/BookDetail/{n.RelatedEntityId}" : null)).ToList();
+    }
+    public async Task<IActionResult> OnGetUnreadCountAsync() => new JsonResult(new { userId = UserId, unread = UserId.HasValue ? await dashboard.GetUnreadNotificationCountAsync(UserId.Value) : 0 });
+    public async Task<IActionResult> OnGetPageAsync(int page = 1)
+    {
+        await OnGetAsync(page);
+        return new JsonResult(new { items = Items, total = TotalPages * 10 });
+    }
+    public async Task<IActionResult> OnPostReadAsync(int notificationId)
+    {
+        if (!UserId.HasValue) return Unauthorized();
+        await dashboard.MarkNotificationAsReadAsync(notificationId, UserId.Value);
+        return RedirectToPage();
+    }
+    public async Task<IActionResult> OnPostReadAllAsync()
+    {
+        if (!UserId.HasValue) return Unauthorized();
+        await dashboard.MarkAllNotificationsAsReadAsync(UserId.Value);
+        return RedirectToPage();
     }
 }

@@ -1,0 +1,8 @@
+@model BookInfoFinder.Models.View.AvatarViewModel
+<span class="user-avatar @Model.CssClass" data-avatar-user="@Model.UserId" aria-hidden="true">
+    <span class="avatar-initial">@(string.IsNullOrEmpty(Model.UserName) ? "B" : Model.UserName[..1].ToUpperInvariant())</span>
+    @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+    {
+        <img src="@Model.AvatarUrl" width="256" height="256" alt="" />
+    }
+</span>

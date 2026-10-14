@@ -62,7 +62,9 @@
 
     // If userId was server-rendered into the page, use it directly
     if (currentUserId.length > 0) {
-        initializeWithUser(currentUserId, null);
+        $.getJSON('/Notifications?handler=UnreadCount')
+            .done(function (data) { initializeWithUser(currentUserId, data?.unread || 0); })
+            .fail(function () { initializeWithUser(currentUserId, null); });
     } else {
         // Fallback: fetch via AJAX (sends session cookies)
         $.getJSON('/Notifications?handler=UnreadCount')

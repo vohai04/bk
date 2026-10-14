@@ -853,6 +853,10 @@ namespace BookInfoFinder.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserId"));
 
+                    b.Property<string>("AvatarVersion")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -920,6 +924,25 @@ namespace BookInfoFinder.Migrations
                             Status = 1,
                             UserName = "johndoe"
                         });
+                });
+
+            modelBuilder.Entity("BookInfoFinder.Models.Entity.UserAvatar", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<byte[]>("Image")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserAvatars", (string)null);
                 });
 
             modelBuilder.Entity("BookInfoFinder.Models.Entity.Book", b =>
@@ -1066,6 +1089,15 @@ namespace BookInfoFinder.Migrations
                     b.Navigation("Book");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BookInfoFinder.Models.Entity.UserAvatar", b =>
+                {
+                    b.HasOne("BookInfoFinder.Models.Entity.User", null)
+                        .WithOne()
+                        .HasForeignKey("BookInfoFinder.Models.Entity.UserAvatar", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BookInfoFinder.Models.Entity.Author", b =>

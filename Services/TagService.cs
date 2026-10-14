@@ -145,16 +145,13 @@ namespace BookInfoFinder.Services
         {
             try
             {
-                var tags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
-                var tagDtos = new List<TagDto>();
-
-                foreach (var tag in tags)
-                {
-                    var bookCount = await _context.BookTags.CountAsync(bt => bt.TagId == tag.TagId);
-                    tagDtos.Add(tag.ToDto(bookCount));
-                }
-
-                return tagDtos;
+                return await _context.Tags.AsNoTracking().OrderBy(t => t.Name)
+                    .Select(t => new TagDto
+                    {
+                        TagId = t.TagId, Name = t.Name, Description = t.Description,
+                        CreatedAt = t.CreatedAt, UpdatedAt = t.UpdatedAt,
+                        BookCount = _context.BookTags.Count(bt => bt.TagId == t.TagId)
+                    }).ToListAsync();
             }
             catch (Exception ex)
             {

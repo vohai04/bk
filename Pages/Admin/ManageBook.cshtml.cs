@@ -46,8 +46,8 @@ namespace BookInfoFinder.Pages.Admin
                 int.TryParse(query["page"], out int page);
                 int.TryParse(query["pageSize"], out int pageSize);
 
-                page = page <= 0 ? 1 : page;
-                pageSize = pageSize <= 0 ? 6 : pageSize;
+                page = Math.Clamp(page, 1, 100000);
+                pageSize = pageSize <= 0 ? 10 : Math.Clamp(pageSize, 1, 50);
 
                 string? categoryName = null;
                 if (categoryId > 0)

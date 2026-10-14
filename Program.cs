@@ -10,6 +10,7 @@ using BookInfoFinder.Hubs;
 using QuestPDF;
 using QuestPDF.Infrastructure;
 using DotNetEnv; // Thêm để đọc file .env
+using BookInfoFinder.Filters;
 
 // Đọc file .env nếu tồn tại
 if (File.Exists(".env"))
@@ -58,12 +59,6 @@ if (!string.IsNullOrEmpty(geminiApiKey))
     builder.Configuration["GEMINI:ApiKey"] = geminiApiKey;
 QuestPDF.Settings.License = LicenseType.Community;
 
-builder.Services.AddRazorPages()
-    .AddRazorRuntimeCompilation();
-builder.Services.AddRazorPages(options =>
-{
-    options.Conventions.ConfigureFilter(new Microsoft.AspNetCore.Mvc.IgnoreAntiforgeryTokenAttribute());
-});
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromHours(2);
@@ -86,6 +81,7 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAvatarService, AvatarService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IBookTagService, BookTagService>();
 builder.Services.AddScoped<IFavoriteService, FavoriteService>();
@@ -97,17 +93,39 @@ builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<IBookCommentService, BookCommentService>();
 builder.Services.AddScoped<IChatbotService, ChatbotService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddHttpContextAccessor();
 // Page routes
 builder.Services.AddRazorPages(options =>
 {
+    options.Conventions.AddFolderApplicationModelConvention("/Admin", model =>
+    {
+        model.Filters.Add(new AdminAccessFilter());
+        model.Filters.Add(new AdminAuditFilter());
+    });
+    foreach (var page in new[] { "/BookDetail", "/Account/Profile", "/Favorites", "/SearchHistory", "/Notifications", "/Index" })
+        options.Conventions.AddPageApplicationModelConvention(page, model => model.Filters.Add(new ReaderAccessFilter()));
+    options.Conventions.AddPageRoute("/Index", "User");
+    options.Conventions.AddPageRoute("/Admin/Dashboard", "Admin");
     options.Conventions.AddPageRoute("/Account/Login", "Login");
     options.Conventions.AddPageRoute("/Account/Register", "Register");
     options.Conventions.AddPageRoute("/Account/Logout", "Logout");
     options.Conventions.AddPageRoute("/Admin/Dashboard", "Dashboard");
     options.Conventions.AddPageRoute("/Account/ForgotPassword", "ForgotPassword");
-});
+}).AddRazorRuntimeCompilation();
 builder.Services.AddMemoryCache();
 var app = builder.Build();
+
+app.MapGet("/avatars/{userId:int}", async (int userId, string? v, IAvatarService avatars, HttpContext http) =>
+{
+    var avatar = await avatars.GetAsync(userId, http.RequestAborted);
+    if (avatar is null || (v != null && v != avatar.Version)) return Results.NotFound();
+    var etag = $"\"{avatar.Version}\"";
+    http.Response.Headers.ETag = etag;
+    http.Response.Headers.CacheControl = v != null ? "public,max-age=31536000,immutable" : "no-cache";
+    http.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    if (http.Request.Headers.IfNoneMatch.Any(value => value == etag)) return Results.StatusCode(304);
+    return Results.Bytes(avatar.Image, "image/webp");
+});
 
 // Auto-migrate database on startup (for production)
 using (var scope = app.Services.CreateScope())
@@ -116,6 +134,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         context.Database.Migrate();
+        await BookInfoFinder.Services.PasswordStorage.UpgradeLegacyAsync(context);
         Console.WriteLine("✅ Database migration completed successfully.");
     }
     catch (Exception ex)

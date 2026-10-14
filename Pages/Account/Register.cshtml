@@ -4,7 +4,7 @@
     ViewData["Title"] = "Đăng ký";
 }
 
-<div class="container mt-5">
+<div class="container auth-page">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow">
@@ -28,32 +28,32 @@
 
                     <form method="post">
                         <div class="form-group mb-3">
-                            <label asp-for="RegisterRequest.FullName" class="form-label">Họ và tên:</label>
-                            <input asp-for="RegisterRequest.FullName" class="form-control" placeholder="Nhập họ và tên" />
+                            <label asp-for="RegisterRequest.FullName" autocomplete="name" class="form-label">Họ và tên:</label>
+                            <input asp-for="RegisterRequest.FullName" autocomplete="name" class="form-control" placeholder="Nhập họ và tên" />
                             <span asp-validation-for="RegisterRequest.FullName" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
-                            <label asp-for="RegisterRequest.Username" class="form-label">Tên đăng nhập:</label>
-                            <input asp-for="RegisterRequest.Username" class="form-control" placeholder="Nhập tên đăng nhập" />
+                            <label asp-for="RegisterRequest.Username" autocomplete="username" spellcheck="false" class="form-label">Tên đăng nhập:</label>
+                            <input asp-for="RegisterRequest.Username" autocomplete="username" spellcheck="false" class="form-control" placeholder="Nhập tên đăng nhập" />
                             <span asp-validation-for="RegisterRequest.Username" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
                             <label asp-for="RegisterRequest.Email" class="form-label">Email:</label>
-                            <input asp-for="RegisterRequest.Email" type="email" class="form-control" placeholder="Nhập địa chỉ email" />
+                            <input asp-for="RegisterRequest.Email" type="email" autocomplete="email" spellcheck="false" class="form-control" placeholder="Nhập địa chỉ email" />
                             <span asp-validation-for="RegisterRequest.Email" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
                             <label asp-for="RegisterRequest.Password" class="form-label">Mật khẩu:</label>
-                            <input asp-for="RegisterRequest.Password" type="password" class="form-control" placeholder="Nhập mật khẩu" />
+                            <input asp-for="RegisterRequest.Password" type="password" autocomplete="new-password" class="form-control" placeholder="Nhập mật khẩu" />
                             <span asp-validation-for="RegisterRequest.Password" class="text-danger"></span>
                         </div>
 
                         <div class="form-group mb-3">
                             <label asp-for="RegisterRequest.ConfirmPassword" class="form-label">Xác nhận mật khẩu:</label>
-                            <input asp-for="RegisterRequest.ConfirmPassword" type="password" class="form-control" placeholder="Nhập lại mật khẩu" />
+                            <input asp-for="RegisterRequest.ConfirmPassword" type="password" autocomplete="new-password" class="form-control" placeholder="Nhập lại mật khẩu" />
                             <span asp-validation-for="RegisterRequest.ConfirmPassword" class="text-danger"></span>
                         </div>
 

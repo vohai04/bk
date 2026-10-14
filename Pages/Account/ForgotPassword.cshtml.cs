@@ -63,23 +63,22 @@ namespace BookInfoFinder.Pages.Account
                     return Page();
                 }
 
-                // Tạo mã OTP
-                var otpCode = _emailService.GenerateOTP();
-                var expireTime = DateTime.Now.AddMinutes(5); // OTP hết hạn sau 5 phút
-
-                // Lưu OTP
-                await _emailService.StoreOTPAsync(Email, otpCode, TimeSpan.FromMinutes(5));
-
                 // Gửi email
                 var otpRequest = new OTPRequestDto
                 {
                     Email = Email,
                     Purpose = "PasswordReset"
                 };
-                await _emailService.SendOTPEmailAsync(otpRequest);
+                if (!await _emailService.SendOTPEmailAsync(otpRequest))
+                {
+                    ErrorMessage = "Không gửi được mã xác thực. Vui lòng thử lại sau.";
+                    return Page();
+                }
 
                 _logger.LogInformation("OTP sent to email {Email}", Email);
 
+                HttpContext.Session.SetString("OtpEmail", Email.Trim().ToLowerInvariant());
+                HttpContext.Session.SetString("OtpPurpose", "forgot-password");
                 IsOtpSent = true;
                 SuccessMessage = "Mã xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.";
                 return Page();
@@ -113,6 +112,8 @@ namespace BookInfoFinder.Pages.Account
 
             try
             {
+                if (HttpContext.Session.GetString("OtpEmail") != Email.Trim().ToLowerInvariant() || HttpContext.Session.GetString("OtpPurpose") != "forgot-password")
+                    return RedirectToPage("/Account/ForgotPassword");
                 // Kiểm tra OTP có hợp lệ không
                 if (!await _emailService.ValidateStoredOTPAsync(Email, OtpCode))
                 {
@@ -127,6 +128,7 @@ namespace BookInfoFinder.Pages.Account
                 _logger.LogInformation("OTP verified successfully for email {Email}", Email);
 
                 // Chuyển hướng đến trang đặt lại mật khẩu
+                BookInfoFinder.Services.PasswordResetGrant.Issue(HttpContext.Session, Email);
                 return RedirectToPage("/Account/ResetPassword", new { email = Email });
             }
             catch (Exception ex)

@@ -36,7 +36,7 @@ namespace BookInfoFinder.Pages.Account
 
         public IActionResult OnGet(string? email = null)
         {
-            if (string.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(email) || !BookInfoFinder.Services.PasswordResetGrant.IsValid(HttpContext.Session, email))
             {
                 return RedirectToPage("/Account/ForgotPassword");
             }
@@ -47,6 +47,8 @@ namespace BookInfoFinder.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
+            if (!BookInfoFinder.Services.PasswordResetGrant.IsValid(HttpContext.Session, Email))
+                return RedirectToPage("/Account/ForgotPassword");
             if (!ModelState.IsValid)
             {
                 return Page();
@@ -86,6 +88,7 @@ namespace BookInfoFinder.Pages.Account
 
                 _logger.LogInformation("Password reset successfully for email {Email}", Email);
 
+                BookInfoFinder.Services.PasswordResetGrant.Clear(HttpContext.Session);
                 TempData["SuccessMessage"] = "Mật khẩu đã được đặt lại thành công! Vui lòng đăng nhập với mật khẩu mới.";
                 return RedirectToPage("/Account/Login");
             }

@@ -3,72 +3,33 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Services.Interface;
 using BookInfoFinder.Models;
+using BookInfoFinder.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookInfoFinder.Pages.Admin
 {
     public class UsersModel : PageModel
     {
         private readonly IUserService _userService;
-        public UsersModel(IUserService userService) => _userService = userService;
-
-        public List<UserDto> Users { get; set; } = new();
-        [BindProperty(SupportsGet = true)] public int? EditUserId { get; set; }
-        [BindProperty(SupportsGet = true)] public int CurrentPage { get; set; } = 1;
-        public int TotalPages { get; set; }
-        public int TotalCount { get; set; }
-
-        public async Task OnGetAsync(int? edit, int page = 1)
+        private readonly BookContext _context;
+        public UsersModel(IUserService userService, BookContext context)
         {
-            CurrentPage = page < 1 ? 1 : page;
-            int pageSize = 10;
-
-            try
-            {
-                var allUsers = await _userService.GetAllUsersAsync();
-                Users = allUsers.ToList();
-                TotalCount = Users.Count;
-
-                // Simple pagination
-                Users = Users
-                    .Skip((CurrentPage - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
-
-                TotalPages = (int)Math.Ceiling((double)TotalCount / pageSize);
-                EditUserId = edit;
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = $"Có lỗi khi tải dữ liệu: {ex.Message}";
-            }
+            _userService = userService;
+            _context = context;
         }
+
+        public void OnGet() { }
 
         // Handler AJAX cho disable user (khóa tài khoản)
         public async Task<JsonResult> OnPostAjaxDisableUserAsync([FromForm] int userId)
         {
-            try
-            {
-                var result = await _userService.DeactivateUserAsync(userId);
-                return new JsonResult(new { success = result });
-            }
-            catch (Exception ex)
-            {
-                return new JsonResult(new { success = false, message = ex.Message });
-            }
+            return await OnPostAjaxSetUserStatusAsync(userId, 0);
         }
 
         // Handler AJAX cho enable user (kích hoạt lại tài khoản)
         public async Task<JsonResult> OnPostAjaxEnableUserAsync([FromForm] int userId)
         {
-            try
-            {
-                var result = await _userService.ActivateUserAsync(userId);
-                return new JsonResult(new { success = result });
-            }
-            catch (Exception ex)
-            {
-                return new JsonResult(new { success = false, message = ex.Message });
-            }
+            return await OnPostAjaxSetUserStatusAsync(userId, 1);
         }
 
         public async Task<JsonResult> OnGetAjaxSearchAsync()
@@ -82,8 +43,8 @@ namespace BookInfoFinder.Pages.Admin
                 int.TryParse(query["page"], out int page);
                 int.TryParse(query["pageSize"], out int pageSize);
 
-                page = page <= 0 ? 1 : page;
-                pageSize = pageSize <= 0 ? 10 : pageSize;
+                page = Math.Clamp(page, 1, 100000);
+                pageSize = pageSize <= 0 ? 10 : Math.Clamp(pageSize, 1, 50);
 
                 var allUsers = await _userService.GetAllUsersAsync();
                 var filteredUsers = allUsers.AsEnumerable();
@@ -144,6 +105,8 @@ namespace BookInfoFinder.Pages.Admin
         {
             try
             {
+                if (roleStr is not ("Admin" or "User"))
+                    return new JsonResult(new { success = false, message = "Chọn vai trò hợp lệ." });
                 if (string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(email) ||
                     string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(fullName))
                 {
@@ -194,6 +157,13 @@ namespace BookInfoFinder.Pages.Admin
                 var existingUser = await _userService.GetUserByIdAsync(userId);
                 if (existingUser == null)
                     return new JsonResult(new { success = false, message = "Không tìm thấy người dùng." });
+                if (roleStr is not ("Admin" or "User"))
+                    return new JsonResult(new { success = false, message = "Chọn vai trò hợp lệ." });
+                if (existingUser.Role == "Admin" && roleStr != "Admin")
+                {
+                    var reason = await GuardAccountAsync(userId);
+                    if (reason is not null) return new JsonResult(new { success = false, message = reason });
+                }
 
                 if (string.IsNullOrWhiteSpace(email) || email.Length > 100)
                     return new JsonResult(new { success = false, message = "Email không hợp lệ." });
@@ -238,6 +208,12 @@ namespace BookInfoFinder.Pages.Admin
         {
             try
             {
+                if (status is not (0 or 1)) return new JsonResult(new { success = false, message = "Trạng thái không hợp lệ." });
+                if (status == 0)
+                {
+                    var reason = await GuardAccountAsync(userId);
+                    if (reason is not null) return new JsonResult(new { success = false, message = reason });
+                }
                 bool success;
                 if (status == 1)
                 {
@@ -253,6 +229,27 @@ namespace BookInfoFinder.Pages.Admin
             {
                 return new JsonResult(new { success = false, message = ex.Message });
             }
+        }
+
+        public async Task<JsonResult> OnPostAjaxDeleteAsync([FromForm] int userId)
+        {
+            var reason = await GuardAccountAsync(userId);
+            if (reason is not null) return new JsonResult(new { success = false, message = reason });
+            if (await _context.Books.AnyAsync(b => b.UserId == userId))
+                return new JsonResult(new { success = false, message = "Tài khoản đang sở hữu sách. Hãy khóa tài khoản để ngừng truy cập và giữ nội dung thư viện." });
+            try { return new JsonResult(new { success = await _userService.DeleteUserAsync(userId) }); }
+            catch (DbUpdateException) { return new JsonResult(new { success = false, message = "Tài khoản còn dữ liệu liên quan. Hãy dùng Khóa tài khoản." }); }
+        }
+
+        private async Task<string?> GuardAccountAsync(int userId)
+        {
+            if (HttpContext.Session.GetString("UserId") == userId.ToString())
+                return "Bạn không thể xóa, khóa hoặc hạ quyền tài khoản đang đăng nhập.";
+            var user = await _userService.GetUserByIdAsync(userId);
+            if (user is null) return "Không tìm thấy người dùng.";
+            if (user.Role == "Admin" && user.Status == 1 && await _context.Users.CountAsync(u => u.Role == Role.Admin && u.Status == 1) <= 1)
+                return "Thư viện cần ít nhất một quản trị viên đang hoạt động.";
+            return null;
         }
     }
 }

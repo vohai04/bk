@@ -8,6 +8,7 @@ namespace BookInfoFinder.Models.Dto
         public string Comment { get; set; } = "";
         public int? Star { get; set; } // Chỉ có ở comment gốc (1-5)
         public string UserName { get; set; } = "";
+        public string? AvatarUrl { get; set; }
         public int Role { get; set; }
         public string RoleName { get; set; } = "";
         public DateTime CreatedAt { get; set; }

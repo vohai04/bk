@@ -41,15 +41,4 @@ namespace BookInfoFinder.Models.Dto
         public string? RelatedEntityType { get; set; }
     }
 
-    public class RecentActivityDto
-    {
-        public string? Type { get; set; }
-        public string? Title { get; set; }
-        public string? Description { get; set; }
-        public string? UserName { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public string? ActionUrl { get; set; }
-        public int? EntityId { get; set; }
-        public string? EntityType { get; set; }
-    }
 }

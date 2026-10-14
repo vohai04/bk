@@ -32,7 +32,7 @@ namespace BookInfoFinder.Pages
             if (int.TryParse(query["pageSize"], out var ps)) pageSize = ps;
 
             page = page < 1 ? 1 : page;
-            pageSize = pageSize < 1 ? 6 : pageSize;
+            pageSize = Math.Clamp(pageSize < 1 ? 6 : pageSize, 1, 50);
 
             var userIdStr = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
@@ -60,7 +60,7 @@ namespace BookInfoFinder.Pages
                 author = f.AuthorName ?? "Không rõ",
                 category = f.CategoryName ?? "Không rõ",
                 tags = f.Tags ?? new List<string>(),
-                createdAt = f.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm", new System.Globalization.CultureInfo("vi-VN"))
+                createdAt = f.CreatedAt
             }).ToList(); return new JsonResult(new
             {
                 success = true,
@@ -80,6 +80,8 @@ namespace BookInfoFinder.Pages
                 if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
                     return new JsonResult(new { success = false, message = "Bạn cần đăng nhập!" });
 
+                if (req is null || req.BookId <= 0)
+                    return new JsonResult(new { success = false, message = "Dữ liệu không hợp lệ." }) { StatusCode = 400 };
                 await _favoriteService.RemoveFromFavoritesAsync(userId, req.BookId);
                 return new JsonResult(new { success = true, message = "Đã xóa khỏi yêu thích!" });
             }

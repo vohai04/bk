@@ -1,0 +1,76 @@
+@{
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
+    var links = new[] {
+        (Page: "/Admin/Dashboard", Icon: "grid-1x2", Label: "Tổng quan", Group: "Thư viện"),
+        (Page: "/Admin/ManageBook", Icon: "book", Label: "Danh mục sách", Group: "Thư viện"),
+        (Page: "/Admin/Categories", Icon: "collection", Label: "Thể loại", Group: "Thư viện"),
+        (Page: "/Admin/ManageAuthor", Icon: "person-badge", Label: "Tác giả", Group: "Thư viện"),
+        (Page: "/Admin/ManageNXB", Icon: "buildings", Label: "Nhà xuất bản", Group: "Thư viện"),
+        (Page: "/Admin/Tags", Icon: "tags", Label: "Thẻ sách", Group: "Thư viện"),
+        (Page: "/Admin/Users", Icon: "people", Label: "Người dùng", Group: "Vận hành"),
+        (Page: "/Admin/Report", Icon: "bar-chart", Label: "Báo cáo", Group: "Vận hành"),
+        (Page: "/Admin/Notifications", Icon: "bell", Label: "Thông báo", Group: "Vận hành"),
+        (Page: "/Admin/AuditLog", Icon: "journal-check", Label: "Audit log", Group: "Vận hành")
+    };
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <partial name="_Head" />
+    <link rel="stylesheet" href="~/css/workspace.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin-workspace.css" asp-append-version="true" />
+</head>
+<body class="management-body">
+    <a class="skip-link" href="#mainContent">Đến nội dung chính</a>
+    <aside class="management-sidebar" id="workspaceSidebar" aria-label="Menu quản trị">
+        <a class="admin-brand" asp-page="/Admin/Dashboard">
+            <span class="admin-brand-symbol"><i class="bi bi-book-half" aria-hidden="true"></i></span>
+            <span>BookInfoFinder<small>Quản lý thư viện</small></span>
+        </a>
+        @foreach (var group in links.GroupBy(link => link.Group))
+        {
+            <div class="admin-nav-label">@group.Key</div>
+            <nav class="workspace-nav" aria-label="@group.Key">
+                @foreach (var link in group)
+                {
+                    var active = currentPage == link.Page || (link.Page == "/Admin/ManageBook" && (currentPage == "/Admin/AddBook" || currentPage == "/Admin/UpdateBook"));
+                    <a asp-page="@link.Page" class="@(active ? "active" : "")" aria-current="@(active ? "page" : null)">
+                        <i class="bi bi-@link.Icon" aria-hidden="true"></i><span>@link.Label</span>
+                        @if (link.Page == "/Admin/Notifications") { <span id="notificationCount" class="notification-badge" style="display:none"></span> }
+                    </a>
+                }
+            </nav>
+        }
+        <div class="management-sidebar-bottom">
+            <a asp-page="/Index"><i class="bi bi-arrow-up-right" aria-hidden="true"></i> Mở trang người đọc</a>
+            <span>Mỗi cuốn sách, một cánh cửa mới.</span>
+        </div>
+    </aside>
+    <div class="management-workspace">
+        <header class="workspace-topbar">
+            <div class="topbar-location">
+                <button id="workspaceMenuToggle" class="icon-button mobile-menu-toggle" type="button" aria-controls="workspaceSidebar" aria-expanded="false" aria-label="Mở menu quản trị"><i class="bi bi-list" aria-hidden="true"></i></button>
+                <a asp-page="/Admin/Dashboard">Quản trị</a><i class="bi bi-chevron-right" aria-hidden="true"></i><strong>@ViewData["Title"]</strong>
+            </div>
+            <div class="topbar-actions">
+                <a class="admin-help-link" asp-page="/Admin/AuditLog"><i class="bi bi-journal-check" aria-hidden="true"></i><span>Audit log</span></a>
+                <partial name="_UserMenu" />
+            </div>
+        </header>
+        <main id="mainContent" class="management-main" tabindex="-1">
+            <div class="management-heading">
+                <div><h1>@ViewData["Title"]</h1><p>@ViewData["Description"]</p></div>
+                <div class="page-actions">@await RenderSectionAsync("PageActions", required: false)</div>
+            </div>
+            @if (TempData["SuccessMessage"] is { } success) { <div class="admin-flash success" role="status">@success</div> }
+            @if (TempData["ErrorMessage"] is { } error) { <div class="admin-flash error" role="alert">@error</div> }
+            @RenderBody()
+        </main>
+        <footer class="workspace-footer"><span>BookInfoFinder</span><span>Không gian quản lý thư viện</span><a asp-page="/Privacy">Bảo mật</a></footer>
+    </div>
+    <button class="sidebar-backdrop" type="button" aria-label="Đóng menu" tabindex="-1" hidden></button>
+    <partial name="_Feedback" /><partial name="_Scripts" />
+    <script src="~/js/admin-core.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

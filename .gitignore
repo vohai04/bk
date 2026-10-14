@@ -226,5 +226,8 @@ FodyWeavers.xsd
 .env.test
 .env.production
 
+# Local browser verification output
+artifacts/
+
 # Application specific files - Remove this line to allow appsettings.json
 # appsettings.json

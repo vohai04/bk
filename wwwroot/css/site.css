@@ -1,28 +1,28 @@
-/* =====================================================
-   SITE.CSS - Main Entry Point
-   BookInfoFinder
+/* Shared controls. Legacy page-specific themes have been retired. */
+:root{--bs-primary:#2d6b53;--bs-primary-rgb:45,107,83;--bs-link-color:#2d6b53;--bs-link-hover-color:#245440;--bs-body-font-family:"Be Vietnam Pro",sans-serif;--z-toast:1090}
+body{font-family:var(--bs-body-font-family)}
+a{color:#2d6b53}a:hover{color:#245440}
+.btn{border-radius:7px;font-size:13px;padding:10px 16px;min-height:42px;box-shadow:none;background-image:none}
+.btn-primary,.btn-success{--bs-btn-bg:#2d6b53;--bs-btn-border-color:#2d6b53;--bs-btn-hover-bg:#245440;--bs-btn-hover-border-color:#245440;--bs-btn-active-bg:#245440;--bs-btn-active-border-color:#245440;--bs-btn-disabled-bg:#2d6b53;--bs-btn-disabled-border-color:#2d6b53;background-image:none}
+.btn-secondary,.btn-outline-secondary{--bs-btn-color:#526359;--bs-btn-bg:#f2f5f2;--bs-btn-border-color:#dfe7e0;--bs-btn-hover-color:#273b34;--bs-btn-hover-bg:#e4ece5;--bs-btn-hover-border-color:#d0ded3;--bs-btn-active-color:#273b34;--bs-btn-active-bg:#e4ece5}
+.btn-link{text-decoration:none;color:#2d6b53}
+.form-control,.form-select{min-height:44px;border-color:#dce5df;border-radius:7px;font-size:13px;padding:10px 12px}
+.form-control:focus,.form-select:focus{border-color:#76a18b;box-shadow:0 0 0 3px #2d6b5315}
+.form-label{font-size:12px;font-weight:500;margin-bottom:8px;color:#405549}
+.form-check-input:checked{background-color:#2d6b53;border-color:#2d6b53}
+.modal-content{border:1px solid #dfe7e0;border-radius:14px;box-shadow:0 24px 80px #18302422}
+.modal-header,.modal-body,.modal-footer{padding:22px 25px}.modal-title{font-size:18px;font-weight:600}.modal-header,.modal-footer{border-color:#e2e9e4}.modal-footer{gap:6px}
+.modal-backdrop{background:#182c21}.modal-backdrop.show{opacity:.4}
+.dropdown-menu{font-size:12px;border:1px solid #e2e9e4;box-shadow:0 10px 30px #18302412;padding:8px}.dropdown-item{padding:10px 14px;border-radius:4px}.dropdown-item:active{background:#2d6b53}
+.page-link{color:#2d6b53;border-color:#dfe7e0}.page-item.active .page-link{background:#2d6b53;border-color:#2d6b53}.page-link:focus{box-shadow:0 0 0 3px #2d6b5315}
+.alert{font-size:13px;border-radius:8px}.text-primary{color:#2d6b53!important}.text-muted{color:#697a72!important}.bg-primary{background-color:#2d6b53!important}
+.toast-container{z-index:1090}.toast{background:#fff;border:1px solid #e2e9e4;box-shadow:0 8px 30px #18302415}.toast-header{background:#f8faf7;color:#273b34}
+.loading{padding:40px;display:flex;align-items:center;justify-content:center;gap:12px}.spinner{width:24px;height:24px;border:2px solid #dce5df;border-top-color:#2d6b53;border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.search-suggestions{position:absolute;background:white;border:1px solid #dce5df;border-radius:8px;box-shadow:0 8px 28px #18302412;overflow:hidden}
+.floating-chatbot{position:fixed;bottom:24px;right:24px;z-index:1040}.floating-chatbot .btn{border-radius:50%;width:46px;height:46px;padding:0;font-size:20px}
+.chatbot-window{position:fixed;bottom:22px;right:22px;width:340px;height:450px;background:#fff;border:1px solid #dce5df;border-radius:12px;box-shadow:0 18px 60px #18302425;z-index:1040;overflow:hidden;display:flex;flex-direction:column}
+.chatbot-header{background:#2d6b53;color:#fff;padding:15px 18px;display:flex;align-items:center;justify-content:space-between}.chatbot-header button{background:none;border:0;color:white;font-size:25px}.chatbot-body{padding:16px;flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px}.chatbot-footer{padding:12px;border-top:1px solid #e2e9e4;display:flex;gap:8px}.chatbot-footer input{flex:1;min-width:0;border:1px solid #dce5df;border-radius:6px;padding:9px;font-size:12px}.chatbot-footer button{background:#2d6b53;color:white;border:0;border-radius:6px;padding:8px 13px}.chat-message{padding:10px 12px;background:#f2f5f2;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere}.user-message{align-self:flex-end;background:#e8f1eb}.bot-message{align-self:flex-start}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
-   This file imports all modular CSS files in order.
-   Edit individual files instead of this one.
-   ===================================================== */
-
-/* 1. Design tokens (must be first) */
-@import url('variables.css');
-
-/* 2. Base reset & animations */
-@import url('base.css');
-
-/* 3. Layout: header, footer, admin sidebar */
-@import url('layout.css');
-
-/* 4. Navigation & dropdowns */
-@import url('navbar.css');
-
-/* 5. UI Components: cards, search, forms, toast */
-@import url('components.css');
-
-/* 6. Chatbot widget */
-@import url('chatbot.css');
-
-/* 7. All responsive / media queries (last) */
-@import url('responsive.css');
+/* One avatar renderer for account menus, profiles and comment threads. */
+.user-avatar{position:relative;overflow:hidden;flex-shrink:0;isolation:isolate;vertical-align:middle}.user-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;background:#e8f1eb}.avatar-initial{line-height:1}.user-avatar.profile-monogram{display:grid}

@@ -42,16 +42,10 @@ namespace BookInfoFinder.Pages
                 int.TryParse(query["pageSize"], out int pageSize);
 
                 page = page <= 0 ? 1 : page;
-                pageSize = pageSize <= 0 ? 10 : pageSize;
+                pageSize = Math.Clamp(pageSize <= 0 ? 10 : pageSize, 1, 50);
 
-                // Get user ID from session with cookie fallback
+                // Identity comes from the server session only.
                 var userIdStr = HttpContext.Session.GetString("UserId");
-                var cookieUserId = HttpContext.Request.Cookies["UserId"];
-
-                if (string.IsNullOrEmpty(userIdStr) && !string.IsNullOrEmpty(cookieUserId))
-                {
-                    userIdStr = cookieUserId;
-                }
 
                 if (!int.TryParse(userIdStr, out int userId))
                 {
@@ -74,8 +68,7 @@ namespace BookInfoFinder.Pages
                     searchQuery = h.SearchQuery,
                     resultCount = h.ResultCount,
                     searchedAt = h.SearchedAt,
-                    timeAgo = GetTimeAgo(h.SearchedAt),
-                    date = h.SearchedAt.ToString("dd/MM/yyyy HH:mm")
+                    date = h.SearchedAt
                 }).ToList();
 
                 return new JsonResult(new
@@ -85,42 +78,26 @@ namespace BookInfoFinder.Pages
                     totalPages = totalPages
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new JsonResult(new
                 {
                     histories = new List<object>(),
                     totalCount = 0,
                     totalPages = 0,
-                    error = $"Có lỗi khi tải lịch sử tìm kiếm: {ex.Message}"
+                    error = "Không tải được lịch sử tìm kiếm. Vui lòng thử lại."
                 });
             }
-        }
-
-        // Helper method for time ago like Facebook
-        private string GetTimeAgo(DateTime dateTime)
-        {
-            var timeSpan = DateTime.Now - dateTime;
-
-            if (timeSpan.TotalMinutes < 1)
-                return "Vừa xong";
-            if (timeSpan.TotalMinutes < 60)
-                return $"{(int)timeSpan.TotalMinutes} phút trước";
-            if (timeSpan.TotalHours < 24)
-                return $"{(int)timeSpan.TotalHours} giờ trước";
-            if (timeSpan.TotalDays < 7)
-                return $"{(int)timeSpan.TotalDays} ngày trước";
-            if (timeSpan.TotalDays < 30)
-                return $"{(int)(timeSpan.TotalDays / 7)} tuần trước";
-            if (timeSpan.TotalDays < 365)
-                return $"{(int)(timeSpan.TotalDays / 30)} tháng trước";
-
-            return $"{(int)(timeSpan.TotalDays / 365)} năm trước";
         }
 
         // AJAX Delete one
         public async Task<JsonResult> OnPostAjaxDeleteAsync([FromForm] int id)
         {
+            if (!int.TryParse(HttpContext.Session.GetString("UserId"), out var userId))
+                return new JsonResult(new { success = false }) { StatusCode = 401 };
+            var item = await _historyService.GetHistoryByIdAsync(id);
+            if (item is null || item.UserId != userId)
+                return new JsonResult(new { success = false }) { StatusCode = 403 };
             await _historyService.DeleteHistoryAsync(id);
             return new JsonResult(new { success = true });
         }

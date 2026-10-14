@@ -12,14 +12,25 @@ namespace BookInfoFinder.Hubs
         private static readonly ConcurrentDictionary<int, ConcurrentDictionary<string, byte>> _userConnections =
             new();
 
-        public NotificationHub(ILogger<NotificationHub> logger)
+        private readonly BookInfoFinder.Services.Interface.IUserService _users;
+        public NotificationHub(ILogger<NotificationHub> logger, BookInfoFinder.Services.Interface.IUserService users)
         {
             _logger = logger;
+            _users = users;
         }
 
         // Client calls Register to join a group for the user's id
         public async Task Register(int userId)
         {
+            var http = Context.GetHttpContext();
+            if (http is null) throw new HubException("Bạn cần đăng nhập để nhận thông báo.");
+            await http.Session.LoadAsync();
+            if (!int.TryParse(http.Session.GetString("UserId"), out var sessionUserId) || sessionUserId != userId)
+                throw new HubException("Bạn không có quyền nhận thông báo của tài khoản này.");
+            var user = await _users.GetUserByIdAsync(userId);
+            if (user is null || user.Status != 1)
+                throw new HubException("Tài khoản không còn hoạt động.");
+
             var group = GetUserGroup(userId);
             await Groups.AddToGroupAsync(Context.ConnectionId, group);
 

@@ -1,0 +1,50 @@
+@page
+@model BookInfoFinder.Pages.Admin.AuditLogModel
+@{
+    ViewData["Title"] = "Audit log";
+    ViewData["Description"] = "Tra cứu ai đã thay đổi dữ liệu, thao tác gì và vào thời điểm nào.";
+}
+@section PageActions { <a class="admin-button secondary" asp-page="/Admin/AuditLog"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Làm mới</a> }
+<div class="audit-intro"><span class="audit-symbol"><i class="bi bi-journal-check" aria-hidden="true"></i></span><div><h2>Nhật ký thao tác</h2><p>Lịch sử thay đổi sách, danh mục và tài khoản được lưu ở đây.</p></div><span class="admin-pill green">@Model.Total bản ghi</span></div>
+<section class="admin-panel">
+    <form method="get" class="audit-filter" role="search">
+        <div class="field-group audit-search"><label asp-for="Search">Tìm trong nhật ký</label><div class="admin-search"><i class="bi bi-search" aria-hidden="true"></i><input asp-for="Search" placeholder="Tên tài khoản hoặc nội dung…" autocomplete="off" /></div></div>
+        <div class="field-group"><label asp-for="EntityType">Đối tượng</label><select asp-for="EntityType"><option value="">Tất cả đối tượng</option><option value="Book">Sách</option><option value="Category">Thể loại</option><option value="Author">Tác giả</option><option value="Publisher">Nhà xuất bản</option><option value="Tag">Thẻ sách</option><option value="User">Người dùng</option><option value="Comment">Bình luận</option></select></div>
+        <div class="field-group"><label asp-for="ActionType">Thao tác</label><select asp-for="ActionType"><option value="">Tất cả thao tác</option><option value="Created">Tạo mới</option><option value="Updated">Cập nhật</option><option value="Deleted">Xóa</option><option value="StatusChanged">Đổi trạng thái</option></select></div>
+        <div class="field-group"><label asp-for="From">Từ ngày</label><input asp-for="From" type="date" min="1900-01-01" max="2100-12-31" /></div>
+        <div class="field-group"><label asp-for="To">Đến ngày</label><input asp-for="To" type="date" min="1900-01-01" max="2100-12-31" /></div>
+        <div class="filter-buttons"><button type="submit" class="admin-button primary"><i class="bi bi-funnel" aria-hidden="true"></i> Lọc nhật ký</button><a asp-page="/Admin/AuditLog" class="admin-button text">Xóa bộ lọc</a></div>
+    </form>
+    <div asp-validation-summary="All" class="admin-form-error" role="alert"></div>
+    <div class="panel-heading slim"><h2>Lịch sử thay đổi</h2><span class="table-meta">Thời gian Việt Nam (UTC+7)</span></div>
+    @if (Model.Entries.Count == 0)
+    {
+        <div class="admin-empty"><i class="bi bi-journal" aria-hidden="true"></i><h3>Chưa có thao tác phù hợp</h3><p>Thử thay đổi bộ lọc. Các thay đổi mới sẽ xuất hiện khi bạn thêm, sửa hoặc xóa dữ liệu.</p><a class="admin-button secondary" asp-page="/Admin/AuditLog">Xem toàn bộ nhật ký</a></div>
+    }
+    else
+    {
+        <div class="admin-data-scroll" tabindex="0" role="region" aria-label="Bảng audit log, cuộn ngang để xem thêm">
+            <table class="admin-data-table audit-table">
+                <thead><tr><th>Thời gian</th><th>Người thao tác</th><th>Thao tác</th><th>Đối tượng</th><th>Nội dung</th><th>Chi tiết</th></tr></thead>
+                <tbody>
+                @foreach (var entry in Model.Entries)
+                {
+                    <tr>
+                        <td><time datetime="@entry.CreatedAt.ToString("O")" data-format="datetime">@entry.CreatedAt.AddHours(7).ToString("dd/MM/yyyy HH:mm")</time></td>
+                        <td><span class="audit-actor"><span class="person-initial">@(string.IsNullOrEmpty(entry.UserName) ? "?" : entry.UserName[..1].ToUpperInvariant())</span><span class="actor-name">@entry.UserName</span></span></td>
+                        <td><span class="admin-pill @BookInfoFinder.Pages.Admin.AuditLogModel.ActionClass(entry.Action)">@BookInfoFinder.Pages.Admin.AuditLogModel.ActionLabel(entry.Action)</span></td>
+                        <td>@BookInfoFinder.Pages.Admin.AuditLogModel.EntityLabel(entry.EntityType) @if (entry.EntityId.HasValue) { <small class="entity-id">#@entry.EntityId</small> }</td>
+                        <td class="audit-description">@entry.Description</td>
+                        <td><details class="audit-details"><summary aria-label="Chi tiết bản ghi @entry.ActivityId"><i class="bi bi-three-dots" aria-hidden="true"></i></summary><dl><dt>Mã bản ghi</dt><dd>#@entry.ActivityId</dd><dt>Người thao tác</dt><dd>@entry.UserName</dd><dt>Thao tác gốc</dt><dd>@entry.Action</dd><dt>Địa chỉ IP</dt><dd>@(string.IsNullOrEmpty(entry.IpAddress) ? "Không được lưu" : entry.IpAddress)</dd></dl></details></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    <div class="table-footer"><span>@Model.Total bản ghi / Trang @Model.CurrentPage</span><nav class="admin-pagination" aria-label="Trang nhật ký">
+        @if (Model.CurrentPage > 1) { <a asp-page="/Admin/AuditLog" asp-route-p="@(Model.CurrentPage - 1)" asp-route-search="@Model.Search" asp-route-entityType="@Model.EntityType" asp-route-actionType="@Model.ActionType" asp-route-from="@Model.From?.ToString("yyyy-MM-dd")" asp-route-to="@Model.To?.ToString("yyyy-MM-dd")">Trước</a> }
+        <span>@Model.CurrentPage / @Math.Max(1, Model.TotalPages)</span>
+        @if (Model.CurrentPage < Model.TotalPages) { <a asp-page="/Admin/AuditLog" asp-route-p="@(Model.CurrentPage + 1)" asp-route-search="@Model.Search" asp-route-entityType="@Model.EntityType" asp-route-actionType="@Model.ActionType" asp-route-from="@Model.From?.ToString("yyyy-MM-dd")" asp-route-to="@Model.To?.ToString("yyyy-MM-dd")">Sau</a> }
+    </nav></div>
+</section>

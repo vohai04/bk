@@ -14,25 +14,7 @@ namespace BookInfoFinder.Pages.Admin
             _categoryService = categoryService;
         }
 
-        public List<CategoryDto> Categories { get; set; } = new();
-
-        [BindProperty(SupportsGet = true)] public int? EditCategoryId { get; set; }
-        [BindProperty(SupportsGet = true)] public int CurrentPage { get; set; } = 1;
-        public int TotalPages { get; set; }
-        public int TotalCount { get; set; }
-
-        public async Task OnGetAsync(int? edit, int page = 1)
-        {
-            CurrentPage = page < 1 ? 1 : page;
-            int pageSize = 10;
-
-            var result = await _categoryService.GetCategoriesPagedAsync(CurrentPage, pageSize);
-            Categories = result.Categories;
-            TotalCount = result.TotalCount;
-            TotalPages = (int)Math.Ceiling((double)TotalCount / pageSize);
-
-            EditCategoryId = edit;
-        }
+        public void OnGet() { }
 
         public async Task<JsonResult> OnGetAjaxSearchAsync()
         {
@@ -43,19 +25,18 @@ namespace BookInfoFinder.Pages.Admin
                 int.TryParse(query["page"], out int page);
                 int.TryParse(query["pageSize"], out int pageSize);
 
-                page = page <= 0 ? 1 : page;
-                pageSize = pageSize <= 0 ? 10 : pageSize;
+                page = Math.Clamp(page, 1, 100000);
+                pageSize = pageSize <= 0 ? 10 : Math.Clamp(pageSize, 1, 50);
 
                 var result = await _categoryService.GetCategoriesPagedAsync(page, pageSize);
                 var filteredCategories = result.Categories;
+                var totalCount = result.TotalCount;
 
-                // Apply search filter if provided
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    filteredCategories = (await _categoryService.SearchCategoriesAsync(search))
-                        .Skip((page - 1) * pageSize)
-                        .Take(pageSize)
-                        .ToList();
+                    var matches = await _categoryService.SearchCategoriesAsync(search);
+                    totalCount = matches.Count;
+                    filteredCategories = matches.Skip((page - 1) * pageSize).Take(pageSize).ToList();
                 }
 
                 var categoryResult = filteredCategories.Select(cat => new
@@ -68,8 +49,8 @@ namespace BookInfoFinder.Pages.Admin
                     CreatedAtFormatted = cat.CreatedAt.ToString("dd/MM/yyyy HH:mm")
                 });
 
-                var totalPages = (int)Math.Ceiling(result.TotalCount / (double)pageSize);
-                return new JsonResult(new { categories = categoryResult, totalPages, totalCount = result.TotalCount });
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+                return new JsonResult(new { categories = categoryResult, totalPages, totalCount });
             }
             catch (Exception ex)
             {

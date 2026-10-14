@@ -16,6 +16,7 @@ namespace BookInfoFinder.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Publisher> Publishers { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserAvatar> UserAvatars { get; set; }
         public DbSet<Favorite> Favorites { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<BookTag> BookTags { get; set; }
@@ -44,6 +45,14 @@ namespace BookInfoFinder.Data
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<UserAvatar>(entity =>
+            {
+                entity.ToTable("UserAvatars");
+                entity.HasKey(a => a.UserId);
+                entity.Property(a => a.Image).IsRequired().HasColumnType("bytea");
+                entity.Property(a => a.Version).IsRequired().HasMaxLength(32);
+                entity.HasOne<User>().WithOne().HasForeignKey<UserAvatar>(a => a.UserId).OnDelete(DeleteBehavior.Cascade);
+            });
             modelBuilder.Entity<Book>(static entity =>
  {
      entity.ToTable("Books");
@@ -116,6 +125,7 @@ namespace BookInfoFinder.Data
                 entity.Property(static u => u.UserName).IsRequired().HasMaxLength(256);
                 entity.Property(static u => u.Password).IsRequired().HasMaxLength(100);
                 entity.Property(static u => u.Email).IsRequired().HasMaxLength(256);
+                entity.Property(static u => u.AvatarVersion).HasMaxLength(32);
 
                 // Add unique constraints
                 entity.HasIndex(static u => u.UserName).IsUnique();

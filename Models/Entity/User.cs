@@ -19,12 +19,15 @@ namespace BookInfoFinder.Models.Entity
         public string UserName { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(60)]
+        [StringLength(100)]
         public string Password { get; set; } = string.Empty;
 
         [Required]
         [StringLength(256)]
         public string Email { get; set; } = string.Empty;
+
+        [StringLength(32)]
+        public string? AvatarVersion { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

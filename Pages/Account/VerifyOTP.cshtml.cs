@@ -37,7 +37,7 @@ namespace BookInfoFinder.Pages.Account
 
         public IActionResult OnGet(string? email = null, string? purpose = null)
         {
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(purpose))
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(purpose) || HttpContext.Session.GetString("OtpEmail") != email.Trim().ToLowerInvariant() || HttpContext.Session.GetString("OtpPurpose") != purpose)
             {
                 return RedirectToPage("/Account/Login");
             }
@@ -49,6 +49,8 @@ namespace BookInfoFinder.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
+            if (HttpContext.Session.GetString("OtpEmail") != Email.Trim().ToLowerInvariant() || HttpContext.Session.GetString("OtpPurpose") != Purpose)
+                return RedirectToPage("/Account/ForgotPassword");
             if (!ModelState.IsValid)
             {
                 return Page();
@@ -72,6 +74,7 @@ namespace BookInfoFinder.Pages.Account
                 switch (Purpose.ToLower())
                 {
                     case "forgot-password":
+                        BookInfoFinder.Services.PasswordResetGrant.Issue(HttpContext.Session, Email);
                         return RedirectToPage("/Account/ResetPassword", new { email = Email });
                     case "email-verification":
                         return RedirectToPage("/Account/Login", new { message = "Email đã được xác thực thành công." });
@@ -89,7 +92,7 @@ namespace BookInfoFinder.Pages.Account
 
         public async Task<IActionResult> OnPostResendOtpAsync()
         {
-            if (string.IsNullOrEmpty(Email))
+            if (string.IsNullOrEmpty(Email) || HttpContext.Session.GetString("OtpEmail") != Email.Trim().ToLowerInvariant() || HttpContext.Session.GetString("OtpPurpose") != Purpose)
             {
                 ErrorMessage = "Email không hợp lệ.";
                 return Page();
@@ -97,19 +100,17 @@ namespace BookInfoFinder.Pages.Account
 
             try
             {
-                // Tạo mã OTP mới
-                var otpCode = _emailService.GenerateOTP();
-
-                // Lưu OTP
-                await _emailService.StoreOTPAsync(Email, otpCode, TimeSpan.FromMinutes(5));
-
                 // Gửi email
                 var otpRequest = new OTPRequestDto
                 {
                     Email = Email,
                     Purpose = Purpose
                 };
-                await _emailService.SendOTPEmailAsync(otpRequest);
+                if (!await _emailService.SendOTPEmailAsync(otpRequest))
+                {
+                    ErrorMessage = "Không gửi được mã mới. Hãy thử lại sau một phút.";
+                    return Page();
+                }
 
                 _logger.LogInformation("OTP resent to email {Email}", Email);
 

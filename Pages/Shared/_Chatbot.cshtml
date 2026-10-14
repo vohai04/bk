@@ -1,0 +1,8 @@
+<div class="floating-chatbot">
+    <button onclick="toggleChatbotModal()" class="btn btn-primary" type="button" aria-label="Mở trợ lý tìm sách"><i class="bi bi-chat-dots" aria-hidden="true"></i></button>
+</div>
+<div id="chatbotWindow" class="chatbot-window" role="dialog" aria-label="Trợ lý tìm sách" style="display:none;">
+    <div class="chatbot-header"><span>Trợ lý tìm sách</span><button type="button" onclick="toggleChatbotModal()" aria-label="Đóng trợ lý">&times;</button></div>
+    <div class="chatbot-body" id="chatMessages" role="log" aria-live="polite"></div>
+    <div class="chatbot-footer"><input type="text" id="chatInput" aria-label="Câu hỏi về sách" placeholder="Bạn muốn tìm sách gì…" autocomplete="off" /><button type="button" id="sendChat">Gửi</button></div>
+</div>

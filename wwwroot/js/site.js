@@ -1,4 +1,4 @@
-﻿// Toast thông báo
+// Toast thông báo
 function showToast(message, type = "success", duration = 3000) {
     const iconMap = {
         success: "bi-check-circle-fill text-success",
@@ -6,87 +6,53 @@ function showToast(message, type = "success", duration = 3000) {
         warning: "bi-exclamation-triangle-fill text-warning",
         info: "bi-info-circle-fill text-info"
     };
-    // Debug: log when toast is shown and stack trace to help track unexpected DOM changes
-    try {
-        console.log('[showToast]', type, message);
-        console.trace('[showToast] stacktrace');
-    } catch (e) { }
-
-    $("#toastMessage").html(`<i class="${iconMap[type]} me-2"></i>${message}`);
+    $("#toastMessage").empty().append($('<i>').addClass(`${iconMap[type] || iconMap.info} me-2`).attr('aria-hidden', 'true'), document.createTextNode(String(message)));
     const toast = new bootstrap.Toast(document.getElementById("sharedToast"), { delay: duration });
     toast.show();
 }
- 
+
 // Modal xác nhận (dùng Bootstrap modal runtime)
 function showConfirmModal(title, message, onConfirm) {
     const modalHtml = `
-        <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalTitle">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">${title}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title" id="confirmModalTitle"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng xác nhận"></button>
                     </div>
-                    <div class="modal-body">${message}</div>
+                    <div class="modal-body" style="white-space: pre-line"></div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="button" class="btn btn-danger" id="confirmBtn">Xác nhận</button>
+                        <button type="button" class="btn btn-danger" id="confirmBtn" disabled>Xác nhận</button>
                     </div>
                 </div>
             </div>
         </div>`;
     $("#confirmModal").remove();
     $("body").append(modalHtml);
-    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    $('#confirmModalTitle').text(title);
+    $('#confirmModal .modal-body').text(message);
+    const element = document.getElementById('confirmModal');
+    const modal = new bootstrap.Modal(element);
+    const confirm = element.querySelector('#confirmBtn');
+    element.addEventListener('shown.bs.modal', () => { confirm.disabled = false; }, { once: true });
+    element.addEventListener('hidden.bs.modal', () => { modal.dispose(); element.remove(); }, { once: true });
     $("#confirmBtn").on('click', function () {
+        if (confirm.disabled) return;
+        confirm.disabled = true;
         try { onConfirm && onConfirm(); } finally { modal.hide(); }
     });
     modal.show();
 }
- 
+
 // Khởi tạo tooltip Popper/Bootstrap toàn cục
 function initTooltips() {
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
-        new bootstrap.Tooltip(el, { trigger: 'hover focus' });
+        bootstrap.Tooltip.getOrCreateInstance(el, { trigger: 'hover focus' });
     });
 }
- 
-// Header hide/show on scroll (hide when scrolling down, show when scrolling up)
-(function () {
-    const $header = $(".modern-header");
-    if ($header.length === 0) return;
- 
-    let lastScroll = window.pageYOffset || document.documentElement.scrollTop;
-    let ticking = false;
-    const delta = 10; // minimum change to trigger
- 
-    function update() {
-        const current = window.pageYOffset || document.documentElement.scrollTop;
-        if (Math.abs(current - lastScroll) <= delta) {
-            ticking = false;
-            return;
-        }
- 
-        if (current > lastScroll && current > ($header.outerHeight() || 64)) {
-            // scrolling down
-            $header.addClass('header-hidden');
-        } else if (current < lastScroll) {
-            // scrolling up
-            $header.removeClass('header-hidden');
-        }
- 
-        lastScroll = current;
-        ticking = false;
-    }
- 
-    window.addEventListener('scroll', function () {
-        if (!ticking) {
-            window.requestAnimationFrame(update);
-            ticking = true;
-        }
-    }, { passive: true });
-})();
- 
+
 // Phân trang tiện ích
 function renderPagination(containerSelector, totalPages, currentPage, onPageClick) {
     const $pagination = $(containerSelector);
@@ -107,25 +73,9 @@ function renderPagination(containerSelector, totalPages, currentPage, onPageClic
         if (!isNaN(page) && page >= 1 && page <= totalPages) onPageClick(page);
     });
 }
- 
-// Sidebar search form submit => phát event toàn cục
-$(document).on('submit', '#sidebarSearchForm', function (e) {
-    e.preventDefault();
-    const payload = {
-        title: $('#sb_title').val() || '',
-        author: $('#sb_author').val() || '',
-        category: $('#sb_category').val() || '',
-        year: $('#sb_year').val() || ''
-    };
-    $(document).trigger('book:search', payload);
-    const offcanvasEl = document.getElementById('offcanvasSearch');
-    if (offcanvasEl && offcanvasEl.classList.contains('show')) {
-        bootstrap.Offcanvas.getInstance(offcanvasEl)?.hide();
-    }
-});
- 
+
 // Khởi chạy chung
 $(document).ready(function () {
     initTooltips();
 });
- 
+

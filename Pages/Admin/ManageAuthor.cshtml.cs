@@ -17,23 +17,8 @@ namespace BookInfoFinder.Pages.Admin
             _context = context;
         }
 
-        public List<AuthorDto> Authors { get; set; } = new();
+        public void OnGet() { }
 
-        [BindProperty(SupportsGet = true)] public int CurrentPage { get; set; } = 1;
-        public int TotalPages { get; set; }
-        public int TotalCount { get; set; }
-
-        public async Task OnGetAsync(int page = 1)
-        {
-            CurrentPage = page < 1 ? 1 : page;
-            int pageSize = 10;
-
-            var result = await _authorService.GetAuthorsPagedAsync(CurrentPage, pageSize);
-            Authors = result.Authors;
-            TotalCount = result.TotalCount;
-            TotalPages = (int)Math.Ceiling((double)TotalCount / pageSize);
-        }
-        // AJAX
         public async Task<JsonResult> OnGetAjaxSearchAsync()
         {
             try
@@ -43,19 +28,18 @@ namespace BookInfoFinder.Pages.Admin
                 int.TryParse(query["page"], out int page);
                 int.TryParse(query["pageSize"], out int pageSize);
 
-                page = page <= 0 ? 1 : page;
-                pageSize = pageSize <= 0 ? 10 : pageSize;
+                page = Math.Clamp(page, 1, 100000);
+                pageSize = pageSize <= 0 ? 10 : Math.Clamp(pageSize, 1, 50);
 
                 var result = await _authorService.GetAuthorsPagedAsync(page, pageSize);
                 var filteredAuthors = result.Authors;
+                var totalCount = result.TotalCount;
 
-                // Apply search filter if provided
                 if (!string.IsNullOrWhiteSpace(search))
                 {
-                    filteredAuthors = (await _authorService.SearchAuthorsAsync(search))
-                        .Skip((page - 1) * pageSize)
-                        .Take(pageSize)
-                        .ToList();
+                    var matches = await _authorService.SearchAuthorsAsync(search);
+                    totalCount = matches.Count;
+                    filteredAuthors = matches.Skip((page - 1) * pageSize).Take(pageSize).ToList();
                 }
 
                 var authorResult = filteredAuthors.Select(a => new
@@ -71,8 +55,8 @@ namespace BookInfoFinder.Pages.Admin
                     CreatedAtFormatted = a.CreatedAt.ToString("dd/MM/yyyy HH:mm")
                 });
 
-                var totalPages = (int)Math.Ceiling(result.TotalCount / (double)pageSize);
-                return new JsonResult(new { authors = authorResult, totalPages, totalCount = result.TotalCount });
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+                return new JsonResult(new { authors = authorResult, totalPages, totalCount });
             }
             catch (Exception ex)
             {

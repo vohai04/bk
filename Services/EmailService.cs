@@ -13,7 +13,7 @@ namespace BookInfoFinder.Services
         private readonly EmailSettings _settings;
         private readonly IMemoryCache _memoryCache;
         private readonly ILogger<EmailService> _logger;
-        private readonly Random _random = new Random();
+
 
         public EmailService(IOptions<EmailSettings> settings, IMemoryCache memoryCache, ILogger<EmailService> logger)
         {
@@ -26,7 +26,7 @@ namespace BookInfoFinder.Services
         {
             var min = (int)Math.Pow(10, length - 1);
             var max = (int)Math.Pow(10, length) - 1;
-            return _random.Next(min, max).ToString();
+            return System.Security.Cryptography.RandomNumberGenerator.GetInt32(min, max + 1).ToString();
         }
 
         public async Task<bool> SendOTPEmailAsync(OTPRequestDto otpRequest)
@@ -44,6 +44,9 @@ namespace BookInfoFinder.Services
                     return false;
                 }
 
+                var throttleKey = $"otp_send_{otpRequest.Email.Trim().ToLowerInvariant()}";
+                if (_memoryCache.TryGetValue(throttleKey, out _)) return false;
+                _memoryCache.Set(throttleKey, true, TimeSpan.FromMinutes(1));
                 var otp = GenerateOTP();
                 var subject = otpRequest.Purpose switch
                 {
@@ -196,6 +199,11 @@ BookInfoFinder Team
 
             if (_memoryCache.TryGetValue(otpKey, out OTPInfo? otpInfo) && otpInfo != null)
             {
+                if (System.Threading.Interlocked.Increment(ref otpInfo.Attempts) > 5)
+                {
+                    _memoryCache.Remove(otpKey);
+                    return false;
+                }
                 if (DateTime.UtcNow <= otpInfo.ExpiresAt && otpInfo.OTP == otp)
                 {
                     return true;
@@ -247,7 +255,7 @@ BookInfoFinder Team
 
                 // Thử ports theo thứ tự ưu tiên cho hosting providers
                 // Port 2525: Alternative submission port, ít bị hosting chặn nhất
-                // Port 587: Standard SMTP port với STARTTLS 
+                // Port 587: Standard SMTP port với STARTTLS
                 // Port 1025: Alternative port khi 587 bị chặn
                 // Port 465: Legacy SSL port
                 var smtpConfigs = new[]
@@ -322,10 +330,11 @@ BookInfoFinder Team
             }
         }
 
-        private static string GetOTPKey(string email) => $"otp_{email}";
+        private static string GetOTPKey(string email) => $"otp_{email.Trim().ToLowerInvariant()}";
 
         private class OTPInfo
         {
+            public int Attempts;
             public string OTP { get; set; } = "";
             public DateTime CreatedAt { get; set; }
             public DateTime ExpiresAt { get; set; }

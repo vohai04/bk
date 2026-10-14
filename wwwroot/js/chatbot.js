@@ -29,7 +29,10 @@ function addMessage(sender, text) {
     if (!messages) return;
     const msgDiv = document.createElement('div');
     msgDiv.className = `chat-message ${sender}`;
-    msgDiv.innerHTML = `<div class="chat-bubble">${text}</div>`;
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble';
+    bubble.textContent = text;
+    msgDiv.appendChild(bubble);
     messages.appendChild(msgDiv);
     messages.scrollTop = messages.scrollHeight;
 }
@@ -44,7 +47,7 @@ function sendChatMessage() {
 
     fetch('/Index?handler=Chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' },
         body: new URLSearchParams({ message })
     })
     .then(function (res) { return res.json(); })

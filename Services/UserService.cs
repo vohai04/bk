@@ -11,11 +11,13 @@ namespace BookInfoFinder.Services
     {
         private readonly BookContext _context;
         private readonly IDashboardService _dashboardService;
+        private readonly IHttpContextAccessor _http;
 
-        public UserService(BookContext context, IDashboardService dashboardService)
+        public UserService(BookContext context, IDashboardService dashboardService, IHttpContextAccessor http)
         {
             _context = context;
             _dashboardService = dashboardService;
+            _http = http;
         }
 
         public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
@@ -40,19 +42,28 @@ namespace BookInfoFinder.Services
 
         public async Task<UserDto> CreateUserAsync(UserCreateDto userCreateDto)
         {
+            ValidateProfile(userCreateDto.FullName, userCreateDto.Email);
+            if (string.IsNullOrWhiteSpace(userCreateDto.UserName) || userCreateDto.UserName.Length > 256)
+                throw new ArgumentException("Tên đăng nhập không hợp lệ.");
+            if (await IsUserNameExistsAsync(userCreateDto.UserName) || await IsEmailExistsAsync(userCreateDto.Email))
+                throw new ArgumentException("Tên đăng nhập hoặc email đã được sử dụng.");
+            userCreateDto.UserName = userCreateDto.UserName.Trim();
+            userCreateDto.Email = userCreateDto.Email.Trim().ToLowerInvariant();
+            userCreateDto.FullName = userCreateDto.FullName.Trim();
             var user = userCreateDto.ToEntity();
+            user.Password = PasswordStorage.Hash(user, userCreateDto.Password);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
             // Log activity
             await _dashboardService.LogActivityAsync(
-                user.UserName,
+                _http.HttpContext?.Session.GetString("UserName") ?? user.UserName,
                 "User Registered",
-                $"New user '{user.UserName}' registered",
+                $"Tạo tài khoản: “{user.UserName}”",
                 "User",
                 user.UserId,
-                ""
+                _http.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? ""
             );
 
             return user.ToDto();
@@ -60,6 +71,11 @@ namespace BookInfoFinder.Services
 
         public async Task<UserDto> UpdateUserAsync(UserUpdateDto userUpdateDto)
         {
+            ValidateProfile(userUpdateDto.FullName, userUpdateDto.Email);
+            if (await _context.Users.AnyAsync(u => u.UserId != userUpdateDto.UserId && u.Email.ToLower() == userUpdateDto.Email.Trim().ToLower()))
+                throw new ArgumentException("Email đã được sử dụng.");
+            userUpdateDto.FullName = userUpdateDto.FullName.Trim();
+            userUpdateDto.Email = userUpdateDto.Email.Trim().ToLowerInvariant();
             var user = await _context.Users.FindAsync(userUpdateDto.UserId);
             if (user == null)
                 throw new ArgumentException("User not found");
@@ -69,7 +85,6 @@ namespace BookInfoFinder.Services
             userUpdateDto.UpdateEntity(user);
             user.UpdatedAt = DateTime.UtcNow;
 
-            _context.Users.Update(user);
             await _context.SaveChangesAsync();
 
             // reload fresh entity from database to include any DB-side changes
@@ -93,10 +108,9 @@ namespace BookInfoFinder.Services
             if (user == null)
                 return false;
 
-            user.Password = newPassword;
+            user.Password = PasswordStorage.Hash(user, newPassword);
             user.UpdatedAt = DateTime.UtcNow;
 
-            _context.Users.Update(user);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -107,25 +121,28 @@ namespace BookInfoFinder.Services
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return false;
 
-            // In this sample app passwords are stored in plain text. Validate directly.
-            if (user.Password != currentPassword) return false;
+            if (user.Status != 1 || !PasswordStorage.Verify(user, currentPassword)) return false;
 
-            user.Password = newPassword;
+            user.Password = PasswordStorage.Hash(user, newPassword);
             user.UpdatedAt = DateTime.UtcNow;
 
-            _context.Users.Update(user);
             await _context.SaveChangesAsync();
             return true;
         }
 
         public async Task<UserDto?> ValidateUserAsync(LoginRequestDto loginRequest)
         {
-            // Find user by username regardless of status so caller can decide how to handle locked accounts
+            if (loginRequest.Password.Length > 100 || loginRequest.UserName.Length > 256) return null;
+            // Caller supplies the account-locked message after authentication.
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.UserName == loginRequest.UserName);
+                .FirstOrDefaultAsync(u => u.UserName == loginRequest.UserName.Trim());
 
-            if (user == null || user.Password != loginRequest.Password)
-                return null;
+            if (user == null || !PasswordStorage.Verify(user, loginRequest.Password)) return null;
+            if (!PasswordStorage.IsHash(user.Password))
+            {
+                user.Password = PasswordStorage.Hash(user, loginRequest.Password);
+                await _context.SaveChangesAsync();
+            }
 
             return user.ToDto();
         }
@@ -144,6 +161,12 @@ namespace BookInfoFinder.Services
                 .AnyAsync(u => u.Email.Trim().ToLower() == normalized);
         }
 
+        private static void ValidateProfile(string name, string email)
+        {
+            if (string.IsNullOrWhiteSpace(name) || name.Length > 100 || string.IsNullOrWhiteSpace(email) || email.Length > 256 || !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
+                throw new ArgumentException("Tên hiển thị hoặc email không hợp lệ.");
+        }
+
         public async Task<bool> ActivateUserAsync(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
@@ -152,7 +175,6 @@ namespace BookInfoFinder.Services
             user.Status = 1;
             user.UpdatedAt = DateTime.UtcNow;
 
-            _context.Users.Update(user);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -165,7 +187,6 @@ namespace BookInfoFinder.Services
             user.Status = 0;
             user.UpdatedAt = DateTime.UtcNow;
 
-            _context.Users.Update(user);
             await _context.SaveChangesAsync();
             return true;
         }

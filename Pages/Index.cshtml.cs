@@ -135,7 +135,7 @@ namespace BookInfoFinder.Pages
             {
                 BookId = book.BookId,
                 Title = book.Title,
-                ImageBase64 = string.IsNullOrEmpty(book.ImageBase64) ? "/images/default-book.jpg" : book.ImageBase64,
+                ImageBase64 = string.IsNullOrEmpty(book.ImageBase64) ? "/images/default-book.svg" : book.ImageBase64,
                 AuthorName = book.AuthorName ?? "Không rõ",
                 CategoryName = book.CategoryName ?? "Không rõ",
                 PublicationYear = book.PublicationDate,
@@ -204,7 +204,7 @@ namespace BookInfoFinder.Pages
             {
                 BookId = book.BookId,
                 Title = book.Title,
-                ImageBase64 = string.IsNullOrEmpty(book.ImageBase64) ? "/images/default-book.jpg" : book.ImageBase64,
+                ImageBase64 = string.IsNullOrEmpty(book.ImageBase64) ? "/images/default-book.svg" : book.ImageBase64,
                 PublicationDate = book.PublicationDate,
                 AuthorName = book.AuthorName ?? "Không rõ",
                 CategoryName = book.CategoryName ?? "Không rõ",
@@ -227,6 +227,7 @@ namespace BookInfoFinder.Pages
         public async Task<JsonResult> OnGetSearchAsync()
         {
             var q = Request.Query;
+            string? keyword = q["q"];
             string? title = q["title"];
             string? author = q["author"];
             string? category = q["category"];
@@ -239,8 +240,8 @@ namespace BookInfoFinder.Pages
 
 
             page = page <= 0 ? 1 : page;
-            pageSize = pageSize <= 0 ? 12 : pageSize;
-            DateTime? publicationDate = year > 0 ? new DateTime(year, 1, 1) : (DateTime?)null;
+            pageSize = pageSize <= 0 ? 9 : Math.Clamp(pageSize, 1, 48);
+            DateTime? publicationDate = year is >= 1 and <= 9999 ? new DateTime(year, 1, 1) : null;
 
             // Handle filter parameter first
             if (!string.IsNullOrWhiteSpace(filter))
@@ -288,7 +289,7 @@ namespace BookInfoFinder.Pages
                             id = b.BookId,
                             title = b.Title,
                             author = b.AuthorName ?? "Không rõ",
-                            coverUrl = string.IsNullOrEmpty(b.ImageBase64) ? "/images/default-book.jpg" : b.ImageBase64,
+                            coverUrl = string.IsNullOrEmpty(b.ImageBase64) ? "/images/default-book.svg" : b.ImageBase64,
                             rating = 0.0, // Tag search doesn't include rating info
                             favorites = 0,
                             description = ""
@@ -306,15 +307,15 @@ namespace BookInfoFinder.Pages
 
             // Regular search without tags
             var (books, bookCount) = await _bookService.SearchBooksAdminPagedAsync(
-                title, author, category, publicationDate, page, pageSize, null, sort
+                title, author, category, publicationDate, page, pageSize, null, sort, keyword
             );
             totalCount = bookCount;
 
             // Lưu lịch sử tìm kiếm (chỉ page 1, có tiêu chí search, không phải chỉ filter hoặc paging)
-            bool hasSearch = !string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(author) || !string.IsNullOrWhiteSpace(category) || year > 0;
+            bool hasSearch = !string.IsNullOrWhiteSpace(keyword) || !string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(author) || !string.IsNullOrWhiteSpace(category) || year > 0;
             if (page == 1 && hasSearch)
             {
-                await SaveSearchHistory(title, author, category, year, totalCount);
+                await SaveSearchHistory(keyword ?? title, author, category, year, totalCount);
             }
 
             // No need for server-side sorting anymore - it's done in the database
@@ -323,7 +324,7 @@ namespace BookInfoFinder.Pages
                 id = b.BookId,
                 title = b.Title,
                 author = b.AuthorName ?? "Không rõ",
-                coverUrl = string.IsNullOrEmpty(b.ImageBase64) ? "/images/default-book.jpg" : b.ImageBase64,
+                coverUrl = string.IsNullOrEmpty(b.ImageBase64) ? "/images/default-book.svg" : b.ImageBase64,
                 rating = Math.Round(b.AverageRating, 1),
                 favorites = b.TotalFavorites,
                 description = !string.IsNullOrEmpty(b.Description) && b.Description.Length > 100

@@ -1,9 +1,11 @@
-<!-- SVG placeholder for default book image -->
-<svg width="300" height="400" xmlns="http://www.w3.org/2000/svg">
-  <rect width="300" height="400" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
-  <rect x="20" y="30" width="260" height="340" fill="#ffffff" stroke="#e9ecef"/>
-  <circle cx="150" cy="160" r="40" fill="#6c757d"/>
-  <path d="M130 140 L170 140 L170 160 L160 170 L140 170 Z" fill="#ffffff"/>
-  <text x="150" y="220" text-anchor="middle" font-family="Arial" font-size="14" fill="#6c757d">No Image</text>
-  <text x="150" y="240" text-anchor="middle" font-family="Arial" font-size="12" fill="#adb5bd">Available</text>
+<svg width="260" height="390" viewBox="0 0 260 390" xmlns="http://www.w3.org/2000/svg">
+  <rect width="260" height="390" rx="3" fill="#355943"/>
+  <rect width="12" height="390" fill="#294633"/>
+  <rect x="27" y="24" width="208" height="342" rx="1" fill="none" stroke="#d2c8a0" stroke-opacity=".5"/>
+  <circle cx="131" cy="151" r="54" fill="none" stroke="#d2c8a0"/>
+  <circle cx="131" cy="151" r="40" fill="none" stroke="#d2c8a0" stroke-opacity=".5"/>
+  <path d="M104 136q14-8 27 0q14-8 27 0v33q-14-8-27 0q-13-8-27 0z M131 136v33" fill="none" stroke="#ede6cb" stroke-width="2"/>
+  <path d="M85 237h92 M104 247h54" stroke="#d2c8a0" stroke-opacity=".6"/>
+  <text x="131" y="278" text-anchor="middle" font-family="Georgia,serif" font-size="17" fill="#f2ecd7">BookInfoFinder</text>
+  <text x="131" y="306" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" fill="#cad7bf">Chưa có ảnh bìa</text>
 </svg>
