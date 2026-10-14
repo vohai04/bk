@@ -4,6 +4,7 @@
  */
 
 'use strict';
+let chatPending = false;
 
 function toggleChatbotModal() {
     const windowEl = document.getElementById('chatbotWindow');
@@ -40,7 +41,10 @@ function addMessage(sender, text) {
 function sendChatMessage() {
     const $input = $('#chatInput');
     const message = $input.val().trim();
-    if (!message) return;
+    if (!message || chatPending) return;
+
+    chatPending = true;
+    $('#sendChat').prop('disabled', true).text('Đang trả lời…');
 
     addMessage('user', message);
     $input.val('');
@@ -50,9 +54,16 @@ function sendChatMessage() {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' },
         body: new URLSearchParams({ message })
     })
-    .then(function (res) { return res.json(); })
+    .then(function (res) {
+        if (!res.ok) throw new Error('Chat request failed');
+        return res.json();
+    })
     .then(function (data) { addMessage('bot', data.reply); })
-    .catch(function () { addMessage('bot', 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.'); });
+    .catch(function () { addMessage('bot', 'Chưa gửi được tin nhắn. Bạn tải lại trang rồi thử lại nhé.'); })
+    .finally(function () {
+        chatPending = false;
+        $('#sendChat').prop('disabled', false).text('Gửi');
+    });
 }
 
 // Use delegated handlers so they work after any dynamic render

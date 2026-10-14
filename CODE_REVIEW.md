@@ -74,3 +74,11 @@ Quy tắc UI tham khảo: https://raw.githubusercontent.com/vercel-labs/web-inte
 - URL ảnh đổi sau mỗi upload, có ETag và cache theo phiên bản; dữ liệu trả về cố định `image/webp` và `nosniff`. Không lưu file tùy ý trong thư mục public.
 - `python tests/run_ui_checks.py avatar_checks.py`: 6 nhóm kiểm tra gồm preview, PNG/JPEG/WebP, thu nhỏ ảnh, reload/cache, file giả/quá dung lượng/quá chiều rộng, cập nhật profile giữ avatar, session ownership, CSRF, bình luận/phản hồi, lỗi mạng, mobile, xóa ảnh và tài khoản bị khóa.
 - Kiểm tra hồi quy còn phát hiện và sửa lỗi hộp xác nhận không đóng khi bấm trong lúc mở: chỉ bật nút xác nhận sau sự kiện `shown.bs.modal`.
+
+## Chatbot Gemini
+
+- Key mới xác thực thành công, nhưng Google trả HTTP 404 khi gọi `gemini-2.5-flash` với project này. `gemini-3.8-flash` đã trả lời thành công trong kiểm tra trực tiếp; đây là model mặc định mới. Có thể ghi đè bằng `GEMINI_MODEL` hoặc `GEMINI__Model` trên Render.
+- `GeminiClient` dùng HttpClient do DI quản lý, timeout 45 giây, truyền key bằng header thay cho URL. Không log key, prompt hoặc nội dung lỗi từ nhà cung cấp; thông báo phân biệt xác thực, model không khả dụng, hạn mức, timeout và kết nối.
+- Không gửi chi tiết exception database vào prompt. Tránh tải danh sách sách hai lần khi tạo context. Nút gửi khóa trong lúc chờ để tránh gửi trùng.
+- `python tests/gemini_checks.py`: 11 kiểm tra độc lập dùng HTTP giả lập, gồm phản hồi nhiều phần, loại bỏ phần suy nghĩ, JSON lỗi/rỗng, HTTP 401/403/404/429/500, mất kết nối, timeout và thiếu cấu hình. Key chỉ nằm ở môi trường, `appsettings.json` không chứa key.
+- Docker bỏ qua `artifacts/`, `.git/` và `tests/` để không đóng gói dữ liệu local hoặc lịch sử Git.

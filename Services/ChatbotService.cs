@@ -2,7 +2,6 @@ using BookInfoFinder.Services.Interface;
 using BookInfoFinder.Models.Dto;
 using BookInfoFinder.Data;
 using BookInfoFinder.Models.Entity;
-using System.Text.Json;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,48 +10,34 @@ namespace BookInfoFinder.Services;
 public class ChatbotService : IChatbotService
 {
     private readonly IBookService _bookService;
-    private readonly IRatingService _ratingService;
-    private readonly IFavoriteService _favoriteService;
     private readonly ICategoryService _categoryService;
     private readonly IAuthorService _authorService;
     private readonly ITagService _tagService;
-    private readonly IConfiguration _config;
     private readonly BookContext _db;
-    private readonly HttpClient _httpClient;
-    private readonly string? _geminiApiKey;
-    private readonly string? _geminiModel;
+    private readonly GeminiClient _gemini;
+    private readonly ILogger<ChatbotService> _logger;
 
     public ChatbotService(
         IBookService bookService,
-        IRatingService ratingService,
-        IFavoriteService favoriteService,
         ICategoryService categoryService,
         IAuthorService authorService,
         ITagService tagService,
-        IConfiguration config,
-        BookContext db)
+        BookContext db,
+        GeminiClient gemini,
+        ILogger<ChatbotService> logger)
     {
         _bookService = bookService;
-        _ratingService = ratingService;
-        _favoriteService = favoriteService;
         _categoryService = categoryService;
         _authorService = authorService;
         _tagService = tagService;
-        _config = config;
         _db = db;
-        _httpClient = new HttpClient();
-        _geminiApiKey = _config["GEMINI:ApiKey"];
-        _geminiModel = _config["GEMINI:Model"] ?? "gemini-2.0-flash-exp";
+        _gemini = gemini;
+        _logger = logger;
     }
 
     // ==================== MAIN ENTRY POINT ====================
     public async Task<string> GetChatbotReplyAsync(string message, string? sessionId)
     {
-        if (string.IsNullOrEmpty(_geminiApiKey))
-        {
-            return "⚠️ API key chưa được cấu hình. Vui lòng kiểm tra appsettings.json";
-        }
-
         try
         {
             // Lưu tin nhắn của user
@@ -118,7 +103,7 @@ public class ChatbotService : IChatbotService
         var fullPrompt = $"{systemPrompt}\n\nNgười dùng: {userMessage}";
 
         // Bước 4: Gọi Gemini API
-        return await CallGeminiAPI(fullPrompt);
+        return await _gemini.ReplyAsync(fullPrompt);
     }
 
     // ==================== BUILD DATABASE CONTEXT ====================
@@ -130,7 +115,8 @@ public class ChatbotService : IChatbotService
         try
         {
             // Thống kê tổng quan
-            var totalBooks = (await _bookService.GetAllBooksAsync()).Count();
+            var books = await _bookService.GetAllBooksAsync();
+            var totalBooks = books.Count();
             var totalAuthors = (await _authorService.GetAllAuthorsAsync()).Count();
             var totalCategories = (await _categoryService.GetAllCategoriesAsync()).Count();
             var totalTags = (await _tagService.GetAllTagsAsync()).Count();
@@ -142,7 +128,6 @@ public class ChatbotService : IChatbotService
             context.AppendLine($"- Tags: {totalTags}\n");
 
             // Danh sách sách (10 cuốn đầu)
-            var books = await _bookService.GetAllBooksAsync();
             context.AppendLine("📚 MỘT SỐ SÁCH:");
             foreach (var book in books.Take(10))
             {
@@ -174,7 +159,8 @@ public class ChatbotService : IChatbotService
         }
         catch (Exception ex)
         {
-            context.AppendLine($"⚠️ Lỗi khi lấy thông tin database: {ex.Message}");
+            _logger.LogWarning("Unable to build chatbot catalog context: {ErrorType}", ex.GetType().Name);
+            context.AppendLine("Danh mục sách hiện không khả dụng. Hãy báo người dùng thử lại sau.");
         }
 
         return context.ToString();
@@ -219,65 +205,6 @@ LƯU Ý QUAN TRỌNG:
 - TUYỆT ĐỐI chỉ trả lời dựa trên DATABASE CONTEXT ở trên
 - KHÔNG bịa thông tin không có trong context
 - Nếu không tìm thấy, nói: ""Không tìm thấy [thông tin] trong hệ thống""";
-    }
-
-    // ==================== CALL GEMINI API ====================
-    private async Task<string> CallGeminiAPI(string prompt)
-    {
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{_geminiModel}:generateContent?key={_geminiApiKey}";
-
-        var requestBody = new
-        {
-            contents = new[]
-            {
-                new
-                {
-                    parts = new[]
-                    {
-                        new { text = prompt }
-                    }
-                }
-            },
-            generationConfig = new
-            {
-                temperature = 0.7,
-                topK = 40,
-                topP = 0.95,
-                maxOutputTokens = 1024
-            }
-        };
-
-        var json = JsonSerializer.Serialize(requestBody);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        try
-        {
-            var response = await _httpClient.PostAsync(url, content);
-            response.EnsureSuccessStatusCode();
-
-            var responseJson = await response.Content.ReadAsStringAsync();
-            var responseObject = JsonSerializer.Deserialize<JsonElement>(responseJson);
-
-            if (responseObject.TryGetProperty("candidates", out var candidates) &&
-                candidates.GetArrayLength() > 0 &&
-                candidates[0].TryGetProperty("content", out var contentProp) &&
-                contentProp.TryGetProperty("parts", out var parts) &&
-                parts.GetArrayLength() > 0 &&
-                parts[0].TryGetProperty("text", out var text))
-            {
-                return text.GetString() ?? "Không thể tạo phản hồi.";
-            }
-
-            return "⚠️ Không thể phân tích phản hồi từ AI.";
-        }
-        catch (HttpRequestException)
-        {
-            return "😔 Lỗi kết nối với AI. Vui lòng kiểm tra API key hoặc kết nối mạng.";
-        }
-        catch (Exception ex)
-        {
-            return $"😔 Lỗi: {ex.Message}";
-        }
     }
 
     // ==================== HISTORY MANAGEMENT ====================

@@ -65,6 +65,9 @@ certificates/
 
 # Node modules (nếu có frontend build)
 node_modules/
+artifacts/
+.git/
+tests/
 npm-debug.log*
 
 # Editor directories and files

@@ -57,6 +57,9 @@ if (!string.IsNullOrEmpty(emailPassword))
 var geminiApiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
 if (!string.IsNullOrEmpty(geminiApiKey))
     builder.Configuration["GEMINI:ApiKey"] = geminiApiKey;
+var geminiModel = Environment.GetEnvironmentVariable("GEMINI_MODEL");
+if (!string.IsNullOrWhiteSpace(geminiModel))
+    builder.Configuration["GEMINI:Model"] = geminiModel;
 QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services.AddSession(options =>
@@ -92,6 +95,7 @@ builder.Services.AddScoped<IPublisherService, PublisherService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<IBookCommentService, BookCommentService>();
 builder.Services.AddScoped<IChatbotService, ChatbotService>();
+builder.Services.AddHttpClient<GeminiClient>(client => client.Timeout = TimeSpan.FromSeconds(45));
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddHttpContextAccessor();
 // Page routes
